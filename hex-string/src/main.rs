@@ -3,6 +3,7 @@ use std::char;
 fn main() {
     let my_name = "Liangcheng Juves".to_string();
     let hex = HexString.from(my_name.as_bytes());
+    assert_eq!("4c69616e676368656e67204a75766573", hex);
     println!("Convert my_name to hex string is {}", hex);
     // let bytes = HexString.parse(hex);
     // println!("Convert hex string to my_name is {:?}", bytes);
