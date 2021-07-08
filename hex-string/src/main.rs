@@ -1,5 +1,3 @@
-use std::char;
-
 fn main() {
     let my_name = "Liangcheng Juves".to_string();
     let hex = HexString.from(my_name.as_bytes());
