@@ -1,5 +1,5 @@
 fn main() {
-    let my_name = "Liangcheng Juves".to_string();
+    let my_name = "Liangcheng Juves";
     let hex = HexString.from(my_name.as_bytes());
     println!("Convert \"{}\" to hex string is {}", my_name, hex);
 
@@ -13,7 +13,7 @@ fn main() {
 
 #[test]
 fn test_hexstring_from() {
-    let my_name = "Liangcheng Juves".to_string();
+    let my_name = "Liangcheng Juves";
     let hex = HexString.from(my_name.as_bytes());
     assert_eq!("4c69616e676368656e67204a75766573", hex);
 }
