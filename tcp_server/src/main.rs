@@ -6,10 +6,10 @@ use std::net::TcpListener;
 
 fn echo_main(addr: &str) -> Result<()> {
     let listener = TcpListener::bind(addr)?;
-    println!("listening on {}", addr);
+    println!("Listening on {}", addr);
     loop {
         let (mut tcp_stream, socket_addr) = listener.accept()?;
-        println!("connection recevied from {}", socket_addr);
+        println!("Connection recevied from {}", socket_addr);
         let mut out_stream = tcp_stream.try_clone()?;
         std::thread::spawn(move || {
             let mut ret = Vec::<u8>::new();
@@ -17,8 +17,8 @@ fn echo_main(addr: &str) -> Result<()> {
             loop {
                 let len = match tcp_stream.read(&mut buf) {
                     Ok(0) => {
-                        println!("recevied data is: {}", String::from_utf8_lossy(&ret));
-                        println!("connection closed");
+                        println!("Recevied data is: {}", String::from_utf8_lossy(&ret));
+                        println!("Connection closed");
                         return Ok(());
                     }
                     Ok(len) => len,
