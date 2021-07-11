@@ -1,7 +1,4 @@
-use std::io::ErrorKind;
-use std::io::Read;
-use std::io::Result;
-use std::io::Write;
+use std::io::{ErrorKind, Read, Result, Write};
 use std::net::TcpListener;
 
 fn echo_main(addr: &str) -> Result<()> {
