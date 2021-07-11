@@ -31,10 +31,10 @@ impl HexString {
     pub const RADIX: u32 = 16;
 
     pub fn from(&self, bytes: &[u8]) -> String {
-        let mut ret = String::new();
         let char_from_digit = |num: u32| char::from_digit(num, HexString::RADIX).unwrap();
+        let mut ret = String::new();
         for byte in bytes {
-            let num: u32 = *byte as u32;
+            let num = *byte as u32;
             ret.push(char_from_digit(num >> 4 & 0xF));
             ret.push(char_from_digit(num & 0xF));
         }
@@ -42,8 +42,6 @@ impl HexString {
     }
 
     pub fn parse(&self, hex: &str) -> Vec<u8> {
-        let ret_arrlen = hex.len() / 2;
-        let mut ret: Vec<u8> = Vec::new();
         let char_to_digit = |n: usize| {
             hex.chars()
                 .nth(n)
@@ -51,9 +49,9 @@ impl HexString {
                 .to_digit(HexString::RADIX)
                 .unwrap()
         };
-        for i in 0..ret_arrlen {
-            let mut digit: u32;
-            digit = char_to_digit(2 * i);
+        let mut ret = Vec::<u8>::new();
+        for i in 0..(hex.len() / 2) {
+            let mut digit = char_to_digit(2 * i);
             digit <<= 4;
             digit += char_to_digit(2 * i + 1);
             ret.push(digit as u8);
