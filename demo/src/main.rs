@@ -1,62 +1,30 @@
-use std::env::current_dir;
-use std::fs::OpenOptions;
-use std::io::{ErrorKind, Read, Result};
+mod comb_sum;
+mod process_bar;
+mod stream;
 
-trait ReadListener {
-    fn on_reading(&self, bytes: &[u8], finished: bool);
-}
-
-fn read_stream<R: Read + ?Sized, RL: ReadListener>(
-    reader: &mut R,
-    read_listener: &mut RL,
-) -> Result<()> {
-    const BUF_SIZE: usize = 1024;
-    let mut readed = Vec::<u8>::new();
-    let mut buf = [0u8; BUF_SIZE];
-    loop {
-        let len = match reader.read(&mut buf) {
-            Ok(0) => {
-                read_listener.on_reading(&readed, true);
-                return Ok(());
-            }
-            Ok(len) => len,
-            Err(ref e) if e.kind() == ErrorKind::Interrupted => continue,
-            Err(e) => return Err(e),
-        };
-        readed.clear();
-        for b in &buf[..len] {
-            readed.push(*b);
-        }
-        read_listener.on_reading(&buf[..len], false);
-    }
-}
-
-struct ReadListenerImpl;
-
-impl ReadListenerImpl {
-    fn new() -> ReadListenerImpl {
-        Self
-    }
-}
-
-impl ReadListener for ReadListenerImpl {
-    fn on_reading(&self, bytes: &[u8], finished: bool) {
-        if !finished {
-            print!("{}", String::from_utf8_lossy(bytes));
-        } else {
-            const SIGN: &str = "========";
-            println!();
-            println!("{} finished {}", SIGN, SIGN);
-            println!();
-            print!("{}", String::from_utf8_lossy(bytes));
-        }
-    }
-}
+use std::io::Result;
+// use stream::{open_cargo_toml, read_stream, ReadListenerImpl};
+// use std::thread::sleep;
+// use std::time::Duration;
 
 fn main() -> Result<()> {
-    let pwd = current_dir().unwrap();
-    let path = pwd.join("Cargo.toml");
-    let mut cargo_toml = OpenOptions::new().read(true).open(path)?;
-    read_stream(&mut cargo_toml, &mut ReadListenerImpl::new())?;
+    ////////////////////////////////////////////////
+
+    // let mut cargo_toml = open_cargo_toml()?;
+    // read_stream(&mut cargo_toml, &mut ReadListenerImpl::new())?;
+
+    ////////////////////////////////////////////////
+
+    // for perc in 0..=100 {
+    //     process_bar::draw(perc)?;
+    //     sleep(Duration::from_micros(60_000));
+    // }
+    // println!();
+
+    ////////////////////////////////////////////////
+    let keys: [f64; 7] = [0f64, 1f64, 2f64, 3f64, 4f64, 5f64, 6f64];
+    println!("{:?}", comb_sum::compute(&keys, 9f64));
+
+    ////////////////////////////////////////////////
     Ok(())
 }
