@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -19,6 +20,8 @@ extern "C"
 #define loop while (1)
 #define println(fmt, ...) \
     printf(fmt "\n", __VA_ARGS__);
+#define print(fmt, ...) \
+    printf(fmt, __VA_ARGS__);
 
     typedef int8_t i8;  /* 8-bit */
     typedef uint8_t u8; /* 8-bit */
@@ -37,17 +40,12 @@ extern "C"
     // typedef int128_t i128;                          /* 128-bit */
     // typedef uint128_t u128;                         /* 128-bit */
 
+    typedef ptrdiff_t isize;
+    typedef size_t usize;
+
     /// Floating-Point
     typedef float f32;  /* 32-bit */
     typedef double f64; /* 64-bit */
-
-#if defined(__x86_64__) || (defined(__WORDSIZE) && (__WORDSIZE == 64))
-    typedef i64 isize;
-    typedef u64 usize;
-#elif defined(__i386__) || (defined(__WORDSIZE) && (__WORDSIZE == 32))
-typedef i32 isize;
-typedef u32 usize;
-#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
