@@ -19,7 +19,7 @@
 
 ## About
 
-[**📚 Read this template tutorial! 📚**][template-docs]
+[**📚 Read this template tutorial! 📚**][template-docs]&emsp;&emsp;[MDN]
 
 This template is designed for compiling Rust libraries into WebAssembly and
 publishing the resulting package to NPM.
@@ -29,6 +29,7 @@ templates and usages of `wasm-pack`.
 
 [tutorials]: https://rustwasm.github.io/docs/wasm-pack/tutorials/index.html
 [template-docs]: https://rustwasm.github.io/docs/wasm-pack/tutorials/npm-browser-packages/index.html
+[MDN]: https://developer.mozilla.org/zh-CN/docs/WebAssembly/Rust_to_wasm
 
 ## 🚴 Usage
 
