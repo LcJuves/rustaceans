@@ -1,5 +1,21 @@
 use std::io::{stdout, Result, Write};
 
+/// # Examples
+///
+/// ```
+/// use std::io;
+/// use std::thread::sleep;
+/// use std::time::Duration;
+///
+/// fn main() -> io::Result<()> {
+///     for perc in 0..=100 {
+///         draw(perc)?;
+///         sleep(Duration::from_micros(60_000));
+///     }
+///     println!();
+///     Ok(())
+/// }
+/// ```
 #[allow(dead_code)]
 pub fn draw(perc: usize) -> Result<()> {
     const BAR_LAB: &str = "-\\|/";

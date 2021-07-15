@@ -3,22 +3,43 @@ use std::fs::File;
 use std::fs::OpenOptions;
 use std::io::{ErrorKind, Read, Result};
 
-pub trait ReadListener {
-    fn on_reading(&self, bytes: &[u8], finished: bool);
-}
+pub const BUF_SIZE: usize = 1024;
 
+/// # Examples
+///
+/// ```
+/// use std::io;
+///
+/// fn main() -> io::Result<()> {
+///     let mut cargo_toml = open_cargo_toml()?;
+///     let mut read_listener = |bytes: &[u8], finished: bool| {
+///         if !finished {
+///             print!("{}", String::from_utf8_lossy(bytes));
+///         } else {
+///             const SIGN: &str = "========";
+///             println!();
+///             println!("{} finished {}", SIGN, SIGN);
+///             println!();
+///             print!("{}", String::from_utf8_lossy(bytes));
+///         }
+///     };
+///     closure_read_stream(&mut cargo_toml, &mut read_listener)?;
+///     Ok(())
+/// }
+/// ```
 #[allow(dead_code)]
-pub fn read_stream<R: Read + ?Sized, RL: ReadListener>(
-    reader: &mut R,
-    read_listener: &mut RL,
-) -> Result<()> {
-    const BUF_SIZE: usize = 1024;
+pub fn closure_read_stream<R, F>(reader: &mut R, read_callback: &mut F) -> Result<()>
+where
+    R: Read + ?Sized,
+    F: FnMut(&[u8], bool),
+{
     let mut readed = Vec::<u8>::new();
     let mut buf = [0u8; BUF_SIZE];
+
     loop {
         let len = match reader.read(&mut buf) {
             Ok(0) => {
-                read_listener.on_reading(&readed, true);
+                read_callback(&readed, true);
                 return Ok(());
             }
             Ok(len) => len,
@@ -29,34 +50,57 @@ pub fn read_stream<R: Read + ?Sized, RL: ReadListener>(
         for b in &buf[..len] {
             readed.push(*b);
         }
-        read_listener.on_reading(&buf[..len], false);
+        read_callback(&buf[..len], false);
     }
 }
 
-#[derive(Clone)]
-pub struct ReadListenerImpl;
-
-impl ReadListenerImpl {
-    #[allow(dead_code)]
-    pub fn new() -> ReadListenerImpl {
-        Self
-    }
+pub trait ReadListener {
+    fn on_reading(&self, bytes: &[u8], finished: bool);
 }
 
-impl ReadListener for ReadListenerImpl {
-    fn on_reading(&self, bytes: &[u8], finished: bool) {
-        if !finished {
-            print!("{}", String::from_utf8_lossy(bytes));
-        } else {
-            const SIGN: &str = "========";
-            println!();
-            println!("{} finished {}", SIGN, SIGN);
-            println!();
-            print!("{}", String::from_utf8_lossy(bytes));
-        }
-    }
+/// # Examples
+///
+/// ```
+/// use std::io;
+///
+/// pub struct ReadListenerImpl;
+/// impl ReadListenerImpl {
+///     pub fn new() -> ReadListenerImpl {
+///         Self
+///     }
+/// }
+///
+/// impl ReadListener for ReadListenerImpl {
+///     fn on_reading(&self, bytes: &[u8], finished: bool) {
+///         if !finished {
+///             print!("{}", String::from_utf8_lossy(bytes));
+///         } else {
+///             const SIGN: &str = "========";
+///             println!();
+///             println!("{} finished {}", SIGN, SIGN);
+///             println!();
+///             print!("{}", String::from_utf8_lossy(bytes));
+///         }
+///     }
+/// }
+///
+/// fn main() -> io::Result<()> {
+///     let mut cargo_toml = open_cargo_toml()?;
+///     read_stream(&mut cargo_toml, &mut ReadListenerImpl::new())?;
+///     Ok(())
+/// }
+/// ```
+#[allow(dead_code)]
+pub fn read_stream<R: Read + ?Sized, RL: ReadListener>(
+    reader: &mut R,
+    read_listener: &mut RL,
+) -> Result<()> {
+    let mut closure = |bytes: &[u8], finished: bool| read_listener.on_reading(&bytes, finished);
+    closure_read_stream(reader, &mut closure)?;
+    Ok(())
 }
 
+/// Can be used to open `Cargo.toml` under `Package`
 #[allow(dead_code)]
 pub fn open_cargo_toml() -> Result<File> {
     let pwd = current_dir().unwrap();
