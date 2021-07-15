@@ -35,13 +35,13 @@ extern "C"
     typedef int64_t i64;  /* 64-bit */
     typedef uint64_t u64; /* 64-bit */
 
-    // typedef long long long long int128_t;           /* 128-bit */
-    // typedef unsigned long long long long uint128_t; /* 128-bit */
-    // typedef int128_t i128;                          /* 128-bit */
-    // typedef uint128_t u128;                         /* 128-bit */
+    typedef __int128_t int128_t;   /* 128-bit */
+    typedef __uint128_t uint128_t; /* 128-bit */
+    typedef int128_t i128;         /* 128-bit */
+    typedef uint128_t u128;        /* 128-bit */
 
-    typedef ptrdiff_t isize;
-    typedef size_t usize;
+    typedef ptrdiff_t isize; /* arch */
+    typedef size_t usize;    /* arch */
 
     /// Floating-Point
     typedef float f32;  /* 32-bit */

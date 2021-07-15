@@ -1,12 +1,13 @@
-
+/**
+ * Created at 2021/7/15 12:00
+ * 
+ * @author Liangcheng Juves
+ */
 #include "rust_impl.h"
-#include <stdint.h>
 
 int main(int argc, char const *argv[])
 {
-
-    size_t q = 2;
-    println("%ld", sizeof(size_t) * 8);
-
+    u128 q = 2;
+    println("%ld", sizeof(q) * 8);
     return 0;
 }
