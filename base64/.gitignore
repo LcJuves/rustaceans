@@ -1,0 +1,6 @@
+*.lock
+target
+*.out
+*.html
+*.md
+.DS_Store
