@@ -7,5 +7,5 @@ tm=$(date "+%Y/%m/%d %H:%M")
 base_dir="$(cd "$(dirname "$0")"; pwd)"
 
 git -C ${base_dir} add ${base_dir}
-git -C ${base_dir} commit -m "Updated at ${tm}"
+git -C ${base_dir} commit -m "Updated at ${tm}" --author "Liangcheng Juves <liangchengj@outlook.com>"
 git -C ${base_dir} push -u origin main
