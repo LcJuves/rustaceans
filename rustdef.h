@@ -4,13 +4,14 @@
  * @author Liangcheng Juves
  */
 
-#ifndef _RUST_IMPL_H
-#define _RUST_IMPL_H
+#ifndef _RUSTDEF_H
+#define _RUSTDEF_H
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stddef.h>
+#include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -18,10 +19,13 @@ extern "C"
 #endif /* __cplusplus */
 
 #define loop while (1)
-#define println(fmt, ...) \
-    printf(fmt "\n", __VA_ARGS__);
 #define print(fmt, ...) \
     printf(fmt, __VA_ARGS__);
+#define println(fmt, ...) \
+    print(fmt "\n", __VA_ARGS__);
+
+#define utoi_t(x, t) ((signed t)x)
+#define itou_t(x, t) ((unsigned t)x)
 
     typedef int8_t i8;  /* 8-bit */
     typedef uint8_t u8; /* 8-bit */
@@ -51,4 +55,4 @@ extern "C"
 } /* extern "C" */
 #endif /* __cplusplus */
 
-#endif /* _RUST_IMPL_H */
+#endif /* _RUSTDEF_H */
