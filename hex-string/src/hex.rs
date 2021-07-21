@@ -10,7 +10,7 @@ impl HexString {
         let mut ret = String::new();
         for byte in bytes {
             let num = *byte as u32;
-            ret.push(char_from_digit(num >> 4 & 0xf));
+            ret.push(char_from_digit(num >> 4));
             ret.push(char_from_digit(num & 0xf));
         }
         ret
@@ -26,10 +26,10 @@ impl HexString {
         };
         let mut ret = Vec::<u8>::new();
         for i in 0..(hex.len() / 2) {
-            let digi = 2 * i;
-            let mut digit = char_to_digit(digi);
+            let dgti = 2 * i;
+            let mut digit = char_to_digit(dgti);
             digit <<= 4;
-            digit += char_to_digit(digi + 1);
+            digit += char_to_digit(dgti + 1);
             ret.push(digit as u8);
         }
         ret
