@@ -33,7 +33,9 @@ pub fn decode(src: &[u8]) -> Vec<u8> {
 
             for elemi in 0..elems.len() {
                 let mut curr_elem = elems[elemi];
-                if curr_elem > b'Z' {
+                if curr_elem < b'0' || curr_elem > b'z' {
+                    panic!("Beyond the decodable range");
+                } else if curr_elem > b'Z' {
                     curr_elem = curr_elem - 32;
                 }
                 if ale == curr_elem {
