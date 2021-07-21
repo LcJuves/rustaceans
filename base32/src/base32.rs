@@ -50,9 +50,6 @@ pub fn encode(src: &[u8]) -> Vec<u8> {
             true => ALPHABET[(albeti_1 & 0x1) << 4 | (albeti_2 & 0xf0) >> 4] as u8,
             _ => b'=',
         });
-        println!("{:08b}", (albeti_2 & 0xf) << 1);
-        println!("{:b}", (albeti_3 & 0x80) >> 7);
-        println!("{:08b}", (albeti_2 & 0xf) << 1 | (albeti_3 & 0x80) >> 7);
         dst.push(match b'\0' != cpy[cpyi_2] && cpyi_2 != src_len + 1 {
             true => ALPHABET[(albeti_2 & 0xf) << 1 | (albeti_3 & 0x80) >> 7] as u8,
             _ => b'=',
