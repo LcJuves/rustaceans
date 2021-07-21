@@ -1,5 +1,7 @@
+#[allow(dead_code)]
 pub struct HexString;
 
+#[allow(dead_code)]
 impl HexString {
     pub const RADIX: u32 = 16;
 
