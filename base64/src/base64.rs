@@ -77,7 +77,7 @@ pub fn encode(src: &[u8], url_safe: bool, no_padding: bool, wrap: bool) -> Vec<u
             }
         }
 
-        cpyi += 3;
+        cpyi += NUMBER_OF_BYTES_PER_GROUP;
     }
     dst
 }
