@@ -29,7 +29,7 @@ impl HexString {
             let dgti = 2 * i;
             let mut digit = char_to_digit(dgti);
             digit <<= 4;
-            digit += char_to_digit(dgti + 1);
+            digit |= char_to_digit(dgti + 1);
             ret.push(digit as u8);
         }
         ret
