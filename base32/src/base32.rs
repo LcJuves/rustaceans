@@ -123,9 +123,6 @@ pub fn decode(src: &[u8]) -> Vec<u8> {
         let (albeti_0, albeti_1, albeti_2, albeti_3, albeti_4, albeti_5, albeti_6, albeti_7) =
             find_albeti(&src[srci..=(srci + 7)]);
 
-        // [74, 86, 81, 87, 52, 89, 76, 79]
-        // [77, 97, 110]
-
         dst.push((albeti_0 << 3 | albeti_1 >> 2) as u8);
 
         match albeti_2 != -1 && albeti_3 != -1 {
