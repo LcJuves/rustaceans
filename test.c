@@ -4,6 +4,7 @@
  * @author Liangcheng Juves
  */
 #include "rustdef.h"
+#include <unistd.h>
 
 int main(int argc, char const *argv[])
 {
@@ -11,5 +12,17 @@ int main(int argc, char const *argv[])
     println("%ld", sizeof(q) * 8);
     u8 num = 255;
     println("%d", utoi_t(num, char));
+
+    usize count = 0;
+
+    loop
+    {
+        if (1000 == count)
+        {
+            break;
+        }
+        usleep(6000);
+        count++;
+    }
     return 0;
 }

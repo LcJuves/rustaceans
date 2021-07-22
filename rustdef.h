@@ -18,7 +18,7 @@ extern "C"
 {
 #endif /* __cplusplus */
 
-#define loop while (1)
+#define loop for (;;)
 #define print(fmt, ...) \
     printf(fmt, __VA_ARGS__);
 #define println(fmt, ...) \
