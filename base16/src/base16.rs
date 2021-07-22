@@ -3,6 +3,11 @@ const ALPHABET: [char; 16] = [
     'A', 'B', 'C', 'D', 'E', 'F',
 ];
 
+/// Number of encoded bytes per group
+///
+/// When decoding, every 2 four bits is converted to every 1 eight bits
+const NUMBER_OF_ENCODED_BYTES_PER_GROUP: usize = 2;
+
 #[allow(dead_code)]
 pub fn encode(src: &[u8]) -> Vec<u8> {
     let mut dst = Vec::<u8>::new();
@@ -56,10 +61,11 @@ pub fn decode(src: &[u8]) -> Vec<u8> {
         albeti
     };
 
-    for i in 0..(src.len() / 2) {
-        let srci = 2 * i;
+    for i in 0..(src.len() / NUMBER_OF_ENCODED_BYTES_PER_GROUP) {
+        let srci = NUMBER_OF_ENCODED_BYTES_PER_GROUP * i;
         // Find the index of every two elements from the Base16 encoding table
-        let (albeti_0, albeti_1) = find_albeti(&src[srci..=(srci + 1)]);
+        let (albeti_0, albeti_1) =
+            find_albeti(&src[srci..=(srci + (NUMBER_OF_ENCODED_BYTES_PER_GROUP - 1))]);
         let mut diget = albeti_0 << 4;
         diget |= albeti_1;
         dst.push(diget as u8);
