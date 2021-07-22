@@ -9,6 +9,11 @@ const ALPHABET: [char; 32] = [
 /// When encoding, every 5 eight bits is converted to every 8 five bits
 const NUMBER_OF_BYTES_PER_GROUP: usize = 5;
 
+/// Number of encoded bytes per group
+///
+/// When decoding, every 8 five bits is converted to every 5 eight bits
+const NUMBER_OF_ENCODED_BYTES_PER_GROUP: usize = 8;
+
 #[allow(dead_code)]
 pub fn encode(src: &[u8]) -> Vec<u8> {
     let src_len = src.len();
@@ -121,7 +126,7 @@ pub fn decode(src: &[u8]) -> Vec<u8> {
 
         // Find the index of every eight elements from the Base32 encoding table
         let (albeti_0, albeti_1, albeti_2, albeti_3, albeti_4, albeti_5, albeti_6, albeti_7) =
-            find_albeti(&src[srci..=(srci + 7)]);
+            find_albeti(&src[srci..=(srci + (NUMBER_OF_ENCODED_BYTES_PER_GROUP - 1))]);
 
         dst.push((albeti_0 << 3 | albeti_1 >> 2) as u8);
 
@@ -145,7 +150,7 @@ pub fn decode(src: &[u8]) -> Vec<u8> {
             _ => dst.push((albeti_6 << 5 | albeti_7) as u8),
         }
 
-        srci += 8;
+        srci += NUMBER_OF_ENCODED_BYTES_PER_GROUP;
     }
     dst
 }

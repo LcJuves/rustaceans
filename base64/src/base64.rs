@@ -19,6 +19,11 @@ const URL_SAFE_ALPHABET: [char; 64] = [
 /// When encoding, every 3 eight bits is converted to every 4 six bits
 const NUMBER_OF_BYTES_PER_GROUP: usize = 3;
 
+/// Number of encoded bytes per group
+///
+/// When decoding, every 4 six bits is converted to every 3 eight bits
+const NUMBER_OF_ENCODED_BYTES_PER_GROUP: usize = 4;
+
 #[allow(dead_code)]
 pub fn encode(src: &[u8], url_safe: bool, no_padding: bool, wrap: bool) -> Vec<u8> {
     let alphabet = match url_safe {
@@ -73,7 +78,7 @@ pub fn encode(src: &[u8], url_safe: bool, no_padding: bool, wrap: bool) -> Vec<u
                     dst.push(b'\n');
                     wrap_flag = 0;
                 }
-                _ => wrap_flag += 4,
+                _ => wrap_flag += NUMBER_OF_ENCODED_BYTES_PER_GROUP,
             }
         }
 
@@ -142,7 +147,8 @@ pub fn decode(string: &str, url_safe: bool) -> Vec<u8> {
         }
 
         // Find the index of every four elements from the Base64 encoding table
-        let (albeti_0, albeti_1, albeti_2, albeti_3) = find_albeti(&src[srci..=(srci + 3)]);
+        let (albeti_0, albeti_1, albeti_2, albeti_3) =
+            find_albeti(&src[srci..=(srci + (NUMBER_OF_ENCODED_BYTES_PER_GROUP - 1))]);
 
         dst.push((albeti_0 << 2 | albeti_1 >> 4) as u8);
 
@@ -156,7 +162,7 @@ pub fn decode(string: &str, url_safe: bool) -> Vec<u8> {
             _ => dst.push((albeti_2 << 6 | albeti_3) as u8),
         }
 
-        srci += 4;
+        srci += NUMBER_OF_ENCODED_BYTES_PER_GROUP;
     }
     dst
 }
