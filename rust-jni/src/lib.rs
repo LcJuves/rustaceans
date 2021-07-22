@@ -1,43 +1,30 @@
 mod rust_jni_sys;
 
-// This is the interface to the JVM that we'll call the majority of our
-// methods on.
-use jni::JNIEnv;
+use crate::rust_jni_sys::jboolean;
+use rust_jni_sys::{JNIEnv, JNI_FALSE};
+use std::ffi::{CStr, CString};
+use std::os::raw::c_char;
 
-// These objects are what you should use as arguments to your native
-// function. They carry extra lifetime information to prevent them escaping
-// this context and getting used after being GC'd.
-use jni::objects::{JClass, JString};
+use rust_jni_sys::{jclass, jstring};
 
-// This is just a pointer. We'll be returning it from our function. We
-// can't return one of the objects with lifetime information because the
-// lifetime checker won't let us.
-use jni::sys::jstring;
-
-// This keeps Rust from "mangling" the name and making it unique for this
-// crate.
 #[no_mangle]
 pub extern "system" fn Java_HelloWorld_hello(
-    env: JNIEnv,
-    // This is the class that owns our static method. It's not going to be used,
-    // but still must be present to match the expected signature of a static
-    // native method.
-    _class: JClass,
-    input: JString,
+    env: *mut JNIEnv,
+    _class: jclass,
+    input: jstring,
 ) -> jstring {
-    // First, we have to get the string out of Java. Check out the `strings`
-    // module for more info on how this works.
-    let input: String = env
-        .get_string(input)
-        .expect("Couldn't get java string!")
-        .into();
+    unsafe {
+        let fn_get_string_utf_chars = (*(*env)).GetStringUTFChars.unwrap();
+        let c_str: *const c_char = fn_get_string_utf_chars(env, input, JNI_FALSE as *mut jboolean);
+        let r_str = CStr::from_ptr(c_str).to_string_lossy();
 
-    // Then we have to create a new Java string to return. Again, more info
-    // in the `strings` module.
-    let output = env
-        .new_string(format!("Hello, {}!", input))
-        .expect("Couldn't create java string!");
+        println!("String from java: {}", r_str);
 
-    // Finally, extract the raw pointer to return.
-    output.into_inner()
+        let r_str = format!("Hello, {}!", r_str);
+
+        println!("String from java: {}", r_str);
+
+        let fn_new_string_utf = (*(*env)).NewStringUTF.unwrap();
+        return fn_new_string_utf(env, CString::new(r_str).unwrap().into_raw());
+    }
 }

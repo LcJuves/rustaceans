@@ -19,11 +19,12 @@ class HelloWorld {
 
   private static void addLibraryPath() {
     String path =
-        new File("").getAbsolutePath()
+        new File("..").getAbsolutePath()
             + separator
             + "target"
             + separator
             + (DEBUG ? "debug" : "release");
+    System.out.println(path);
     Platform.addLibraryPath(path);
   }
 
