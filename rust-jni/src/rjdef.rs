@@ -423,6 +423,142 @@ pub struct JNINativeInterface {
         methodID: jmethodID,
         args: *const jvalue,
     ) -> jshort,
+
+    CallNonvirtualIntMethod: unsafe extern "C" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        ...
+    ) -> jint,
+    CallNonvirtualIntMethodV: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: va_list,
+    ) -> jint,
+    CallNonvirtualIntMethodA: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: *const jvalue,
+    ) -> jint,
+
+    CallNonvirtualLongMethod: unsafe extern "C" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        ...
+    ) -> jlong,
+    CallNonvirtualLongMethodV: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: va_list,
+    ) -> jlong,
+    CallNonvirtualLongMethodA: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: *const jvalue,
+    ) -> jlong,
+
+    CallNonvirtualFloatMethod: unsafe extern "C" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        ...
+    ) -> jfloat,
+    CallNonvirtualFloatMethodV: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: va_list,
+    ) -> jfloat,
+    CallNonvirtualFloatMethodA: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: *const jvalue,
+    ) -> jfloat,
+
+    CallNonvirtualDoubleMethod: unsafe extern "C" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        ...
+    ) -> jdouble,
+    CallNonvirtualDoubleMethodV: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: va_list,
+    ) -> jdouble,
+    CallNonvirtualDoubleMethodA: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: *const jvalue,
+    ) -> jdouble,
+
+    CallNonvirtualVoidMethod: unsafe extern "C" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        ...
+    ) -> !,
+    CallNonvirtualVoidMethodV: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: va_list,
+    ) -> !,
+    CallNonvirtualVoidMethodA: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: *const jvalue,
+    ) -> !,
+
+    GetFieldID: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        clazz: jclass,
+        name: *const c_char,
+        sig: *const c_char,
+    ) -> jfieldID,
+
+    GetObjectField:
+        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jobject,
+    GetBooleanField:
+        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jboolean,
+    GetByteField:
+        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jbyte,
+    GetCharField:
+        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jchar,
+    GetShortField:
+        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jshort,
+    GetIntField:
+        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jint,
+    GetLongField:
+        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jlong,
+    GetFloatField:
+        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jfloat,
+    GetDoubleField:
+        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jdouble,
 }
 
 /// JNI invocation interface
