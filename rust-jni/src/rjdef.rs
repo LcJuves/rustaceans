@@ -2,6 +2,8 @@
 
 use std::os::raw::{c_char, c_void};
 
+pub type va_list = *mut c_void;
+
 /* Primitive types that match up with Java equivalents */
 pub type jboolean = u8; /* unsigned 8 bits */
 pub type jbyte = i8; /* signed 8 bits */
@@ -135,6 +137,292 @@ pub struct JNINativeInterface {
         unsafe extern "system" fn(env: *mut JNIEnv, obj1: jobject, obj2: jobject) -> jboolean,
     NewLocalRef: unsafe extern "system" fn(env: *mut JNIEnv, lref: jobject) -> jobject,
     EnsureLocalCapacity: unsafe extern "system" fn(env: *mut JNIEnv, capacity: jint) -> jint,
+
+    AllocObject: unsafe extern "system" fn(env: *mut JNIEnv, clazz: jclass) -> jobject,
+    NewObject:
+        unsafe extern "C" fn(env: *mut JNIEnv, clazz: jclass, methodID: jmethodID, ...) -> jobject,
+    NewObjectV: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: va_list,
+    ) -> jobject,
+    NewObjectA: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: *const jvalue,
+    ) -> jobject,
+
+    GetObjectClass: unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject) -> jclass,
+    IsInstanceOf:
+        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject, clazz: jclass) -> jboolean,
+
+    GetMethodID: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        name: *const c_char,
+        sig: *const c_char,
+    ) -> jmethodID,
+
+    CallObjectMethod:
+        unsafe extern "C" fn(env: *mut JNIEnv, obj: jobject, methodID: jmethodID, ...) -> jobject,
+    CallObjectMethodV: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        methodID: jmethodID,
+        args: va_list,
+    ) -> jobject,
+    CallObjectMethodA: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        methodID: jmethodID,
+        args: *const jvalue,
+    ) -> jobject,
+
+    CallBooleanMethod:
+        unsafe extern "C" fn(env: *mut JNIEnv, obj: jobject, methodID: jmethodID, ...) -> jboolean,
+    CallBooleanMethodV: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        methodID: jmethodID,
+        args: va_list,
+    ) -> jboolean,
+    CallBooleanMethodA: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        methodID: jmethodID,
+        args: *const jvalue,
+    ) -> jboolean,
+
+    CallByteMethod:
+        unsafe extern "C" fn(env: *mut JNIEnv, obj: jobject, methodID: jmethodID, ...) -> jbyte,
+    CallByteMethodV: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        methodID: jmethodID,
+        args: va_list,
+    ) -> jbyte,
+    CallByteMethodA: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        methodID: jmethodID,
+        args: *const jvalue,
+    ) -> jbyte,
+
+    CallCharMethod:
+        unsafe extern "C" fn(env: *mut JNIEnv, obj: jobject, methodID: jmethodID, ...) -> jchar,
+    CallCharMethodV: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        methodID: jmethodID,
+        args: va_list,
+    ) -> jchar,
+    CallCharMethodA: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        methodID: jmethodID,
+        args: *const jvalue,
+    ) -> jchar,
+
+    CallShortMethod:
+        unsafe extern "C" fn(env: *mut JNIEnv, obj: jobject, methodID: jmethodID, ...) -> jshort,
+    CallShortMethodV: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        methodID: jmethodID,
+        args: va_list,
+    ) -> jshort,
+    CallShortMethodA: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        methodID: jmethodID,
+        args: *const jvalue,
+    ) -> jshort,
+
+    CallIntMethod:
+        unsafe extern "C" fn(env: *mut JNIEnv, obj: jobject, methodID: jmethodID, ...) -> jint,
+    CallIntMethodV: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        methodID: jmethodID,
+        args: va_list,
+    ) -> jint,
+    CallIntMethodA: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        methodID: jmethodID,
+        args: *const jvalue,
+    ) -> jint,
+
+    CallLongMethod:
+        unsafe extern "C" fn(env: *mut JNIEnv, obj: jobject, methodID: jmethodID, ...) -> jlong,
+    CallLongMethodV: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        methodID: jmethodID,
+        args: va_list,
+    ) -> jlong,
+    CallLongMethodA: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        methodID: jmethodID,
+        args: *const jvalue,
+    ) -> jlong,
+
+    CallFloatMethod:
+        unsafe extern "C" fn(env: *mut JNIEnv, obj: jobject, methodID: jmethodID, ...) -> jfloat,
+    CallFloatMethodV: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        methodID: jmethodID,
+        args: va_list,
+    ) -> jfloat,
+    CallFloatMethodA: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        methodID: jmethodID,
+        args: *const jvalue,
+    ) -> jfloat,
+
+    CallDoubleMethod:
+        unsafe extern "C" fn(env: *mut JNIEnv, obj: jobject, methodID: jmethodID, ...) -> jdouble,
+    CallDoubleMethodV: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        methodID: jmethodID,
+        args: va_list,
+    ) -> jdouble,
+    CallDoubleMethodA: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        methodID: jmethodID,
+        args: *const jvalue,
+    ) -> jdouble,
+
+    CallVoidMethod:
+        unsafe extern "C" fn(env: *mut JNIEnv, obj: jobject, methodID: jmethodID, ...) -> !,
+    CallVoidMethodV: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        methodID: jmethodID,
+        args: va_list,
+    ) -> !,
+    CallVoidMethodA: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        methodID: jmethodID,
+        args: *const jvalue,
+    ) -> !,
+
+    CallNonvirtualObjectMethod: unsafe extern "C" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        ...
+    ) -> jobject,
+    CallNonvirtualObjectMethodV: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: va_list,
+    ) -> jobject,
+    CallNonvirtualObjectMethodA: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: *const jvalue,
+    ) -> jobject,
+
+    CallNonvirtualBooleanMethod: unsafe extern "C" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        ...
+    ) -> jboolean,
+    CallNonvirtualBooleanMethodV: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: va_list,
+    ) -> jboolean,
+    CallNonvirtualBooleanMethodA: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: *const jvalue,
+    ) -> jboolean,
+
+    CallNonvirtualByteMethod: unsafe extern "C" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        ...
+    ) -> jbyte,
+    CallNonvirtualByteMethodV: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: va_list,
+    ) -> jbyte,
+    CallNonvirtualByteMethodA: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: *const jvalue,
+    ) -> jbyte,
+
+    CallNonvirtualCharMethod: unsafe extern "C" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        ...
+    ) -> jchar,
+    CallNonvirtualCharMethodV: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: va_list,
+    ) -> jchar,
+    CallNonvirtualCharMethodA: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: *const jvalue,
+    ) -> jchar,
+
+    CallNonvirtualShortMethod: unsafe extern "C" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        ...
+    ) -> jshort,
+    CallNonvirtualShortMethodV: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: va_list,
+    ) -> jshort,
+    CallNonvirtualShortMethodA: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID,
+        args: *const jvalue,
+    ) -> jshort,
 }
 
 /// JNI invocation interface
