@@ -34,14 +34,14 @@ pub type jdoubleArray = jarray;
 pub type jthrowable = jobject;
 pub type jweak = jobject;
 
-#[repr(C)]
 /// opaque structure
+#[repr(C)]
 pub struct _jfieldID;
 /// field IDs
 pub type jfieldID = *mut _jfieldID;
 
-#[repr(C)]
 /// opaque structure
+#[repr(C)]
 pub struct _jmethodID;
 /// method IDs
 pub type jmethodID = *mut _jmethodID;
@@ -84,6 +84,57 @@ pub struct JNINativeInterface {
     reserved1: *mut c_void,
     reserved2: *mut c_void,
     reserved3: *mut c_void,
+
+    GetVersion: unsafe extern "system" fn(env: *mut JNIEnv) -> jint,
+
+    DefineClass: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        name: *const c_char,
+        loader: jobject,
+        buf: *const jbyte,
+        len: jsize,
+    ) -> jclass,
+    FindClass: unsafe extern "system" fn(env: *mut JNIEnv, name: *const c_char) -> jclass,
+
+    FromReflectedMethod: unsafe extern "system" fn(env: *mut JNIEnv, method: jobject) -> jmethodID,
+    FromReflectedField: unsafe extern "system" fn(env: *mut JNIEnv, field: jobject) -> jfieldID,
+
+    ToReflectedMethod: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        cls: jclass,
+        methodID: jmethodID,
+        isStatic: jboolean,
+    ) -> jobject,
+
+    GetSuperclass: unsafe extern "system" fn(env: *mut JNIEnv, sub: jclass) -> jclass,
+    IsAssignableFrom:
+        unsafe extern "system" fn(env: *mut JNIEnv, sub: jclass, sup: jclass) -> jboolean,
+
+    ToReflectedField: unsafe extern "system" fn(
+        env: *mut JNIEnv,
+        cls: jclass,
+        fieldID: jfieldID,
+        isStatic: jboolean,
+    ) -> jobject,
+
+    Throw: unsafe extern "system" fn(env: *mut JNIEnv, obj: jthrowable) -> jint,
+    ThrowNew:
+        unsafe extern "system" fn(env: *mut JNIEnv, clazz: jclass, msg: *const c_char) -> jint,
+    ExceptionOccurred: unsafe extern "system" fn(env: *mut JNIEnv) -> jthrowable,
+    ExceptionDescribe: unsafe extern "system" fn(env: *mut JNIEnv) -> !,
+    ExceptionClear: unsafe extern "system" fn(env: *mut JNIEnv) -> !,
+    FatalError: unsafe extern "system" fn(env: *mut JNIEnv, msg: *const c_char) -> !,
+
+    PushLocalFrame: unsafe extern "system" fn(env: *mut JNIEnv, capacity: jint) -> jint,
+    PopLocalFrame: unsafe extern "system" fn(env: *mut JNIEnv, result: jobject) -> jobject,
+
+    NewGlobalRef: unsafe extern "system" fn(env: *mut JNIEnv, gref: jobject) -> jobject,
+    DeleteGlobalRef: unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject) -> !,
+    DeleteLocalRef: unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject) -> !,
+    IsSameObject:
+        unsafe extern "system" fn(env: *mut JNIEnv, obj1: jobject, obj2: jobject) -> jboolean,
+    NewLocalRef: unsafe extern "system" fn(env: *mut JNIEnv, lref: jobject) -> jobject,
+    EnsureLocalCapacity: unsafe extern "system" fn(env: *mut JNIEnv, capacity: jint) -> jint,
 }
 
 /// JNI invocation interface
@@ -92,6 +143,25 @@ pub struct JNIInvokeInterface {
     reserved0: *mut c_void,
     reserved1: *mut c_void,
     reserved2: *mut c_void,
+
+    DestroyJavaVM: unsafe extern "system" fn(vm: *mut JavaVM) -> jint,
+
+    AttachCurrentThread: unsafe extern "system" fn(
+        vm: *mut JavaVM,
+        penv: *mut *mut c_void,
+        args: *mut c_void,
+    ) -> jint,
+
+    DetachCurrentThread: unsafe extern "system" fn(vm: *mut JavaVM) -> jint,
+
+    GetEnv:
+        unsafe extern "system" fn(vm: *mut JavaVM, penv: *mut *mut c_void, version: jint) -> jint,
+
+    AttachCurrentThreadAsDaemon: unsafe extern "system" fn(
+        vm: *mut JavaVM,
+        penv: *mut *mut c_void,
+        args: *mut c_void,
+    ) -> jint,
 }
 
 #[repr(C)]
@@ -117,16 +187,24 @@ pub struct JavaVMInitArgs {
     ignoreUnrecognized: jboolean,
 }
 
-extern "system" {}
-
-// /*
-//  * VM initialization functions
-//  *
-//  * Note these are the only symbols exported for JNI by the VM
-//  */
-// jint JNI_GetDefaultJavaVMInitArgs(void*);
-// jint JNI_CreateJavaVM(JavaVM**, JNIEnv**, void*);
-// jint JNI_GetCreatedJavaVMs(JavaVM**, jsize, jsize*);
+extern "system" {
+    /*
+     * VM initialization functions
+     *
+     * Note these are the only symbols exported for JNI by the VM
+     */
+    pub fn JNI_GetDefaultJavaVMInitArgs(args: *mut c_void) -> jint;
+    pub fn JNI_CreateJavaVM(
+        pvm: *mut *mut JavaVM,
+        penv: *mut *mut c_void,
+        args: *mut c_void,
+    ) -> jint;
+    pub fn JNI_GetCreatedJavaVMs(
+        vm_buf: *mut *mut JavaVM,
+        bufLen: jsize,
+        numVMs: *mut jsize,
+    ) -> jint;
+}
 
 // /*
 //  * Prototypes for functions exported by loadable shared libs
