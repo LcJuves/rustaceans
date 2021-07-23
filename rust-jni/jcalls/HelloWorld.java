@@ -30,7 +30,7 @@ class HelloWorld {
 
   // The rest is just regular ol' Java!
   public static void main(String[] args) {
-    String output = HelloWorld.hello("josh");
-    System.out.println(output);
+    // String output = HelloWorld.hello("josh");
+    // System.out.println(output);
   }
 }
