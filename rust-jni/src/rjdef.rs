@@ -167,7 +167,6 @@ pub struct JNINativeInterface {
     pub FatalError: unsafe extern "system" fn(env: *mut JNIEnv, msg: *const c_char) -> !,
 
     /// PASS
-
     pub PushLocalFrame: unsafe extern "system" fn(env: *mut JNIEnv, capacity: jint) -> jint,
     pub PopLocalFrame: unsafe extern "system" fn(env: *mut JNIEnv, result: jobject) -> jobject,
 
@@ -1208,7 +1207,7 @@ pub struct JNINativeInterface {
 
     /// New JNI 1.6 Features
     pub GetObjectRefType:
-        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject) -> jobjectRefType,
+        Option<unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject) -> jobjectRefType>,
     /// Module Features
     pub GetModule: Option<unsafe extern "system" fn(env: *mut JNIEnv, clazz: jclass) -> jobject>,
 }
