@@ -1,3 +1,4 @@
+mod rjdef;
 mod rust_jni_sys;
 
 use crate::rust_jni_sys::jboolean;
