@@ -12,7 +12,7 @@ pub type jlong = i64; /* signed 64 bits */
 pub type jfloat = f32; /* 32-bit IEEE 754 */
 pub type jdouble = f64; /* 64-bit IEEE 754 */
 
-/* "cardinal indices and sizes" */
+/// "cardinal indices and sizes"
 pub type jsize = jint;
 
 /*
@@ -35,12 +35,16 @@ pub type jthrowable = jobject;
 pub type jweak = jobject;
 
 #[repr(C)]
-pub struct _jfieldID; /* opaque structure */
-pub type jfieldID = *mut _jfieldID; /* field IDs */
+/// opaque structure
+pub struct _jfieldID;
+/// field IDs
+pub type jfieldID = *mut _jfieldID;
 
 #[repr(C)]
-pub struct _jmethodID; /* opaque structure */
-pub type jmethodID = *mut _jmethodID; /* method IDs */
+/// opaque structure
+pub struct _jmethodID;
+/// method IDs
+pub type jmethodID = *mut _jmethodID;
 
 #[repr(C)]
 pub union jvalue {
@@ -73,9 +77,7 @@ pub struct JNINativeMethod {
 pub type JNIEnv = *const JNINativeInterface;
 pub type JavaVM = *const JNIInvokeInterface;
 
-/*
- * Table of interface function pointers
- */
+/// Table of interface function pointers
 #[repr(C)]
 pub struct JNINativeInterface {
     reserved0: *mut c_void,
@@ -84,9 +86,7 @@ pub struct JNINativeInterface {
     reserved3: *mut c_void,
 }
 
-/*
- * JNI invocation interface
- */
+/// JNI invocation interface
 #[repr(C)]
 pub struct JNIInvokeInterface {
     reserved0: *mut c_void,
@@ -101,10 +101,7 @@ pub struct JavaVMAttachArgs {
     group: jobject,      /* global ref of a ThreadGroup object, or NULL */
 }
 
-/*
- * JNI 1.2+ initialization.  (As of 1.6, the pre-1.2 structures are no
- * longer supported.)
- */
+/// JNI 1.2+ initialization (As of 1.6, the pre-1.2 structures are no longer supported)
 #[repr(C)]
 pub struct JavaVMOption {
     optionString: *const c_char,
@@ -113,7 +110,7 @@ pub struct JavaVMOption {
 
 #[repr(C)]
 pub struct JavaVMInitArgs {
-    version: jint, /* use JNI_VERSION_1_2 or later */
+    version: jint, /* use JNI_VERSION_1_1 or later */
 
     nOptions: jint,
     options: *mut JavaVMOption,
@@ -123,17 +120,17 @@ pub struct JavaVMInitArgs {
 extern "system" {}
 
 // /*
-//  * VM initialization functions.
+//  * VM initialization functions
 //  *
-//  * Note these are the only symbols exported for JNI by the VM.
+//  * Note these are the only symbols exported for JNI by the VM
 //  */
 // jint JNI_GetDefaultJavaVMInitArgs(void*);
 // jint JNI_CreateJavaVM(JavaVM**, JNIEnv**, void*);
 // jint JNI_GetCreatedJavaVMs(JavaVM**, jsize, jsize*);
 
 // /*
-//  * Prototypes for functions exported by loadable shared libs.  These are
-//  * called by JNI, not provided by JNI.
+//  * Prototypes for functions exported by loadable shared libs
+//  * These are called by JNI, not provided by JNI
 //  */
 // JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved);
 // JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved);
@@ -148,6 +145,9 @@ pub const JNI_VERSION_1_1: jint = 0x00010001;
 pub const JNI_VERSION_1_2: jint = 0x00010002;
 pub const JNI_VERSION_1_4: jint = 0x00010004;
 pub const JNI_VERSION_1_6: jint = 0x00010006;
+pub const JNI_VERSION_1_8: jint = 0x00010008;
+pub const JNI_VERSION_9: jint = 0x00090000;
+pub const JNI_VERSION_10: jint = 0x000a0000;
 
 pub const JNI_OK: jint = 0; /* no error */
 pub const JNI_ERR: jint = -1; /* generic error */

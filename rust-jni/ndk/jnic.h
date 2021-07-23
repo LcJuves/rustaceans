@@ -1,3 +1,9 @@
+/**
+ * Created at 2021/7/23 10:46
+ * Also can see at https://github.com/openjdk/jdk/blob/master/src/java.base/share/native/include/jni.h
+ * 
+ * @author Liangcheng Juves
+ */
 #ifndef JNI_H_
 #define JNI_H_
 
