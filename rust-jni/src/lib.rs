@@ -5,22 +5,14 @@ use jdef::*;
 use std::ffi::*;
 use std::os::raw::*;
 
-impl_jni_onload!(
-  _,
-  _,
-  {
+impl_jni_onload!(_, _, {
     println!("JNI >>> OnLoad");
     JNI_VERSION_10
-  }
-);
+});
 
-impl_jni_unload!(
-  _,
-  _,
-  {
+impl_jni_unload!(_, _, {
     println!("JNI >>> Unload");
-  }
-);
+});
 
 unsafe_jni_fn_def!(
     Java_CallJNI_getVersion,
