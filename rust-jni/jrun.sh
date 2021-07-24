@@ -6,5 +6,5 @@ base_dir="$(cd "$(dirname "$0")"; pwd)"
 run_type=release
 
 cd "${base_dir}"; cargo build --${run_type}
-cd "${base_dir}/jcalls"; javac HelloWorld.java
-cd "${base_dir}/jcalls"; java -Djava.library.path="${base_dir}/target/${run_type}" HelloWorld
+cd "${base_dir}/jcalls"; javac Main.java
+cd "${base_dir}/jcalls"; java -Djava.library.path="${base_dir}/target/${run_type}" Main
