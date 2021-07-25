@@ -3,7 +3,7 @@
 //! Rust bindings to the JNI
 //! ******
 //! Prototypes for functions exported by loadable shared libs
-//! 
+//!
 //! These are called by JNI, not provided by JNI
 
 /**
@@ -50,6 +50,15 @@ macro_rules! unsafe_extern_system_fn {
     }
 }
 
+/// # Examples
+///
+/// ```rust
+/// unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: jclass, methodID: jmethodID) -> jobject)
+/// ```
+/// expand to
+/// ```rust
+/// Option<unsafe extern "C" fn(env: *mut JNIEnv, clazz: jclass, methodID: jmethodID, ...) -> jobject>
+/// ```
 #[macro_export]
 macro_rules! unsafe_extern_c_var_fn {
     (($($param_name:tt: $param_type:ty), *) -> $ret_ty:ty) => {
@@ -57,6 +66,27 @@ macro_rules! unsafe_extern_c_var_fn {
     }
 }
 
+/// # Such as
+///
+/// ```rust
+/// jni_fn_def!(
+///     JNI_OnLoad,
+///     (vm: *mut JavaVM, reserved: *mut c_void),
+///     jint,
+///     {
+///         /* code */
+///         /* The return value must be >= JNI_VERSION_1_1 */
+///     }
+/// );
+/// ```
+/// expand to
+/// ```rust
+/// #[no_mangle]
+/// pub extern "system" fn JNI_OnLoad(vm: *mut JavaVM, reserved: *mut c_void) -> jint {
+///     /* code */
+///     /* The return value must be >= JNI_VERSION_1_1 */
+/// }
+/// ```
 #[macro_export]
 macro_rules! jni_fn_def {
     ($name:tt, ($($ident:tt: $ty:ty), *), $ret_ty:ty, $code:block) => {
@@ -65,6 +95,23 @@ macro_rules! jni_fn_def {
     };
 }
 
+/// # Such as
+///
+/// ```rust
+/// unsafe_jni_fn_def!(
+///     JNI_OnUnload,
+///     (vm: *mut JavaVM, reserved: *mut c_void),
+///     (),
+///     { /* code */ }
+/// );
+/// ```
+/// expand to
+/// ```rust
+/// #[no_mangle]
+/// pub unsafe extern "system" fn JNI_OnUnload(vm: *mut JavaVM, reserved: *mut c_void) {
+///     /* code */
+/// }
+/// ```
 #[macro_export]
 macro_rules! unsafe_jni_fn_def {
     ($name:tt, ($($ident:tt: $ty:ty), *), $ret_ty:ty, $code:block) => {
@@ -79,7 +126,7 @@ macro_rules! unsafe_jni_fn_def {
 /// ***
 /// ```rust
 /// #[no_mangle]
-/// pub unsafe extern "system" fn JNI_OnLoad(vm: *mut JavaVM, reserved: *mut c_void) -> jint {
+/// pub extern "system" fn JNI_OnLoad(vm: *mut JavaVM, reserved: *mut c_void) -> jint {
 ///     /* code */
 ///     /* The return value must be >= JNI_VERSION_1_1 */
 /// }
@@ -112,7 +159,7 @@ macro_rules! impl_jni_on_load {
 /// ***
 /// ```rust
 /// #[no_mangle]
-/// pub unsafe extern "system" fn JNI_OnUnload(vm: *mut JavaVM, reserved: *mut c_void) {
+/// pub extern "system" fn JNI_OnUnload(vm: *mut JavaVM, reserved: *mut c_void) {
 ///     /* code */
 /// }
 /// ```
@@ -236,1097 +283,1026 @@ pub struct JNINativeInterface {
     reserved2: *mut c_void,
 
     reserved3: *mut c_void,
-    pub GetVersion: unsafe extern "system" fn(env: *mut JNIEnv) -> jint,
+    pub GetVersion: unsafe_extern_system_fn!((env: *mut JNIEnv) -> jint),
 
-    pub DefineClass: unsafe extern "system" fn(
+    pub DefineClass: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         name: *const c_char,
         loader: jobject,
         buf: *const jbyte,
-        len: jsize,
-    ) -> jclass,
-    pub FindClass: unsafe extern "system" fn(env: *mut JNIEnv, name: *const c_char) -> jclass,
+        len: jsize
+    ) -> jclass),
+    pub FindClass: unsafe_extern_system_fn!((env: *mut JNIEnv, name: *const c_char) -> jclass),
 
-    pub FromReflectedMethod:
-        unsafe extern "system" fn(env: *mut JNIEnv, method: jobject) -> jmethodID,
-    pub FromReflectedField: unsafe extern "system" fn(env: *mut JNIEnv, field: jobject) -> jfieldID,
+    pub FromReflectedMethod: unsafe_extern_system_fn!((env: *mut JNIEnv, method: jobject) -> jmethodID),
+    pub FromReflectedField: unsafe_extern_system_fn!((env: *mut JNIEnv, field: jobject) -> jfieldID),
 
     /// spec doesn't show jboolean parameter
-    pub ToReflectedMethod: unsafe extern "system" fn(
+    pub ToReflectedMethod: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         cls: jclass,
         methodID: jmethodID,
-        isStatic: jboolean,
-    ) -> jobject,
+        isStatic: jboolean
+    ) -> jobject),
 
-    pub GetSuperclass: unsafe extern "system" fn(env: *mut JNIEnv, sub: jclass) -> jclass,
-    pub IsAssignableFrom:
-        unsafe extern "system" fn(env: *mut JNIEnv, sub: jclass, sup: jclass) -> jboolean,
+    pub GetSuperclass: unsafe_extern_system_fn!((env: *mut JNIEnv, sub: jclass) -> jclass),
+    pub IsAssignableFrom: unsafe_extern_system_fn!((env: *mut JNIEnv, sub: jclass, sup: jclass) -> jboolean),
 
     /// spec doesn't show jboolean parameter
-    pub ToReflectedField: unsafe extern "system" fn(
+    pub ToReflectedField: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         cls: jclass,
         fieldID: jfieldID,
-        isStatic: jboolean,
-    ) -> jobject,
+        isStatic: jboolean
+    ) -> jobject),
 
-    pub Throw: unsafe extern "system" fn(env: *mut JNIEnv, obj: jthrowable) -> jint,
-    pub ThrowNew:
-        unsafe extern "system" fn(env: *mut JNIEnv, clazz: jclass, msg: *const c_char) -> jint,
-    pub ExceptionOccurred: unsafe extern "system" fn(env: *mut JNIEnv) -> jthrowable,
-    pub ExceptionDescribe: unsafe extern "system" fn(env: *mut JNIEnv) -> !,
-    pub ExceptionClear: unsafe extern "system" fn(env: *mut JNIEnv) -> !,
-    pub FatalError: unsafe extern "system" fn(env: *mut JNIEnv, msg: *const c_char) -> !,
+    pub Throw: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: jthrowable) -> jint),
+    pub ThrowNew: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz: jclass, msg: *const c_char) -> jint),
+    pub ExceptionOccurred: unsafe_extern_system_fn!((env: *mut JNIEnv) -> jthrowable),
+    pub ExceptionDescribe: unsafe_extern_system_fn!((env: *mut JNIEnv) -> !),
+    pub ExceptionClear: unsafe_extern_system_fn!((env: *mut JNIEnv) -> !),
+    pub FatalError: unsafe_extern_system_fn!((env: *mut JNIEnv, msg: *const c_char) -> !),
 
-    pub PushLocalFrame: unsafe extern "system" fn(env: *mut JNIEnv, capacity: jint) -> jint,
-    pub PopLocalFrame: unsafe extern "system" fn(env: *mut JNIEnv, result: jobject) -> jobject,
+    pub PushLocalFrame: unsafe_extern_system_fn!((env: *mut JNIEnv, capacity: jint) -> jint),
+    pub PopLocalFrame: unsafe_extern_system_fn!((env: *mut JNIEnv, result: jobject) -> jobject),
 
-    pub NewGlobalRef: unsafe extern "system" fn(env: *mut JNIEnv, gref: jobject) -> jobject,
-    pub DeleteGlobalRef: unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject) -> !,
-    pub DeleteLocalRef: unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject) -> !,
-    pub IsSameObject:
-        unsafe extern "system" fn(env: *mut JNIEnv, obj1: jobject, obj2: jobject) -> jboolean,
-    pub NewLocalRef: unsafe extern "system" fn(env: *mut JNIEnv, lref: jobject) -> jobject,
-    pub EnsureLocalCapacity: unsafe extern "system" fn(env: *mut JNIEnv, capacity: jint) -> jint,
+    pub NewGlobalRef: unsafe_extern_system_fn!((env: *mut JNIEnv, gref: jobject) -> jobject),
+    pub DeleteGlobalRef: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: jobject) -> !),
+    pub DeleteLocalRef: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: jobject) -> !),
+    pub IsSameObject: unsafe_extern_system_fn!((env: *mut JNIEnv, obj1: jobject, obj2: jobject) -> jboolean),
+    pub NewLocalRef: unsafe_extern_system_fn!((env: *mut JNIEnv, lref: jobject) -> jobject),
+    pub EnsureLocalCapacity: unsafe_extern_system_fn!((env: *mut JNIEnv, capacity: jint) -> jint),
 
-    pub AllocObject: unsafe extern "system" fn(env: *mut JNIEnv, clazz: jclass) -> jobject,
-    pub NewObject:
-        unsafe extern "C" fn(env: *mut JNIEnv, clazz: jclass, methodID: jmethodID, ...) -> jobject,
-    pub NewObjectV: unsafe extern "system" fn(
+    pub AllocObject: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz: jclass) -> jobject),
+    pub NewObject: unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: jclass, methodID: jmethodID) -> jobject),
+    pub NewObjectV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jobject,
-    pub NewObjectA: unsafe extern "system" fn(
+        args: va_list
+    ) -> jobject),
+    pub NewObjectA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jobject,
+        args: *const jvalue
+    ) -> jobject),
 
-    pub GetObjectClass: unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject) -> jclass,
-    pub IsInstanceOf:
-        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject, clazz: jclass) -> jboolean,
+    pub GetObjectClass: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: jobject) -> jclass),
+    pub IsInstanceOf: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: jobject, clazz: jclass) -> jboolean),
 
-    pub GetMethodID: unsafe extern "system" fn(
+    pub GetMethodID: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         name: *const c_char,
-        sig: *const c_char,
-    ) -> jmethodID,
+        sig: *const c_char
+    ) -> jmethodID),
 
-    pub CallObjectMethod:
-        unsafe extern "C" fn(env: *mut JNIEnv, obj: jobject, methodID: jmethodID, ...) -> jobject,
-    pub CallObjectMethodV: unsafe extern "system" fn(
+    pub CallObjectMethod: unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: jobject, methodID: jmethodID) -> jobject),
+    pub CallObjectMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jobject,
-    pub CallObjectMethodA: unsafe extern "system" fn(
+        args: va_list
+    ) -> jobject),
+    pub CallObjectMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jobject,
+        args: *const jvalue
+    ) -> jobject),
 
-    pub CallBooleanMethod:
-        unsafe extern "C" fn(env: *mut JNIEnv, obj: jobject, methodID: jmethodID, ...) -> jboolean,
-    pub CallBooleanMethodV: unsafe extern "system" fn(
+    pub CallBooleanMethod: unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: jobject, methodID: jmethodID) -> jboolean),
+    pub CallBooleanMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jboolean,
-    pub CallBooleanMethodA: unsafe extern "system" fn(
+        args: va_list
+    ) -> jboolean),
+    pub CallBooleanMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jboolean,
+        args: *const jvalue
+    ) -> jboolean),
 
-    pub CallByteMethod:
-        unsafe extern "C" fn(env: *mut JNIEnv, obj: jobject, methodID: jmethodID, ...) -> jbyte,
-    pub CallByteMethodV: unsafe extern "system" fn(
+    pub CallByteMethod: unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: jobject, methodID: jmethodID) -> jbyte),
+    pub CallByteMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jbyte,
-    pub CallByteMethodA: unsafe extern "system" fn(
+        args: va_list
+    ) -> jbyte),
+    pub CallByteMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jbyte,
+        args: *const jvalue
+    ) -> jbyte),
 
-    pub CallCharMethod:
-        unsafe extern "C" fn(env: *mut JNIEnv, obj: jobject, methodID: jmethodID, ...) -> jchar,
-    pub CallCharMethodV: unsafe extern "system" fn(
+    pub CallCharMethod: unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: jobject, methodID: jmethodID) -> jchar),
+    pub CallCharMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jchar,
-    pub CallCharMethodA: unsafe extern "system" fn(
+        args: va_list
+    ) -> jchar),
+    pub CallCharMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jchar,
+        args: *const jvalue
+    ) -> jchar),
 
-    pub CallShortMethod:
-        unsafe extern "C" fn(env: *mut JNIEnv, obj: jobject, methodID: jmethodID, ...) -> jshort,
-    pub CallShortMethodV: unsafe extern "system" fn(
+    pub CallShortMethod: unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: jobject, methodID: jmethodID) -> jshort),
+    pub CallShortMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jshort,
-    pub CallShortMethodA: unsafe extern "system" fn(
+        args: va_list
+    ) -> jshort),
+    pub CallShortMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jshort,
+        args: *const jvalue
+    ) -> jshort),
 
-    pub CallIntMethod:
-        unsafe extern "C" fn(env: *mut JNIEnv, obj: jobject, methodID: jmethodID, ...) -> jint,
-    pub CallIntMethodV: unsafe extern "system" fn(
+    pub CallIntMethod: unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: jobject, methodID: jmethodID) -> jint),
+    pub CallIntMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jint,
-    pub CallIntMethodA: unsafe extern "system" fn(
+        args: va_list
+    ) -> jint),
+    pub CallIntMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jint,
+        args: *const jvalue
+    ) -> jint),
 
-    pub CallLongMethod:
-        unsafe extern "C" fn(env: *mut JNIEnv, obj: jobject, methodID: jmethodID, ...) -> jlong,
-    pub CallLongMethodV: unsafe extern "system" fn(
+    pub CallLongMethod: unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: jobject, methodID: jmethodID) -> jlong),
+    pub CallLongMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jlong,
-    pub CallLongMethodA: unsafe extern "system" fn(
+        args: va_list
+    ) -> jlong),
+    pub CallLongMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jlong,
+        args: *const jvalue
+    ) -> jlong),
 
-    pub CallFloatMethod:
-        unsafe extern "C" fn(env: *mut JNIEnv, obj: jobject, methodID: jmethodID, ...) -> jfloat,
-    pub CallFloatMethodV: unsafe extern "system" fn(
+    pub CallFloatMethod: unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: jobject, methodID: jmethodID) -> jfloat),
+    pub CallFloatMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jfloat,
-    pub CallFloatMethodA: unsafe extern "system" fn(
+        args: va_list
+    ) -> jfloat),
+    pub CallFloatMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jfloat,
+        args: *const jvalue
+    ) -> jfloat),
 
-    pub CallDoubleMethod:
-        unsafe extern "C" fn(env: *mut JNIEnv, obj: jobject, methodID: jmethodID, ...) -> jdouble,
-    pub CallDoubleMethodV: unsafe extern "system" fn(
+    pub CallDoubleMethod: unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: jobject, methodID: jmethodID) -> jdouble),
+    pub CallDoubleMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jdouble,
-    pub CallDoubleMethodA: unsafe extern "system" fn(
+        args: va_list
+    ) -> jdouble),
+    pub CallDoubleMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jdouble,
+        args: *const jvalue
+    ) -> jdouble),
 
-    pub CallVoidMethod:
-        unsafe extern "C" fn(env: *mut JNIEnv, obj: jobject, methodID: jmethodID, ...) -> !,
-    pub CallVoidMethodV: unsafe extern "system" fn(
+    pub CallVoidMethod: unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: jobject, methodID: jmethodID) -> !),
+    pub CallVoidMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         methodID: jmethodID,
-        args: va_list,
-    ) -> !,
-    pub CallVoidMethodA: unsafe extern "system" fn(
+        args: va_list
+    ) -> !),
+    pub CallVoidMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         methodID: jmethodID,
-        args: *const jvalue,
-    ) -> !,
+        args: *const jvalue
+    ) -> !),
 
-    pub CallNonvirtualObjectMethod: unsafe extern "C" fn(
+    pub CallNonvirtualObjectMethod: unsafe_extern_c_var_fn!((
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID) -> jobject),
+    pub CallNonvirtualObjectMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         clazz: jclass,
         methodID: jmethodID,
-        ...
-    ) -> jobject,
-    pub CallNonvirtualObjectMethodV: unsafe extern "system" fn(
+        args: va_list
+    ) -> jobject),
+    pub CallNonvirtualObjectMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         clazz: jclass,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jobject,
-    pub CallNonvirtualObjectMethodA: unsafe extern "system" fn(
-        env: *mut JNIEnv,
-        obj: jobject,
-        clazz: jclass,
-        methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jobject,
+        args: *const jvalue
+    ) -> jobject),
 
-    pub CallNonvirtualBooleanMethod: unsafe extern "C" fn(
+    pub CallNonvirtualBooleanMethod: unsafe_extern_c_var_fn!((
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID) -> jboolean),
+    pub CallNonvirtualBooleanMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         clazz: jclass,
         methodID: jmethodID,
-        ...
-    ) -> jboolean,
-    pub CallNonvirtualBooleanMethodV: unsafe extern "system" fn(
+        args: va_list
+    ) -> jboolean),
+    pub CallNonvirtualBooleanMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         clazz: jclass,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jboolean,
-    pub CallNonvirtualBooleanMethodA: unsafe extern "system" fn(
-        env: *mut JNIEnv,
-        obj: jobject,
-        clazz: jclass,
-        methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jboolean,
+        args: *const jvalue
+    ) -> jboolean),
 
-    pub CallNonvirtualByteMethod: unsafe extern "C" fn(
+    pub CallNonvirtualByteMethod: unsafe_extern_c_var_fn!((
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID) -> jbyte),
+    pub CallNonvirtualByteMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         clazz: jclass,
         methodID: jmethodID,
-        ...
-    ) -> jbyte,
-    pub CallNonvirtualByteMethodV: unsafe extern "system" fn(
+        args: va_list
+    ) -> jbyte),
+    pub CallNonvirtualByteMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         clazz: jclass,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jbyte,
-    pub CallNonvirtualByteMethodA: unsafe extern "system" fn(
-        env: *mut JNIEnv,
-        obj: jobject,
-        clazz: jclass,
-        methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jbyte,
+        args: *const jvalue
+    ) -> jbyte),
 
-    pub CallNonvirtualCharMethod: unsafe extern "C" fn(
+    pub CallNonvirtualCharMethod: unsafe_extern_c_var_fn!((
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID) -> jchar),
+    pub CallNonvirtualCharMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         clazz: jclass,
         methodID: jmethodID,
-        ...
-    ) -> jchar,
-    pub CallNonvirtualCharMethodV: unsafe extern "system" fn(
+        args: va_list
+    ) -> jchar),
+    pub CallNonvirtualCharMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         clazz: jclass,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jchar,
-    pub CallNonvirtualCharMethodA: unsafe extern "system" fn(
-        env: *mut JNIEnv,
-        obj: jobject,
-        clazz: jclass,
-        methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jchar,
+        args: *const jvalue
+    ) -> jchar),
 
-    pub CallNonvirtualShortMethod: unsafe extern "C" fn(
+    pub CallNonvirtualShortMethod: unsafe_extern_c_var_fn!((
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID) -> jshort),
+    pub CallNonvirtualShortMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         clazz: jclass,
         methodID: jmethodID,
-        ...
-    ) -> jshort,
-    pub CallNonvirtualShortMethodV: unsafe extern "system" fn(
+        args: va_list
+    ) -> jshort),
+    pub CallNonvirtualShortMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         clazz: jclass,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jshort,
-    pub CallNonvirtualShortMethodA: unsafe extern "system" fn(
-        env: *mut JNIEnv,
-        obj: jobject,
-        clazz: jclass,
-        methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jshort,
+        args: *const jvalue
+    ) -> jshort),
 
-    pub CallNonvirtualIntMethod: unsafe extern "C" fn(
+    pub CallNonvirtualIntMethod: unsafe_extern_c_var_fn!((
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID) -> jint),
+    pub CallNonvirtualIntMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         clazz: jclass,
         methodID: jmethodID,
-        ...
-    ) -> jint,
-    pub CallNonvirtualIntMethodV: unsafe extern "system" fn(
+        args: va_list
+    ) -> jint),
+    pub CallNonvirtualIntMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         clazz: jclass,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jint,
-    pub CallNonvirtualIntMethodA: unsafe extern "system" fn(
-        env: *mut JNIEnv,
-        obj: jobject,
-        clazz: jclass,
-        methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jint,
+        args: *const jvalue
+    ) -> jint),
 
-    pub CallNonvirtualLongMethod: unsafe extern "C" fn(
+    pub CallNonvirtualLongMethod: unsafe_extern_c_var_fn!((
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID) -> jlong),
+    pub CallNonvirtualLongMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         clazz: jclass,
         methodID: jmethodID,
-        ...
-    ) -> jlong,
-    pub CallNonvirtualLongMethodV: unsafe extern "system" fn(
+        args: va_list
+    ) -> jlong),
+    pub CallNonvirtualLongMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         clazz: jclass,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jlong,
-    pub CallNonvirtualLongMethodA: unsafe extern "system" fn(
-        env: *mut JNIEnv,
-        obj: jobject,
-        clazz: jclass,
-        methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jlong,
+        args: *const jvalue
+    ) -> jlong),
 
-    pub CallNonvirtualFloatMethod: unsafe extern "C" fn(
+    pub CallNonvirtualFloatMethod: unsafe_extern_c_var_fn!((
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID) -> jfloat),
+    pub CallNonvirtualFloatMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         clazz: jclass,
         methodID: jmethodID,
-        ...
-    ) -> jfloat,
-    pub CallNonvirtualFloatMethodV: unsafe extern "system" fn(
+        args: va_list
+    ) -> jfloat),
+    pub CallNonvirtualFloatMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         clazz: jclass,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jfloat,
-    pub CallNonvirtualFloatMethodA: unsafe extern "system" fn(
-        env: *mut JNIEnv,
-        obj: jobject,
-        clazz: jclass,
-        methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jfloat,
+        args: *const jvalue
+    ) -> jfloat),
 
-    pub CallNonvirtualDoubleMethod: unsafe extern "C" fn(
+    pub CallNonvirtualDoubleMethod: unsafe_extern_c_var_fn!((
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID) -> jdouble),
+    pub CallNonvirtualDoubleMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         clazz: jclass,
         methodID: jmethodID,
-        ...
-    ) -> jdouble,
-    pub CallNonvirtualDoubleMethodV: unsafe extern "system" fn(
+        args: va_list
+    ) -> jdouble),
+    pub CallNonvirtualDoubleMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         clazz: jclass,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jdouble,
-    pub CallNonvirtualDoubleMethodA: unsafe extern "system" fn(
-        env: *mut JNIEnv,
-        obj: jobject,
-        clazz: jclass,
-        methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jdouble,
+        args: *const jvalue
+    ) -> jdouble),
 
-    pub CallNonvirtualVoidMethod: unsafe extern "C" fn(
+    pub CallNonvirtualVoidMethod: unsafe_extern_c_var_fn!((
+        env: *mut JNIEnv,
+        obj: jobject,
+        clazz: jclass,
+        methodID: jmethodID) -> !),
+    pub CallNonvirtualVoidMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         clazz: jclass,
         methodID: jmethodID,
-        ...
-    ) -> !,
-    pub CallNonvirtualVoidMethodV: unsafe extern "system" fn(
+        args: va_list
+    ) -> !),
+    pub CallNonvirtualVoidMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         clazz: jclass,
         methodID: jmethodID,
-        args: va_list,
-    ) -> !,
-    pub CallNonvirtualVoidMethodA: unsafe extern "system" fn(
-        env: *mut JNIEnv,
-        obj: jobject,
-        clazz: jclass,
-        methodID: jmethodID,
-        args: *const jvalue,
-    ) -> !,
+        args: *const jvalue
+    ) -> !),
 
-    pub GetFieldID: unsafe extern "system" fn(
+    pub GetFieldID: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         name: *const c_char,
-        sig: *const c_char,
-    ) -> jfieldID,
+        sig: *const c_char
+    ) -> jfieldID),
 
-    pub GetObjectField:
-        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jobject,
-    pub GetBooleanField:
-        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jboolean,
-    pub GetByteField:
-        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jbyte,
-    pub GetCharField:
-        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jchar,
-    pub GetShortField:
-        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jshort,
-    pub GetIntField:
-        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jint,
-    pub GetLongField:
-        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jlong,
-    pub GetFloatField:
-        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jfloat,
-    pub GetDoubleField:
-        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jdouble,
+    pub GetObjectField: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jobject),
+    pub GetBooleanField: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jboolean),
+    pub GetByteField: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jbyte),
+    pub GetCharField: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jchar),
+    pub GetShortField: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jshort),
+    pub GetIntField: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jint),
+    pub GetLongField: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jlong),
+    pub GetFloatField: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jfloat),
+    pub GetDoubleField: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: jobject, fieldID: jfieldID) -> jdouble),
 
-    pub SetObjectField: unsafe extern "system" fn(
+    pub SetObjectField: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         fieldID: jfieldID,
-        val: jobject,
-    ) -> !,
-    pub SetBooleanField: unsafe extern "system" fn(
+        val: jobject
+    ) -> !),
+    pub SetBooleanField: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         fieldID: jfieldID,
-        val: jboolean,
-    ) -> !,
-    pub SetByteField: unsafe extern "system" fn(
+        val: jboolean
+    ) -> !),
+    pub SetByteField: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         fieldID: jfieldID,
-        val: jbyte,
-    ) -> !,
-    pub SetCharField: unsafe extern "system" fn(
+        val: jbyte
+    ) -> !),
+    pub SetCharField: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         fieldID: jfieldID,
-        val: jchar,
-    ) -> !,
-    pub SetShortField: unsafe extern "system" fn(
+        val: jchar
+    ) -> !),
+    pub SetShortField: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         fieldID: jfieldID,
-        val: jshort,
-    ) -> !,
-    pub SetIntField: unsafe extern "system" fn(
+        val: jshort
+    ) -> !),
+    pub SetIntField: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         fieldID: jfieldID,
-        val: jint,
-    ) -> !,
-    pub SetLongField: unsafe extern "system" fn(
+        val: jint
+    ) -> !),
+    pub SetLongField: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         fieldID: jfieldID,
-        val: jlong,
-    ) -> !,
-    pub SetFloatField: unsafe extern "system" fn(
+        val: jlong
+    ) -> !),
+    pub SetFloatField: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         fieldID: jfieldID,
-        val: jfloat,
-    ) -> !,
-    pub SetDoubleField: unsafe extern "system" fn(
+        val: jfloat
+    ) -> !),
+    pub SetDoubleField: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: jobject,
         fieldID: jfieldID,
-        val: jdouble,
-    ) -> !,
+        val: jdouble
+    ) -> !),
 
-    pub GetStaticMethodID: unsafe extern "system" fn(
+    pub GetStaticMethodID: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         name: *const c_char,
-        sig: *const c_char,
-    ) -> jmethodID,
+        sig: *const c_char
+    ) -> jmethodID),
 
-    pub CallStaticObjectMethod:
-        unsafe extern "C" fn(env: *mut JNIEnv, clazz: jclass, methodID: jmethodID, ...) -> jobject,
-    pub CallStaticObjectMethodV: unsafe extern "system" fn(
+    pub CallStaticObjectMethod: unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: jclass, methodID: jmethodID) -> jobject),
+    pub CallStaticObjectMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jobject,
-    pub CallStaticObjectMethodA: unsafe extern "system" fn(
+        args: va_list
+    ) -> jobject),
+    pub CallStaticObjectMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jobject,
+        args: *const jvalue
+    ) -> jobject),
 
-    pub CallStaticBooleanMethod:
-        unsafe extern "C" fn(env: *mut JNIEnv, clazz: jclass, methodID: jmethodID, ...) -> jboolean,
-    pub CallStaticBooleanMethodV: unsafe extern "system" fn(
+    pub CallStaticBooleanMethod: unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: jclass, methodID: jmethodID) -> jboolean),
+    pub CallStaticBooleanMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jboolean,
-    pub CallStaticBooleanMethodA: unsafe extern "system" fn(
+        args: va_list
+    ) -> jboolean),
+    pub CallStaticBooleanMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jboolean,
+        args: *const jvalue
+    ) -> jboolean),
 
-    pub CallStaticByteMethod:
-        unsafe extern "C" fn(env: *mut JNIEnv, clazz: jclass, methodID: jmethodID, ...) -> jbyte,
-    pub CallStaticByteMethodV: unsafe extern "system" fn(
+    pub CallStaticByteMethod: unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: jclass, methodID: jmethodID) -> jbyte),
+    pub CallStaticByteMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jbyte,
-    pub CallStaticByteMethodA: unsafe extern "system" fn(
+        args: va_list
+    ) -> jbyte),
+    pub CallStaticByteMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jbyte,
+        args: *const jvalue
+    ) -> jbyte),
 
-    pub CallStaticCharMethod:
-        unsafe extern "C" fn(env: *mut JNIEnv, clazz: jclass, methodID: jmethodID, ...) -> jchar,
-    pub CallStaticCharMethodV: unsafe extern "system" fn(
+    pub CallStaticCharMethod: unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: jclass, methodID: jmethodID) -> jchar),
+    pub CallStaticCharMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jchar,
-    pub CallStaticCharMethodA: unsafe extern "system" fn(
+        args: va_list
+    ) -> jchar),
+    pub CallStaticCharMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jchar,
+        args: *const jvalue
+    ) -> jchar),
 
-    pub CallStaticShortMethod:
-        unsafe extern "C" fn(env: *mut JNIEnv, clazz: jclass, methodID: jmethodID, ...) -> jshort,
-    pub CallStaticShortMethodV: unsafe extern "system" fn(
+    pub CallStaticShortMethod: unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: jclass, methodID: jmethodID) -> jshort),
+    pub CallStaticShortMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jshort,
-    pub CallStaticShortMethodA: unsafe extern "system" fn(
+        args: va_list
+    ) -> jshort),
+    pub CallStaticShortMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jshort,
+        args: *const jvalue
+    ) -> jshort),
 
-    pub CallStaticIntMethod:
-        unsafe extern "C" fn(env: *mut JNIEnv, clazz: jclass, methodID: jmethodID, ...) -> jint,
-    pub CallStaticIntMethodV: unsafe extern "system" fn(
+    pub CallStaticIntMethod: unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: jclass, methodID: jmethodID) -> jint),
+    pub CallStaticIntMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jint,
-    pub CallStaticIntMethodA: unsafe extern "system" fn(
+        args: va_list
+    ) -> jint),
+    pub CallStaticIntMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jint,
+        args: *const jvalue
+    ) -> jint),
 
-    pub CallStaticLongMethod:
-        unsafe extern "C" fn(env: *mut JNIEnv, clazz: jclass, methodID: jmethodID, ...) -> jlong,
-    pub CallStaticLongMethodV: unsafe extern "system" fn(
+    pub CallStaticLongMethod: unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: jclass, methodID: jmethodID) -> jlong),
+    pub CallStaticLongMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jlong,
-    pub CallStaticLongMethodA: unsafe extern "system" fn(
+        args: va_list
+    ) -> jlong),
+    pub CallStaticLongMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jlong,
+        args: *const jvalue
+    ) -> jlong),
 
-    pub CallStaticFloatMethod:
-        unsafe extern "C" fn(env: *mut JNIEnv, clazz: jclass, methodID: jmethodID, ...) -> jfloat,
-    pub CallStaticFloatMethodV: unsafe extern "system" fn(
+    pub CallStaticFloatMethod: unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: jclass, methodID: jmethodID) -> jfloat),
+    pub CallStaticFloatMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jfloat,
-    pub CallStaticFloatMethodA: unsafe extern "system" fn(
+        args: va_list
+    ) -> jfloat),
+    pub CallStaticFloatMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jfloat,
+        args: *const jvalue
+    ) -> jfloat),
 
-    pub CallStaticDoubleMethod:
-        unsafe extern "C" fn(env: *mut JNIEnv, clazz: jclass, methodID: jmethodID, ...) -> jdouble,
-    pub CallStaticDoubleMethodV: unsafe extern "system" fn(
+    pub CallStaticDoubleMethod: unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: jclass, methodID: jmethodID) -> jdouble),
+    pub CallStaticDoubleMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: va_list,
-    ) -> jdouble,
-    pub CallStaticDoubleMethodA: unsafe extern "system" fn(
+        args: va_list
+    ) -> jdouble),
+    pub CallStaticDoubleMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: *const jvalue,
-    ) -> jdouble,
+        args: *const jvalue
+    ) -> jdouble),
 
-    pub CallStaticVoidMethod:
-        unsafe extern "C" fn(env: *mut JNIEnv, clazz: jclass, methodID: jmethodID, ...) -> !,
-    pub CallStaticVoidMethodV: unsafe extern "system" fn(
+    pub CallStaticVoidMethod: unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: jclass, methodID: jmethodID) -> !),
+    pub CallStaticVoidMethodV: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: va_list,
-    ) -> !,
-    pub CallStaticVoidMethodA: unsafe extern "system" fn(
+        args: va_list
+    ) -> !),
+    pub CallStaticVoidMethodA: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
-        args: *const jvalue,
-    ) -> !,
+        args: *const jvalue
+    ) -> !),
 
-    pub GetStaticFieldID: unsafe extern "system" fn(
+    pub GetStaticFieldID: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         name: *const c_char,
-        sig: *const c_char,
-    ) -> jfieldID,
-    pub GetStaticObjectField:
-        unsafe extern "system" fn(env: *mut JNIEnv, clazz: jclass, fieldID: jfieldID) -> jobject,
-    pub GetStaticBooleanField:
-        unsafe extern "system" fn(env: *mut JNIEnv, clazz: jclass, fieldID: jfieldID) -> jboolean,
-    pub GetStaticByteField:
-        unsafe extern "system" fn(env: *mut JNIEnv, clazz: jclass, fieldID: jfieldID) -> jbyte,
-    pub GetStaticCharField:
-        unsafe extern "system" fn(env: *mut JNIEnv, clazz: jclass, fieldID: jfieldID) -> jchar,
-    pub GetStaticShortField:
-        unsafe extern "system" fn(env: *mut JNIEnv, clazz: jclass, fieldID: jfieldID) -> jshort,
-    pub GetStaticIntField:
-        unsafe extern "system" fn(env: *mut JNIEnv, clazz: jclass, fieldID: jfieldID) -> jint,
-    pub GetStaticLongField:
-        unsafe extern "system" fn(env: *mut JNIEnv, clazz: jclass, fieldID: jfieldID) -> jlong,
-    pub GetStaticFloatField:
-        unsafe extern "system" fn(env: *mut JNIEnv, clazz: jclass, fieldID: jfieldID) -> jfloat,
-    pub GetStaticDoubleField:
-        unsafe extern "system" fn(env: *mut JNIEnv, clazz: jclass, fieldID: jfieldID) -> jdouble,
+        sig: *const c_char
+    ) -> jfieldID),
+    pub GetStaticObjectField: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz: jclass, fieldID: jfieldID) -> jobject),
+    pub GetStaticBooleanField: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz: jclass, fieldID: jfieldID) -> jboolean),
+    pub GetStaticByteField: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz: jclass, fieldID: jfieldID) -> jbyte),
+    pub GetStaticCharField: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz: jclass, fieldID: jfieldID) -> jchar),
+    pub GetStaticShortField: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz: jclass, fieldID: jfieldID) -> jshort),
+    pub GetStaticIntField: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz: jclass, fieldID: jfieldID) -> jint),
+    pub GetStaticLongField: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz: jclass, fieldID: jfieldID) -> jlong),
+    pub GetStaticFloatField: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz: jclass, fieldID: jfieldID) -> jfloat),
+    pub GetStaticDoubleField: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz: jclass, fieldID: jfieldID) -> jdouble),
 
-    pub SetStaticObjectField: unsafe extern "system" fn(
+    pub SetStaticObjectField: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         fieldID: jfieldID,
-        value: jobject,
-    ) -> !,
-    pub SetStaticBooleanField: unsafe extern "system" fn(
+        value: jobject
+    ) -> !),
+    pub SetStaticBooleanField: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         fieldID: jfieldID,
-        value: jboolean,
-    ) -> !,
-    pub SetStaticByteField: unsafe extern "system" fn(
+        value: jboolean
+    ) -> !),
+    pub SetStaticByteField: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         fieldID: jfieldID,
-        value: jbyte,
-    ) -> !,
-    pub SetStaticCharField: unsafe extern "system" fn(
+        value: jbyte
+    ) -> !),
+    pub SetStaticCharField: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         fieldID: jfieldID,
-        value: jchar,
-    ) -> !,
-    pub SetStaticShortField: unsafe extern "system" fn(
+        value: jchar
+    ) -> !),
+    pub SetStaticShortField: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         fieldID: jfieldID,
-        value: jshort,
-    ) -> !,
-    pub SetStaticIntField: unsafe extern "system" fn(
+        value: jshort
+    ) -> !),
+    pub SetStaticIntField: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         fieldID: jfieldID,
-        value: jint,
-    ) -> !,
-    pub SetStaticLongField: unsafe extern "system" fn(
+        value: jint
+    ) -> !),
+    pub SetStaticLongField: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         fieldID: jfieldID,
-        value: jlong,
-    ) -> !,
-    pub SetStaticFloatField: unsafe extern "system" fn(
+        value: jlong
+    ) -> !),
+    pub SetStaticFloatField: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         fieldID: jfieldID,
-        value: jfloat,
-    ) -> !,
-    pub SetStaticDoubleField: unsafe extern "system" fn(
+        value: jfloat
+    ) -> !),
+    pub SetStaticDoubleField: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         fieldID: jfieldID,
-        value: jdouble,
-    ) -> !,
+        value: jdouble
+    ) -> !),
 
-    pub NewString:
-        unsafe extern "system" fn(env: *mut JNIEnv, unicode: *const jchar, len: jsize) -> jstring,
-    pub GetStringLength: unsafe extern "system" fn(env: *mut JNIEnv, str: jstring) -> jsize,
-    pub GetStringChars: unsafe extern "system" fn(
+    pub NewString: unsafe_extern_system_fn!((env: *mut JNIEnv, unicode: *const jchar, len: jsize) -> jstring),
+    pub GetStringLength: unsafe_extern_system_fn!((env: *mut JNIEnv, str: jstring) -> jsize),
+    pub GetStringChars: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         str: jstring,
-        isCopy: *mut jboolean,
-    ) -> *const jchar,
-    pub ReleaseStringChars:
-        unsafe extern "system" fn(env: *mut JNIEnv, str: jstring, chars: *const jchar) -> !,
+        isCopy: *mut jboolean
+    ) -> *const jchar),
+    pub ReleaseStringChars: unsafe_extern_system_fn!((env: *mut JNIEnv, str: jstring, chars: *const jchar) -> !),
 
-    pub NewStringUTF: unsafe extern "system" fn(env: *mut JNIEnv, utf: *const c_char) -> jstring,
-    pub GetStringUTFLength: unsafe extern "system" fn(env: *mut JNIEnv, str: jstring) -> jsize,
-    pub GetStringUTFChars: unsafe extern "system" fn(
+    pub NewStringUTF: unsafe_extern_system_fn!((env: *mut JNIEnv, utf: *const c_char) -> jstring),
+    pub GetStringUTFLength: unsafe_extern_system_fn!((env: *mut JNIEnv, str: jstring) -> jsize),
+    pub GetStringUTFChars: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         str: jstring,
-        isCopy: *mut jboolean,
-    ) -> *const c_char,
-    pub ReleaseStringUTFChars:
-        unsafe extern "system" fn(env: *mut JNIEnv, str: jstring, chars: *const c_char) -> !,
+        isCopy: *mut jboolean
+    ) -> *const c_char),
+    pub ReleaseStringUTFChars: unsafe_extern_system_fn!((env: *mut JNIEnv, str: jstring, chars: *const c_char) -> !),
 
-    pub GetArrayLength: unsafe extern "system" fn(env: *mut JNIEnv, array: jarray) -> jsize,
+    pub GetArrayLength: unsafe_extern_system_fn!((env: *mut JNIEnv, array: jarray) -> jsize),
 
-    pub NewObjectArray: unsafe extern "system" fn(
+    pub NewObjectArray: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         len: jsize,
         clazz: jclass,
-        init: jobject,
-    ) -> jobjectArray,
-    pub GetObjectArrayElement:
-        unsafe extern "system" fn(env: *mut JNIEnv, array: jobjectArray, index: jsize) -> jobject,
-    pub SetObjectArrayElement: unsafe extern "system" fn(
+        init: jobject
+    ) -> jobjectArray),
+    pub GetObjectArrayElement: unsafe_extern_system_fn!((env: *mut JNIEnv, array: jobjectArray, index: jsize) -> jobject),
+    pub SetObjectArrayElement: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jobjectArray,
         index: jsize,
-        val: jobject,
-    ) -> !,
+        val: jobject
+    ) -> !),
 
-    pub NewBooleanArray: unsafe extern "system" fn(env: *mut JNIEnv, len: jsize) -> jbooleanArray,
-    pub NewByteArray: unsafe extern "system" fn(env: *mut JNIEnv, len: jsize) -> jbyteArray,
-    pub NewCharArray: unsafe extern "system" fn(env: *mut JNIEnv, len: jsize) -> jcharArray,
-    pub NewShortArray: unsafe extern "system" fn(env: *mut JNIEnv, len: jsize) -> jshortArray,
-    pub NewIntArray: unsafe extern "system" fn(env: *mut JNIEnv, len: jsize) -> jintArray,
-    pub NewLongArray: unsafe extern "system" fn(env: *mut JNIEnv, len: jsize) -> jlongArray,
-    pub NewFloatArray: unsafe extern "system" fn(env: *mut JNIEnv, len: jsize) -> jfloatArray,
-    pub NewDoubleArray: unsafe extern "system" fn(env: *mut JNIEnv, len: jsize) -> jdoubleArray,
+    pub NewBooleanArray: unsafe_extern_system_fn!((env: *mut JNIEnv, len: jsize) -> jbooleanArray),
+    pub NewByteArray: unsafe_extern_system_fn!((env: *mut JNIEnv, len: jsize) -> jbyteArray),
+    pub NewCharArray: unsafe_extern_system_fn!((env: *mut JNIEnv, len: jsize) -> jcharArray),
+    pub NewShortArray: unsafe_extern_system_fn!((env: *mut JNIEnv, len: jsize) -> jshortArray),
+    pub NewIntArray: unsafe_extern_system_fn!((env: *mut JNIEnv, len: jsize) -> jintArray),
+    pub NewLongArray: unsafe_extern_system_fn!((env: *mut JNIEnv, len: jsize) -> jlongArray),
+    pub NewFloatArray: unsafe_extern_system_fn!((env: *mut JNIEnv, len: jsize) -> jfloatArray),
+    pub NewDoubleArray: unsafe_extern_system_fn!((env: *mut JNIEnv, len: jsize) -> jdoubleArray),
 
-    pub GetBooleanArrayElements: unsafe extern "system" fn(
+    pub GetBooleanArrayElements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jbooleanArray,
-        isCopy: *mut jboolean,
-    ) -> *mut jboolean,
-    pub GetByteArrayElements: unsafe extern "system" fn(
+        isCopy: *mut jboolean
+    ) -> *mut jboolean),
+    pub GetByteArrayElements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jbyteArray,
-        isCopy: *mut jboolean,
-    ) -> *mut jbyte,
-    pub GetCharArrayElements: unsafe extern "system" fn(
+        isCopy: *mut jboolean
+    ) -> *mut jbyte),
+    pub GetCharArrayElements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jcharArray,
-        isCopy: *mut jboolean,
-    ) -> *mut jchar,
-    pub GetShortArrayElements: unsafe extern "system" fn(
+        isCopy: *mut jboolean
+    ) -> *mut jchar),
+    pub GetShortArrayElements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jshortArray,
-        isCopy: *mut jboolean,
-    ) -> *mut jshort,
-    pub GetIntArrayElements: unsafe extern "system" fn(
+        isCopy: *mut jboolean
+    ) -> *mut jshort),
+    pub GetIntArrayElements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jintArray,
-        isCopy: *mut jboolean,
-    ) -> *mut jint,
-    pub GetLongArrayElements: unsafe extern "system" fn(
+        isCopy: *mut jboolean
+    ) -> *mut jint),
+    pub GetLongArrayElements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jlongArray,
-        isCopy: *mut jboolean,
-    ) -> *mut jlong,
-    pub GetFloatArrayElements: unsafe extern "system" fn(
+        isCopy: *mut jboolean
+    ) -> *mut jlong),
+    pub GetFloatArrayElements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jfloatArray,
-        isCopy: *mut jboolean,
-    ) -> *mut jfloat,
-    pub GetDoubleArrayElements: unsafe extern "system" fn(
+        isCopy: *mut jboolean
+    ) -> *mut jfloat),
+    pub GetDoubleArrayElements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jdoubleArray,
-        isCopy: *mut jboolean,
-    ) -> *mut jdouble,
+        isCopy: *mut jboolean
+    ) -> *mut jdouble),
 
-    pub ReleaseBooleanArrayElements: unsafe extern "system" fn(
+    pub ReleaseBooleanArrayElements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jbooleanArray,
         elems: *mut jboolean,
-        mode: jint,
-    ) -> !,
-    pub ReleaseByteArrayElements: unsafe extern "system" fn(
+        mode: jint
+    ) -> !),
+    pub ReleaseByteArrayElements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jbyteArray,
         elems: *mut jbyte,
-        mode: jint,
-    ) -> !,
-    pub ReleaseCharArrayElements: unsafe extern "system" fn(
+        mode: jint
+    ) -> !),
+    pub ReleaseCharArrayElements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jcharArray,
         elems: *mut jchar,
-        mode: jint,
-    ) -> !,
-    pub ReleaseShortArrayElements: unsafe extern "system" fn(
+        mode: jint
+    ) -> !),
+    pub ReleaseShortArrayElements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jshortArray,
         elems: *mut jshort,
-        mode: jint,
-    ) -> !,
-    pub ReleaseIntArrayElements: unsafe extern "system" fn(
+        mode: jint
+    ) -> !),
+    pub ReleaseIntArrayElements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jintArray,
         elems: *mut jint,
-        mode: jint,
-    ) -> !,
-    pub ReleaseLongArrayElements: unsafe extern "system" fn(
+        mode: jint
+    ) -> !),
+    pub ReleaseLongArrayElements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jlongArray,
         elems: *mut jlong,
-        mode: jint,
-    ) -> !,
-    pub ReleaseFloatArrayElements: unsafe extern "system" fn(
+        mode: jint
+    ) -> !),
+    pub ReleaseFloatArrayElements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jfloatArray,
         elems: *mut jfloat,
-        mode: jint,
-    ) -> !,
-    pub ReleaseDoubleArrayElements: unsafe extern "system" fn(
+        mode: jint
+    ) -> !),
+    pub ReleaseDoubleArrayElements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jdoubleArray,
         elems: *mut jdouble,
-        mode: jint,
-    ) -> !,
+        mode: jint
+    ) -> !),
 
-    pub GetBooleanArrayRegion: unsafe extern "system" fn(
+    pub GetBooleanArrayRegion: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jbooleanArray,
         start: jsize,
         len: jsize,
-        buf: *mut jboolean,
-    ) -> !,
-    pub GetByteArrayRegion: unsafe extern "system" fn(
+        buf: *mut jboolean
+    ) -> !),
+    pub GetByteArrayRegion: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jbyteArray,
         start: jsize,
         len: jsize,
-        buf: *mut jbyte,
-    ) -> !,
-    pub GetCharArrayRegion: unsafe extern "system" fn(
+        buf: *mut jbyte
+    ) -> !),
+    pub GetCharArrayRegion: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jcharArray,
         start: jsize,
         len: jsize,
-        buf: *mut jchar,
-    ) -> !,
-    pub GetShortArrayRegion: unsafe extern "system" fn(
+        buf: *mut jchar
+    ) -> !),
+    pub GetShortArrayRegion: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jshortArray,
         start: jsize,
         len: jsize,
-        buf: *mut jshort,
-    ) -> !,
-    pub GetIntArrayRegion: unsafe extern "system" fn(
+        buf: *mut jshort
+    ) -> !),
+    pub GetIntArrayRegion: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jintArray,
         start: jsize,
         len: jsize,
-        buf: *mut jint,
-    ) -> !,
-    pub GetLongArrayRegion: unsafe extern "system" fn(
+        buf: *mut jint
+    ) -> !),
+    pub GetLongArrayRegion: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jlongArray,
         start: jsize,
         len: jsize,
-        buf: *mut jlong,
-    ) -> !,
-    pub GetFloatArrayRegion: unsafe extern "system" fn(
+        buf: *mut jlong
+    ) -> !),
+    pub GetFloatArrayRegion: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jfloatArray,
         start: jsize,
         len: jsize,
-        buf: *mut jfloat,
-    ) -> !,
-    pub GetDoubleArrayRegion: unsafe extern "system" fn(
+        buf: *mut jfloat
+    ) -> !),
+    pub GetDoubleArrayRegion: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jdoubleArray,
         start: jsize,
         len: jsize,
-        buf: *mut jdouble,
-    ) -> !,
+        buf: *mut jdouble
+    ) -> !),
 
-    pub SetBooleanArrayRegion: unsafe extern "system" fn(
+    pub SetBooleanArrayRegion: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jbooleanArray,
         start: jsize,
         len: jsize,
-        buf: *const jboolean,
-    ) -> !,
-    pub SetByteArrayRegion: unsafe extern "system" fn(
+        buf: *const jboolean
+    ) -> !),
+    pub SetByteArrayRegion: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jbyteArray,
         start: jsize,
         len: jsize,
-        buf: *const jbyte,
-    ) -> !,
-    pub SetCharArrayRegion: unsafe extern "system" fn(
+        buf: *const jbyte
+    ) -> !),
+    pub SetCharArrayRegion: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jcharArray,
         start: jsize,
         len: jsize,
-        buf: *const jchar,
-    ) -> !,
-    pub SetShortArrayRegion: unsafe extern "system" fn(
+        buf: *const jchar
+    ) -> !),
+    pub SetShortArrayRegion: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jshortArray,
         start: jsize,
         len: jsize,
-        buf: *const jshort,
-    ) -> !,
-    pub SetIntArrayRegion: unsafe extern "system" fn(
+        buf: *const jshort
+    ) -> !),
+    pub SetIntArrayRegion: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jintArray,
         start: jsize,
         len: jsize,
-        buf: *const jint,
-    ) -> !,
-    pub SetLongArrayRegion: unsafe extern "system" fn(
+        buf: *const jint
+    ) -> !),
+    pub SetLongArrayRegion: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jlongArray,
         start: jsize,
         len: jsize,
-        buf: *const jlong,
-    ) -> !,
-    pub SetFloatArrayRegion: unsafe extern "system" fn(
+        buf: *const jlong
+    ) -> !),
+    pub SetFloatArrayRegion: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jfloatArray,
         start: jsize,
         len: jsize,
-        buf: *const jfloat,
-    ) -> !,
-    pub SetDoubleArrayRegion: unsafe extern "system" fn(
+        buf: *const jfloat
+    ) -> !),
+    pub SetDoubleArrayRegion: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jdoubleArray,
         start: jsize,
         len: jsize,
-        buf: *const jdouble,
-    ) -> !,
+        buf: *const jdouble
+    ) -> !),
 
-    pub RegisterNatives: unsafe extern "system" fn(
+    pub RegisterNatives: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: jclass,
         methods: *const JNINativeMethod,
-        nMethods: jint,
-    ) -> jint,
-    pub UnregisterNatives: unsafe extern "system" fn(env: *mut JNIEnv, clazz: jclass) -> jint,
+        nMethods: jint
+    ) -> jint),
+    pub UnregisterNatives: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz: jclass) -> jint),
 
-    pub MonitorEnter: unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject) -> jint,
-    pub MonitorExit: unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject) -> jint,
+    pub MonitorEnter: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: jobject) -> jint),
+    pub MonitorExit: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: jobject) -> jint),
 
-    pub GetJavaVM: unsafe extern "system" fn(env: *mut JNIEnv, vm: *mut *mut JavaVM) -> jint,
+    pub GetJavaVM: unsafe_extern_system_fn!((env: *mut JNIEnv, vm: *mut *mut JavaVM) -> jint),
 
-    pub GetStringRegion: unsafe extern "system" fn(
+    pub GetStringRegion: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         str: jstring,
         start: jsize,
         len: jsize,
-        buf: *mut jchar,
-    ) -> !,
-    pub GetStringUTFRegion: unsafe extern "system" fn(
+        buf: *mut jchar
+    ) -> !),
+    pub GetStringUTFRegion: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         str: jstring,
         start: jsize,
         len: jsize,
-        buf: *mut c_char,
-    ) -> !,
+        buf: *mut c_char
+    ) -> !),
 
-    pub GetPrimitiveArrayCritical: unsafe extern "system" fn(
+    pub GetPrimitiveArrayCritical: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jarray,
-        isCopy: *mut jboolean,
-    ) -> *mut c_void,
-    pub ReleasePrimitiveArrayCritical: unsafe extern "system" fn(
+        isCopy: *mut jboolean
+    ) -> *mut c_void),
+    pub ReleasePrimitiveArrayCritical: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: jarray,
         carray: *mut c_void,
-        mode: jint,
-    ) -> !,
+        mode: jint
+    ) -> !),
 
-    pub GetStringCritical: unsafe extern "system" fn(
+    pub GetStringCritical: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         string: jstring,
-        isCopy: *mut jboolean,
-    ) -> *const jchar,
-    pub ReleaseStringCritical:
-        unsafe extern "system" fn(env: *mut JNIEnv, string: jstring, cstring: *const jchar) -> !,
+        isCopy: *mut jboolean
+    ) -> *const jchar),
+    pub ReleaseStringCritical: unsafe_extern_system_fn!((env: *mut JNIEnv, string: jstring, cstring: *const jchar) -> !),
 
-    pub NewWeakGlobalRef: unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject) -> jweak,
-    pub DeleteWeakGlobalRef: unsafe extern "system" fn(env: *mut JNIEnv, gref: jweak) -> !,
+    pub NewWeakGlobalRef: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: jobject) -> jweak),
+    pub DeleteWeakGlobalRef: unsafe_extern_system_fn!((env: *mut JNIEnv, gref: jweak) -> !),
 
-    pub ExceptionCheck: unsafe extern "system" fn(env: *mut JNIEnv) -> jboolean,
+    pub ExceptionCheck: unsafe_extern_system_fn!((env: *mut JNIEnv) -> jboolean),
 
-    pub NewDirectByteBuffer: unsafe extern "system" fn(
+    pub NewDirectByteBuffer: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         address: *mut c_void,
-        capacity: jlong,
-    ) -> jobject,
-    pub GetDirectBufferAddress:
-        unsafe extern "system" fn(env: *mut JNIEnv, buf: jobject) -> *mut c_void,
-    pub GetDirectBufferCapacity: unsafe extern "system" fn(env: *mut JNIEnv, buf: jobject) -> jlong,
+        capacity: jlong
+    ) -> jobject),
+    pub GetDirectBufferAddress: unsafe_extern_system_fn!((env: *mut JNIEnv, buf: jobject) -> *mut c_void),
+    pub GetDirectBufferCapacity: unsafe_extern_system_fn!((env: *mut JNIEnv, buf: jobject) -> jlong),
 
     /// New JNI 1.6 Features
     ///
     /// `JNI_VERSION` >= `JNI_VERSION_1_6` can be used normally
-    pub GetObjectRefType:
-        unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject) -> jobjectRefType,
+    pub GetObjectRefType: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: jobject) -> jobjectRefType),
     /// Module Features
     ///
     /// `JNI_VERSION` >= `JNI_VERSION_9` can be used normally
-    pub GetModule: unsafe extern "system" fn(env: *mut JNIEnv, clazz: jclass) -> jobject,
+    pub GetModule: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz: jclass) -> jobject),
 }
 
 /// JNI invocation interface
@@ -1338,22 +1314,21 @@ pub struct JNIInvokeInterface {
 
     pub DestroyJavaVM: unsafe extern "system" fn(vm: *mut JavaVM) -> jint,
 
-    pub AttachCurrentThread: unsafe extern "system" fn(
+    pub AttachCurrentThread: unsafe_extern_system_fn!((
         vm: *mut JavaVM,
         penv: *mut *mut c_void,
-        args: *mut c_void,
-    ) -> jint,
+        args: *mut c_void
+    ) -> jint),
 
     pub DetachCurrentThread: unsafe extern "system" fn(vm: *mut JavaVM) -> jint,
 
-    pub GetEnv:
-        unsafe extern "system" fn(vm: *mut JavaVM, penv: *mut *mut c_void, version: jint) -> jint,
+    pub GetEnv: unsafe_extern_system_fn!((vm: *mut JavaVM, penv: *mut *mut c_void, version: jint) -> jint),
 
-    pub AttachCurrentThreadAsDaemon: unsafe extern "system" fn(
+    pub AttachCurrentThreadAsDaemon: unsafe_extern_system_fn!((
         vm: *mut JavaVM,
         penv: *mut *mut c_void,
-        args: *mut c_void,
-    ) -> jint,
+        args: *mut c_void
+    ) -> jint),
 }
 
 #[repr(C)]
