@@ -999,21 +999,21 @@ pub struct JNINativeInterface {
     pub NewString:
         unsafe extern "system" fn(env: *mut JNIEnv, unicode: *const jchar, len: jsize) -> jstring,
     pub GetStringLength: unsafe extern "system" fn(env: *mut JNIEnv, str: jstring) -> jsize,
-    pub GetStringChars: unsafe_ext_sys_fn!((
+    pub GetStringChars: unsafe extern "system" fn(
         env: *mut JNIEnv,
         str: jstring,
-        isCopy: *mut jboolean
-    ) -> *const jchar),
+        isCopy: *mut jboolean,
+    ) -> *const jchar,
     pub ReleaseStringChars:
         unsafe extern "system" fn(env: *mut JNIEnv, str: jstring, chars: *const jchar) -> !,
 
     pub NewStringUTF: unsafe extern "system" fn(env: *mut JNIEnv, utf: *const c_char) -> jstring,
     pub GetStringUTFLength: unsafe extern "system" fn(env: *mut JNIEnv, str: jstring) -> jsize,
-    pub GetStringUTFChars: unsafe_ext_sys_fn!((
+    pub GetStringUTFChars: unsafe extern "system" fn(
         env: *mut JNIEnv,
         str: jstring,
-        isCopy: *mut jboolean
-    ) -> *const c_char),
+        isCopy: *mut jboolean,
+    ) -> *const c_char,
     pub ReleaseStringUTFChars:
         unsafe extern "system" fn(env: *mut JNIEnv, str: jstring, chars: *const c_char) -> !,
 
@@ -1275,11 +1275,11 @@ pub struct JNINativeInterface {
         buf: *mut c_char,
     ) -> !,
 
-    pub GetPrimitiveArrayCritical: unsafe_ext_sys_fn!((
+    pub GetPrimitiveArrayCritical: unsafe extern "system" fn(
         env: *mut JNIEnv,
         array: jarray,
-        isCopy: *mut jboolean
-    ) -> *mut c_void),
+        isCopy: *mut jboolean,
+    ) -> *mut c_void,
     pub ReleasePrimitiveArrayCritical: unsafe extern "system" fn(
         env: *mut JNIEnv,
         array: jarray,
@@ -1287,11 +1287,11 @@ pub struct JNINativeInterface {
         mode: jint,
     ) -> !,
 
-    pub GetStringCritical: unsafe_ext_sys_fn!((
+    pub GetStringCritical: unsafe extern "system" fn(
         env: *mut JNIEnv,
         string: jstring,
-        isCopy: *mut jboolean
-    ) -> *const jchar),
+        isCopy: *mut jboolean,
+    ) -> *const jchar,
     pub ReleaseStringCritical:
         unsafe extern "system" fn(env: *mut JNIEnv, string: jstring, cstring: *const jchar) -> !,
 
