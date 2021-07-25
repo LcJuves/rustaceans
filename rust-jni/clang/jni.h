@@ -26,10 +26,9 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _JNI_H_
-#define _JNI_H_
+#ifndef _JNI_H
+#define _JNI_H
 
-#include <stdio.h>
 #include <stdarg.h>
 
 #ifdef __cplusplus
@@ -55,16 +54,16 @@ extern "C" {
 #endif
 
   #define JNICALL
-  typedef int jint;
+  typedef int           jint;
 #if defined(_LP64) && !defined(__APPLE__)
-  typedef long jlong;
+  typedef long          jlong;
 #else
   /*
    * On _LP64 __APPLE__ "long" and "long long" are both 64 bits,
    * but we use the "long long" typedef to avoid complaints from
    * the __APPLE__ compiler about fprintf formats.
    */
-  typedef long long jlong;
+  typedef long long     jlong;
 #endif
 
 #elif defined(_WIN16) || defined(_WIN32) || defined(_WIN64) \
@@ -74,19 +73,18 @@ extern "C" {
   #define JNIIMPORT __declspec(dllimport)
   #define JNICALL __stdcall
 
-  typedef int jint;
-  typedef __int64 jlong;
+  typedef int           jint;
+  typedef __int64       jlong;
 #else
-#include <stdint.h>
-  typedef int32_t jint;
-  typedef int64_t jlong;
+  typedef int           jint;
+  typedef long long     jlong;
 
   #define JNIIMPORT
   #define JNIEXPORT  __attribute__ ((visibility ("default")))
   #define JNICALL
 #endif
 
-typedef signed char jbyte;
+typedef signed char     jbyte;
 
 #endif /* !_JAVASOFT_JNI_MD_H_ */
 
@@ -98,22 +96,20 @@ typedef double          jdouble;
 
 typedef jint            jsize;
 
-struct _jobject;
-
-typedef struct _jobject *jobject;
-typedef jobject jclass;
-typedef jobject jthrowable;
-typedef jobject jstring;
-typedef jobject jarray;
-typedef jarray jbooleanArray;
-typedef jarray jbyteArray;
-typedef jarray jcharArray;
-typedef jarray jshortArray;
-typedef jarray jintArray;
-typedef jarray jlongArray;
-typedef jarray jfloatArray;
-typedef jarray jdoubleArray;
-typedef jarray jobjectArray;
+typedef void *          jobject;
+typedef jobject         jclass;
+typedef jobject         jthrowable;
+typedef jobject         jstring;
+typedef jobject         jarray;
+typedef jarray          jbooleanArray;
+typedef jarray          jbyteArray;
+typedef jarray          jcharArray;
+typedef jarray          jshortArray;
+typedef jarray          jintArray;
+typedef jarray          jlongArray;
+typedef jarray          jfloatArray;
+typedef jarray          jdoubleArray;
+typedef jarray          jobjectArray;
 
 typedef jobject jweak;
 
@@ -129,11 +125,8 @@ typedef union {
     jobject  l;
 } jvalue;
 
-struct _jfieldID;                       /* opaque structure */
-typedef struct _jfieldID *jfieldID;     /* field IDs */
-
-struct _jmethodID;                      /* opaque structure */
-typedef struct _jmethodID *jmethodID;   /* method IDs */
+typedef void *jfieldID;     /* field IDs */
+typedef void *jmethodID;   /* method IDs */
 
 /* Return values from jobjectRefType */
 typedef enum {
@@ -143,18 +136,15 @@ typedef enum {
      JNIWeakGlobalRefType = 3
 } jobjectRefType;
 
-
 #endif /* JNI_TYPES_ALREADY_DEFINED_IN_JNI_MD_H */
 
-/*
- * jboolean constants
- */
+/* jboolean constants */
 
 #define JNI_FALSE 0
 #define JNI_TRUE 1
 
 /*
- * possible return values for JNI functions.
+ * possible return values for JNI functions
  */
 
 #define JNI_OK           0                 /* success */
@@ -172,6 +162,9 @@ typedef enum {
 #define JNI_COMMIT 1
 #define JNI_ABORT 2
 
+/**
+ * JNI_VERSION_X defined
+ */
 
 #define JNI_VERSION_1_1 0x00010001
 #define JNI_VERSION_1_2 0x00010002
@@ -185,34 +178,24 @@ typedef enum {
  * used in RegisterNatives to describe native method name, signature,
  * and function pointer.
  */
-
 typedef struct {
     char *name;
     char *signature;
     void *fnPtr;
 } JNINativeMethod;
 
-/*
- * JNI Native Method Interface.
+/**
+ * JavaVM (along with a handful of global functions) implements the "Java Invocation Interface",
+ * which allow you to create and destroy a Java Virtual Machine
  */
-
-struct JNINativeInterface_;
-
-struct JNIEnv_;
-
-typedef const struct JNINativeInterface_ *JNIEnv;
+typedef const struct JNIInvokeInterface *JavaVM;
 
 /*
- * JNI Invocation Interface.
+ * JNI Native Method Interface
+ * Table of interface function pointers
  */
-
-struct JNIInvokeInterface_;
-
-struct JavaVM_;
-
-typedef const struct JNIInvokeInterface_ *JavaVM;
-
-struct JNINativeInterface_ {
+typedef const struct JNINativeInterface *JNIEnv;
+struct JNINativeInterface {
     void *reserved0;
     void *reserved1;
     void *reserved2;
@@ -791,7 +774,6 @@ struct JNINativeInterface_ {
 #endif /* JNI_VERSION_9 */
 };
 
-
 typedef struct {
     char *optionString;
     void *extraInfo;
@@ -813,26 +795,32 @@ typedef struct {
 } JavaVMAttachArgs;
 
 /* These will be VM-specific */
-
 #define JDK1_2
 #define JDK1_4
-
 /* End VM-specific */
 
-struct JNIInvokeInterface_ {
+/*
+ * JNI Invocation Interface
+ */
+struct JNIInvokeInterface {
     void *reserved0;
     void *reserved1;
     void *reserved2;
 
-    jint (JNICALL *DestroyJavaVM)(JavaVM *vm);
+    jint (JNICALL *DestroyJavaVM)
+      (JavaVM *vm);
 
-    jint (JNICALL *AttachCurrentThread)(JavaVM *vm, void **penv, void *args);
+    jint (JNICALL *AttachCurrentThread)
+      (JavaVM *vm, void **penv, void *args);
 
-    jint (JNICALL *DetachCurrentThread)(JavaVM *vm);
+    jint (JNICALL *DetachCurrentThread)
+      (JavaVM *vm);
 
-    jint (JNICALL *GetEnv)(JavaVM *vm, void **penv, jint version);
+    jint (JNICALL *GetEnv)
+      (JavaVM *vm, void **penv, jint version);
 
-    jint (JNICALL *AttachCurrentThreadAsDaemon)(JavaVM *vm, void **penv, void *args);
+    jint (JNICALL *AttachCurrentThreadAsDaemon)
+      (JavaVM *vm, void **penv, void *args);
 };
 
 #ifdef _JNI_IMPLEMENTATION_
@@ -860,4 +848,4 @@ JNI_OnUnload(JavaVM *vm, void *reserved);
 } /* extern "C" */
 #endif /* __cplusplus */
 
-#endif /* !_JNI_H_ */
+#endif /* _JNI_H */

@@ -5,3 +5,6 @@ a.out
 .DS_Store
 *.md
 *.html
+*.dylib
+*.dll
+*.so

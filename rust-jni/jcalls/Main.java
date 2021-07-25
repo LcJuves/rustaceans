@@ -1,3 +1,5 @@
+import java.io.PrintStream;
+
 /** Main */
 class Main {
 
@@ -33,6 +35,11 @@ class Main {
         Class<?> clazz = CallJNI.findClass("java/lang/String");
         assertType(clazz, String.class.getClass());
         println(clazz.getName());
+        pass();
+
+        PrintStream out = (PrintStream) CallJNI.getSystemOut();
+        assertType(out, PrintStream.class);
+        out.println("CallJNI: System.out >>>");
         pass();
 
         break;
