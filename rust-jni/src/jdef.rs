@@ -270,7 +270,6 @@ pub struct JNINativeInterface {
     pub ExceptionClear: unsafe extern "system" fn(env: *mut JNIEnv) -> !,
     pub FatalError: unsafe extern "system" fn(env: *mut JNIEnv, msg: *const c_char) -> !,
 
-    /// PASS
     pub PushLocalFrame: unsafe extern "system" fn(env: *mut JNIEnv, capacity: jint) -> jint,
     pub PopLocalFrame: unsafe extern "system" fn(env: *mut JNIEnv, result: jobject) -> jobject,
 
@@ -304,6 +303,7 @@ pub struct JNINativeInterface {
 
     pub GetMethodID: unsafe extern "system" fn(
         env: *mut JNIEnv,
+        clazz: jclass,
         name: *const c_char,
         sig: *const c_char,
     ) -> jmethodID,
@@ -872,19 +872,19 @@ pub struct JNINativeInterface {
     ) -> jlong,
 
     pub CallStaticFloatMethod:
-        unsafe extern "C" fn(env: *mut JNIEnv, clazz: jclass, methodID: jmethodID, ...) -> jlong,
+        unsafe extern "C" fn(env: *mut JNIEnv, clazz: jclass, methodID: jmethodID, ...) -> jfloat,
     pub CallStaticFloatMethodV: unsafe extern "system" fn(
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
         args: va_list,
-    ) -> jlong,
+    ) -> jfloat,
     pub CallStaticFloatMethodA: unsafe extern "system" fn(
         env: *mut JNIEnv,
         clazz: jclass,
         methodID: jmethodID,
         args: *const jvalue,
-    ) -> jlong,
+    ) -> jfloat,
 
     pub CallStaticDoubleMethod:
         unsafe extern "C" fn(env: *mut JNIEnv, clazz: jclass, methodID: jmethodID, ...) -> jdouble,
@@ -1043,46 +1043,46 @@ pub struct JNINativeInterface {
     pub NewFloatArray: unsafe extern "system" fn(env: *mut JNIEnv, len: jsize) -> jfloatArray,
     pub NewDoubleArray: unsafe extern "system" fn(env: *mut JNIEnv, len: jsize) -> jdoubleArray,
 
-    pub GetBooleanArrayElements: unsafe_ext_sys_fn!((
+    pub GetBooleanArrayElements: unsafe extern "system" fn(
         env: *mut JNIEnv,
         array: jbooleanArray,
-        isCopy: *mut jboolean
-    ) -> *mut jboolean),
-    pub GetByteArrayElements: unsafe_ext_sys_fn!((
+        isCopy: *mut jboolean,
+    ) -> *mut jboolean,
+    pub GetByteArrayElements: unsafe extern "system" fn(
         env: *mut JNIEnv,
         array: jbyteArray,
-        isCopy: *mut jboolean
-    ) -> *mut jbyte),
-    pub GetCharArrayElements: unsafe_ext_sys_fn!((
+        isCopy: *mut jboolean,
+    ) -> *mut jbyte,
+    pub GetCharArrayElements: unsafe extern "system" fn(
         env: *mut JNIEnv,
         array: jcharArray,
-        isCopy: *mut jboolean
-    ) -> *mut jchar),
-    pub GetShortArrayElements: unsafe_ext_sys_fn!((
+        isCopy: *mut jboolean,
+    ) -> *mut jchar,
+    pub GetShortArrayElements: unsafe extern "system" fn(
         env: *mut JNIEnv,
         array: jshortArray,
-        isCopy: *mut jboolean
-    ) -> *mut jshort),
-    pub GetIntArrayElements: unsafe_ext_sys_fn!((
+        isCopy: *mut jboolean,
+    ) -> *mut jshort,
+    pub GetIntArrayElements: unsafe extern "system" fn(
         env: *mut JNIEnv,
         array: jintArray,
-        isCopy: *mut jboolean
-    ) -> *mut jint),
-    pub GetLongArrayElements: unsafe_ext_sys_fn!((
+        isCopy: *mut jboolean,
+    ) -> *mut jint,
+    pub GetLongArrayElements: unsafe extern "system" fn(
         env: *mut JNIEnv,
         array: jlongArray,
-        isCopy: *mut jboolean
-    ) -> *mut jlong),
-    pub GetFloatArrayElements: unsafe_ext_sys_fn!((
+        isCopy: *mut jboolean,
+    ) -> *mut jlong,
+    pub GetFloatArrayElements: unsafe extern "system" fn(
         env: *mut JNIEnv,
         array: jfloatArray,
-        isCopy: *mut jboolean
-    ) -> *mut jfloat),
-    pub GetDoubleArrayElements: unsafe_ext_sys_fn!((
+        isCopy: *mut jboolean,
+    ) -> *mut jfloat,
+    pub GetDoubleArrayElements: unsafe extern "system" fn(
         env: *mut JNIEnv,
         array: jdoubleArray,
-        isCopy: *mut jboolean
-    ) -> *mut jdouble),
+        isCopy: *mut jboolean,
+    ) -> *mut jdouble,
 
     pub ReleaseBooleanArrayElements: unsafe extern "system" fn(
         env: *mut JNIEnv,
@@ -1093,43 +1093,43 @@ pub struct JNINativeInterface {
     pub ReleaseByteArrayElements: unsafe extern "system" fn(
         env: *mut JNIEnv,
         array: jbyteArray,
-        elems: *mut jboolean,
+        elems: *mut jbyte,
         mode: jint,
     ) -> !,
     pub ReleaseCharArrayElements: unsafe extern "system" fn(
         env: *mut JNIEnv,
         array: jcharArray,
-        elems: *mut jboolean,
+        elems: *mut jchar,
         mode: jint,
     ) -> !,
     pub ReleaseShortArrayElements: unsafe extern "system" fn(
         env: *mut JNIEnv,
         array: jshortArray,
-        elems: *mut jboolean,
+        elems: *mut jshort,
         mode: jint,
     ) -> !,
     pub ReleaseIntArrayElements: unsafe extern "system" fn(
         env: *mut JNIEnv,
         array: jintArray,
-        elems: *mut jboolean,
+        elems: *mut jint,
         mode: jint,
     ) -> !,
     pub ReleaseLongArrayElements: unsafe extern "system" fn(
         env: *mut JNIEnv,
         array: jlongArray,
-        elems: *mut jboolean,
+        elems: *mut jlong,
         mode: jint,
     ) -> !,
     pub ReleaseFloatArrayElements: unsafe extern "system" fn(
         env: *mut JNIEnv,
         array: jfloatArray,
-        elems: *mut jboolean,
+        elems: *mut jfloat,
         mode: jint,
     ) -> !,
     pub ReleaseDoubleArrayElements: unsafe extern "system" fn(
         env: *mut JNIEnv,
         array: jdoubleArray,
-        elems: *mut jboolean,
+        elems: *mut jdouble,
         mode: jint,
     ) -> !,
 
@@ -1305,13 +1305,18 @@ pub struct JNINativeInterface {
         address: *mut c_void,
         capacity: jlong,
     ) -> jobject,
-    pub GetDirectBufferAddress: unsafe_ext_sys_fn!((env: *mut JNIEnv, buf: jobject) -> *mut c_void),
+    pub GetDirectBufferAddress:
+        unsafe extern "system" fn(env: *mut JNIEnv, buf: jobject) -> *mut c_void,
     pub GetDirectBufferCapacity: unsafe extern "system" fn(env: *mut JNIEnv, buf: jobject) -> jlong,
 
     /// New JNI 1.6 Features
+    ///
+    /// `JNI_VERSION` >= `JNI_VERSION_1_6` can be used normally
     pub GetObjectRefType:
         unsafe extern "system" fn(env: *mut JNIEnv, obj: jobject) -> jobjectRefType,
     /// Module Features
+    ///
+    /// `JNI_VERSION` >= `JNI_VERSION_9` can be used normally
     pub GetModule: unsafe extern "system" fn(env: *mut JNIEnv, clazz: jclass) -> jobject,
 }
 

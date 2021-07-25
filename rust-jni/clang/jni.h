@@ -261,15 +261,15 @@ struct JNINativeInterface_ {
       (JNIEnv *env, jobject result);
 
     jobject (JNICALL *NewGlobalRef)
-      (JNIEnv *env, jobject lobj);
-    void (JNICALL *DeleteGlobalRef)
       (JNIEnv *env, jobject gref);
+    void (JNICALL *DeleteGlobalRef)
+      (JNIEnv *env, jobject obj);
     void (JNICALL *DeleteLocalRef)
       (JNIEnv *env, jobject obj);
     jboolean (JNICALL *IsSameObject)
       (JNIEnv *env, jobject obj1, jobject obj2);
     jobject (JNICALL *NewLocalRef)
-      (JNIEnv *env, jobject ref);
+      (JNIEnv *env, jobject lref);
     jint (JNICALL *EnsureLocalCapacity)
       (JNIEnv *env, jint capacity);
 
@@ -358,7 +358,7 @@ struct JNINativeInterface_ {
     void (JNICALL *CallVoidMethodV)
       (JNIEnv *env, jobject obj, jmethodID methodID, va_list args);
     void (JNICALL *CallVoidMethodA)
-      (JNIEnv *env, jobject obj, jmethodID methodID, const jvalue * args);
+      (JNIEnv *env, jobject obj, jmethodID methodID, const jvalue *args);
 
     jobject (JNICALL *CallNonvirtualObjectMethod)
       (JNIEnv *env, jobject obj, jclass clazz, jmethodID methodID, ...);
@@ -376,7 +376,7 @@ struct JNINativeInterface_ {
        va_list args);
     jboolean (JNICALL *CallNonvirtualBooleanMethodA)
       (JNIEnv *env, jobject obj, jclass clazz, jmethodID methodID,
-       const jvalue * args);
+       const jvalue *args);
 
     jbyte (JNICALL *CallNonvirtualByteMethod)
       (JNIEnv *env, jobject obj, jclass clazz, jmethodID methodID, ...);
@@ -448,7 +448,7 @@ struct JNINativeInterface_ {
        va_list args);
     void (JNICALL *CallNonvirtualVoidMethodA)
       (JNIEnv *env, jobject obj, jclass clazz, jmethodID methodID,
-       const jvalue * args);
+       const jvalue *args);
 
     jfieldID (JNICALL *GetFieldID)
       (JNIEnv *env, jclass clazz, const char *name, const char *sig);
@@ -558,11 +558,11 @@ struct JNINativeInterface_ {
       (JNIEnv *env, jclass clazz, jmethodID methodID, const jvalue *args);
 
     void (JNICALL *CallStaticVoidMethod)
-      (JNIEnv *env, jclass cls, jmethodID methodID, ...);
+      (JNIEnv *env, jclass clazz, jmethodID methodID, ...);
     void (JNICALL *CallStaticVoidMethodV)
-      (JNIEnv *env, jclass cls, jmethodID methodID, va_list args);
+      (JNIEnv *env, jclass clazz, jmethodID methodID, va_list args);
     void (JNICALL *CallStaticVoidMethodA)
-      (JNIEnv *env, jclass cls, jmethodID methodID, const jvalue * args);
+      (JNIEnv *env, jclass clazz, jmethodID methodID, const jvalue *args);
 
     jfieldID (JNICALL *GetStaticFieldID)
       (JNIEnv *env, jclass clazz, const char *name, const char *sig);
@@ -685,38 +685,54 @@ struct JNINativeInterface_ {
       (JNIEnv *env, jdoubleArray array, jdouble *elems, jint mode);
 
     void (JNICALL *GetBooleanArrayRegion)
-      (JNIEnv *env, jbooleanArray array, jsize start, jsize l, jboolean *buf);
+      (JNIEnv *env, jbooleanArray array, jsize start, 
+      jsize len, jboolean *buf);
     void (JNICALL *GetByteArrayRegion)
-      (JNIEnv *env, jbyteArray array, jsize start, jsize len, jbyte *buf);
+      (JNIEnv *env, jbyteArray array, jsize start, jsize len, 
+      jbyte *buf);
     void (JNICALL *GetCharArrayRegion)
-      (JNIEnv *env, jcharArray array, jsize start, jsize len, jchar *buf);
+      (JNIEnv *env, jcharArray array, jsize start, jsize len, 
+      jchar *buf);
     void (JNICALL *GetShortArrayRegion)
-      (JNIEnv *env, jshortArray array, jsize start, jsize len, jshort *buf);
+      (JNIEnv *env, jshortArray array, jsize start, jsize len, 
+      jshort *buf);
     void (JNICALL *GetIntArrayRegion)
-      (JNIEnv *env, jintArray array, jsize start, jsize len, jint *buf);
+      (JNIEnv *env, jintArray array, jsize start, jsize len, 
+      jint *buf);
     void (JNICALL *GetLongArrayRegion)
-      (JNIEnv *env, jlongArray array, jsize start, jsize len, jlong *buf);
+      (JNIEnv *env, jlongArray array, jsize start, jsize len, 
+      jlong *buf);
     void (JNICALL *GetFloatArrayRegion)
-      (JNIEnv *env, jfloatArray array, jsize start, jsize len, jfloat *buf);
+      (JNIEnv *env, jfloatArray array, jsize start, jsize len, 
+      jfloat *buf);
     void (JNICALL *GetDoubleArrayRegion)
-      (JNIEnv *env, jdoubleArray array, jsize start, jsize len, jdouble *buf);
+      (JNIEnv *env, jdoubleArray array, jsize start, jsize len, 
+      jdouble *buf);
 
     void (JNICALL *SetBooleanArrayRegion)
-      (JNIEnv *env, jbooleanArray array, jsize start, jsize l, const jboolean *buf);
+      (JNIEnv *env, jbooleanArray array, jsize start, jsize len, 
+      const jboolean *buf);
     void (JNICALL *SetByteArrayRegion)
-      (JNIEnv *env, jbyteArray array, jsize start, jsize len, const jbyte *buf);
+      (JNIEnv *env, jbyteArray array, jsize start, jsize len, 
+      const jbyte *buf);
     void (JNICALL *SetCharArrayRegion)
-      (JNIEnv *env, jcharArray array, jsize start, jsize len, const jchar *buf);
+      (JNIEnv *env, jcharArray array, jsize start, jsize len, 
+      const jchar *buf);
     void (JNICALL *SetShortArrayRegion)
-      (JNIEnv *env, jshortArray array, jsize start, jsize len, const jshort *buf);
+      (JNIEnv *env, jshortArray array, jsize start, jsize len, 
+      const jshort *buf);
     void (JNICALL *SetIntArrayRegion)
-      (JNIEnv *env, jintArray array, jsize start, jsize len, const jint *buf);
+      (JNIEnv *env, jintArray array, jsize start, jsize len, 
+      const jint *buf);
     void (JNICALL *SetLongArrayRegion)
-      (JNIEnv *env, jlongArray array, jsize start, jsize len, const jlong *buf);
+      (JNIEnv *env, jlongArray array, jsize start, jsize len, 
+      const jlong *buf);
     void (JNICALL *SetFloatArrayRegion)
-      (JNIEnv *env, jfloatArray array, jsize start, jsize len, const jfloat *buf);
+      (JNIEnv *env, jfloatArray array, jsize start, jsize len, 
+      const jfloat *buf);
     void (JNICALL *SetDoubleArrayRegion)
-      (JNIEnv *env, jdoubleArray array, jsize start, jsize len, const jdouble *buf);
+      (JNIEnv *env, jdoubleArray array, jsize start, jsize len, 
+      const jdouble *buf);
 
     jint (JNICALL *RegisterNatives)
       (JNIEnv *env, jclass clazz, const JNINativeMethod *methods,
