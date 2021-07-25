@@ -1,48 +1,10 @@
 #![allow(non_snake_case, non_camel_case_types, dead_code)]
 
+//! Rust bindings to the JNI
+//! ******
 //! Prototypes for functions exported by loadable shared libs
+//! 
 //! These are called by JNI, not provided by JNI
-//!
-//! ```c
-//! JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved);
-//! ```
-//!
-//! ```c
-//! JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved);
-//! ```
-//!
-//! # Rust bindings to the JNI
-//! ##  JNI_OnLoad
-//! ***
-//! ```rust
-//! #[no_mangle]
-//! pub unsafe extern "system" fn JNI_OnLoad(vm: *mut JavaVM, reserved: *mut c_void) -> jint {
-//!     /* code */
-//!     /* The return value must be >= JNI_VERSION_1_1 */
-//! }
-//! ```
-//! ### Or use the `impl_jni_onload` macro, like this
-//! ``` rust
-//! impl_jni_onload!(vm, reserved, {
-//!     /* code */
-//!     /* The return value must be >= JNI_VERSION_1_1 */
-//! });
-//! ```
-//! ***
-//! ***
-//!
-//! ## JNI_OnUnload
-//! ***
-//! ```rust
-//! #[no_mangle]
-//! pub unsafe extern "system" fn JNI_OnUnload(vm: *mut JavaVM, reserved: *mut c_void) {
-//!     /* code */
-//! }
-//! ```
-//! ### Or use the `impl_jni_unload` macro, like this
-//! ```rust
-//! impl_jni_unload!(_, _, { /* code */ });
-//! ```
 
 /**
  * Copyright (c) 2021 Liangcheng Juves <liangchengj@outlook.com>
@@ -72,15 +34,24 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+/// # Examples
+///
+/// ```rust
+/// unsafe_extern_system_fn!((env: *mut JNIEnv) -> jint)
+/// ```
+/// expand to
+/// ```rust
+/// Option<unsafe extern "system" fn(env: *mut JNIEnv) -> jint>
+/// ```
 #[macro_export]
-macro_rules! unsafe_ext_sys_fn {
+macro_rules! unsafe_extern_system_fn {
     (($($param_name:tt: $param_type:ty), *) -> $ret_ty:ty) => {
         Option<unsafe extern "system" fn($($param_name: $param_type, )*) -> $ret_ty>
     }
 }
 
 #[macro_export]
-macro_rules! unsafe_ext_c_va_list_fn {
+macro_rules! unsafe_extern_c_var_fn {
     (($($param_name:tt: $param_type:ty), *) -> $ret_ty:ty) => {
         Option<unsafe extern "C" fn($($param_name: $param_type, )* ...) -> $ret_ty>
     }
@@ -103,8 +74,25 @@ macro_rules! unsafe_jni_fn_def {
 }
 
 /// Defined by native libraries
+///
+/// ##  JNI_OnLoad
+/// ***
+/// ```rust
+/// #[no_mangle]
+/// pub unsafe extern "system" fn JNI_OnLoad(vm: *mut JavaVM, reserved: *mut c_void) -> jint {
+///     /* code */
+///     /* The return value must be >= JNI_VERSION_1_1 */
+/// }
+/// ```
+/// ### Or use the `impl_jni_on_load` macro, like this
+/// ``` rust
+/// impl_jni_on_load!(vm, reserved, {
+///     /* code */
+///     /* The return value must be >= JNI_VERSION_1_1 */
+/// });
+/// ```
 #[macro_export]
-macro_rules! impl_jni_onload {
+macro_rules! impl_jni_on_load {
     ($param_vm_name:tt, $param_reserved_name:tt, $code:block) => {
         jni_fn_def!(
             JNI_OnLoad,
@@ -119,8 +107,21 @@ macro_rules! impl_jni_onload {
 }
 
 /// Defined by native libraries
+///
+/// ## JNI_OnUnload
+/// ***
+/// ```rust
+/// #[no_mangle]
+/// pub unsafe extern "system" fn JNI_OnUnload(vm: *mut JavaVM, reserved: *mut c_void) {
+///     /* code */
+/// }
+/// ```
+/// ### Or use the `impl_jni_on_unload` macro, like this
+/// ```rust
+/// impl_jni_on_unload!(vm, reserved, { /* code */ });
+/// ```
 #[macro_export]
-macro_rules! impl_jni_unload {
+macro_rules! impl_jni_on_unload {
     ($param_vm_name:tt, $param_reserved_name:tt, $code:block) => {
         jni_fn_def!(
             JNI_OnUnload,
@@ -161,13 +162,15 @@ pub type jdouble = f64;
 /// "cardinal indices and sizes"
 pub type jsize = jint;
 
-/*
- * Reference types
- */
+/* Reference types that match up with Java equivalents */
+
 pub type jobject = *mut c_void;
 pub type jclass = jobject;
 pub type jthrowable = jobject;
 pub type jstring = jobject;
+
+/* Array types that match up with Java equivalents */
+
 pub type jarray = jobject;
 pub type jbooleanArray = jarray;
 pub type jbyteArray = jarray;
@@ -181,8 +184,10 @@ pub type jobjectArray = jarray;
 
 pub type jweak = jobject;
 
+/// When passing arguments from Rust to a Java method, the jvalue union is used
 #[repr(C)]
 pub union jvalue {
+    // Primitive types
     pub z: jboolean,
     pub b: jbyte,
     pub c: jchar,
@@ -191,6 +196,7 @@ pub union jvalue {
     pub j: jlong,
     pub f: jfloat,
     pub d: jdouble,
+    // Reference types
     pub l: jobject,
 }
 
@@ -216,7 +222,10 @@ pub struct JNINativeMethod {
     pub fnPtr: *mut c_void,
 }
 
+/// `JNIEnv` implements the "Java Native Inferface", and contains most of what you'll use to interact with Java from Rust
 pub type JNIEnv = *const JNINativeInterface;
+/// `JavaVM` (along with a handful of global functions) implements the "Java Invocation Interface",
+/// which allow you to create and destroy a Java Virtual Machine
 pub type JavaVM = *const JNIInvokeInterface;
 
 /// Table of interface function pointers
