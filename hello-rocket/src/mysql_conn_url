@@ -1,0 +1,1 @@
+mysql://root:@Wodeshijie9934@127.0.0.1:3306/docs_liangchengj_com?pool_min=10&pool_max=100&conn_ttl=10

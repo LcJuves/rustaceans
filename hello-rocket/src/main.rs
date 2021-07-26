@@ -1,3 +1,5 @@
+mod mysql_access;
+
 #[macro_use]
 extern crate rocket;
 
