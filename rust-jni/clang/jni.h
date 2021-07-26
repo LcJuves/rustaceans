@@ -111,7 +111,7 @@ typedef jarray          jfloatArray;
 typedef jarray          jdoubleArray;
 typedef jarray          jobjectArray;
 
-typedef jobject jweak;
+typedef jobject         jweak;
 
 typedef union {
     jboolean z;
@@ -159,8 +159,8 @@ typedef enum {
  * used in ReleaseScalarArrayElements
  */
 
-#define JNI_COMMIT 1
-#define JNI_ABORT 2
+#define JNI_COMMIT  1
+#define JNI_ABORT   2
 
 /**
  * JNI_VERSION_X defined
