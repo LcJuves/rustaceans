@@ -755,22 +755,22 @@ struct JNINativeInterface {
        (JNIEnv *env);
 
     jobject (JNICALL *NewDirectByteBuffer)
-       (JNIEnv* env, void* address, jlong capacity);
-    void* (JNICALL *GetDirectBufferAddress)
-       (JNIEnv* env, jobject buf);
+       (JNIEnv *env, void *address, jlong capacity);
+    void * (JNICALL *GetDirectBufferAddress)
+       (JNIEnv *env, jobject buf);
     jlong (JNICALL *GetDirectBufferCapacity)
-       (JNIEnv* env, jobject buf);
+       (JNIEnv *env, jobject buf);
 
     /* New JNI 1.6 Features */
 #ifdef JNI_VERSION_1_6
     jobjectRefType (JNICALL *GetObjectRefType)
-        (JNIEnv* env, jobject obj);
+        (JNIEnv *env, jobject obj);
 #endif /* JNI_VERSION_1_6 */
 
     /* Module Features */
 #ifdef JNI_VERSION_9
     jobject (JNICALL *GetModule)
-       (JNIEnv* env, jclass clazz);
+       (JNIEnv *env, jclass clazz);
 #endif /* JNI_VERSION_9 */
 };
 
