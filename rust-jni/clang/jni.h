@@ -600,10 +600,10 @@ struct JNINativeInterface {
       (JNIEnv *env, const char *utf);
     jsize (JNICALL *GetStringUTFLength)
       (JNIEnv *env, jstring str);
-    const char* (JNICALL *GetStringUTFChars)
+    const char * (JNICALL *GetStringUTFChars)
       (JNIEnv *env, jstring str, jboolean *isCopy);
     void (JNICALL *ReleaseStringUTFChars)
-      (JNIEnv *env, jstring str, const char* chars);
+      (JNIEnv *env, jstring str, const char *chars);
 
 
     jsize (JNICALL *GetArrayLength)
