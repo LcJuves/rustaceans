@@ -1,4 +1,7 @@
 @echo off
+:: Created at 2021/7/26 17:09
+:: @author Liangcheng Juves
+
 Set ExecDir=%cd%
 Set BaseDir=%~dp0
 Set RunType=release
