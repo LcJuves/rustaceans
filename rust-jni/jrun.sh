@@ -15,20 +15,22 @@ ls -hl "${base_dir}/target/${run_type}/${dylib}"
 once() {
     java_home="$1"
 
-    javac_path="${java_home}/bin/javac"
-    java_path="${java_home}/bin/java"
+    if [ -d "${java_home}" ]; then
+        javac_path="${java_home}/bin/javac"
+        java_path="${java_home}/bin/java"
 
-    echo -e "\n"
-    "${java_path}" -version
-    echo -e "============================================================"
-    echo -e "============================================================\n"
+        echo -e "\n"
+        "${java_path}" -version
+        echo -e "============================================================"
+        echo -e "============================================================\n"
 
-    cd "${base_dir}/jcalls"; "${javac_path}" Main.java
-    cd "${base_dir}/jcalls"; "${java_path}" -Djava.library.path="${base_dir}/target/${run_type}" Main
+        cd "${base_dir}/jcalls"; "${javac_path}" Main.java
+        cd "${base_dir}/jcalls"; "${java_path}" -Djava.library.path="${base_dir}/target/${run_type}" Main
 
-    echo -e "\n///////////////////////////////////////////////////////////////"
-    echo -e "///////////////////////////////////////////////////////////////"
-    echo -e "///////////////////////////////////////////////////////////////"
+        echo -e "\n///////////////////////////////////////////////////////////////"
+        echo -e "///////////////////////////////////////////////////////////////"
+        echo -e "///////////////////////////////////////////////////////////////"
+    fi
 }
 
 
