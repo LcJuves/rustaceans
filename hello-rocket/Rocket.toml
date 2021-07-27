@@ -4,6 +4,7 @@
 # https://api.rocket.rs/v0.4/rocket/config/index.html
 
 [release]
+address = "0.0.0.0"
 port = 8080
 
 [debug]
