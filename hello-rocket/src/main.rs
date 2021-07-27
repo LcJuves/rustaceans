@@ -1,7 +1,10 @@
 mod mysql_access;
-
 #[macro_use]
 extern crate rocket;
+extern crate mysql;
+
+use mysql::serde_json::*;
+use mysql_access::read;
 
 #[get("/")]
 fn index() -> &'static str {
@@ -9,98 +12,18 @@ fn index() -> &'static str {
 }
 
 #[get("/items")]
-fn items() -> &'static str {
-    "{}"
+fn items() -> String {
+    match read() {
+        Ok(ret) => {
+            return json!(ret).to_string();
+        }
+        _ => {
+            return "[]".to_string();
+        }
+    };
 }
 
 #[launch]
 fn rocket() -> _ {
     rocket::build().mount("/", routes![index, items])
 }
-
-////////////////////////////////////////
-
-/* use mysql::prelude::*;
-use mysql::*;
-
-#[derive(Debug, PartialEq, Eq)]
-struct Payment {
-    customer_id: i32,
-    amount: i32,
-    account_name: Option<String>,
-}
-
-fn main() -> std::io::Result<()> {
-    let url = "mysql://root:@Wodeshijie9934@127.0.0.1:3306/docs_liangchengj_com?pool_min=10&pool_max=100&conn_ttl=10";
-    let opts = Opts::from_url(url)?;
-    let pool = Pool::new(opts)?;
-
-    let mut conn = pool.get_conn()?;
-
-    // Let's create a table for payments.
-    conn.query_drop(
-        r"CREATE TEMPORARY TABLE payment (
-        customer_id int not null,
-        amount int not null,
-        account_name text
-    )",
-    )?;
-
-    let payments = vec![
-        Payment {
-            customer_id: 1,
-            amount: 2,
-            account_name: None,
-        },
-        Payment {
-            customer_id: 3,
-            amount: 4,
-            account_name: Some("foo".into()),
-        },
-        Payment {
-            customer_id: 5,
-            amount: 6,
-            account_name: None,
-        },
-        Payment {
-            customer_id: 7,
-            amount: 8,
-            account_name: None,
-        },
-        Payment {
-            customer_id: 9,
-            amount: 10,
-            account_name: Some("bar".into()),
-        },
-    ];
-
-    // Now let's insert payments to the database
-    conn.exec_batch(
-        r"INSERT INTO payment (customer_id, amount, account_name)
-      VALUES (:customer_id, :amount, :account_name)",
-        payments.iter().map(|p| {
-            params! {
-                "customer_id" => p.customer_id,
-                "amount" => p.amount,
-                "account_name" => &p.account_name,
-            }
-        }),
-    )?;
-
-    // Let's select payments from database. Type inference should do the trick here.
-    let selected_payments = conn.query_map(
-        "SELECT customer_id, amount, account_name from payment",
-        |(customer_id, amount, account_name)| Payment {
-            customer_id,
-            amount,
-            account_name,
-        },
-    )?;
-
-    // Let's make sure, that `payments` equals to `selected_payments`.
-    // Mysql gives no guaranties on order of returned rows
-    // without `ORDER BY`, so assume we are lucky.
-    assert_eq!(payments, selected_payments);
-    println!("Yay!");
-    Ok(())
-} */
