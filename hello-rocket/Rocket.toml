@@ -1,0 +1,10 @@
+# Created at 2021/7/27 23:53
+# @author Liangcheng Juves
+#
+# https://api.rocket.rs/v0.4/rocket/config/index.html
+
+[release]
+port = 8080
+
+[debug]
+port = 8000
