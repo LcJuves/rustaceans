@@ -1,25 +1,19 @@
-// use std::io::Cursor;
-
-// use rocket::http::{ContentType, Status};
-// use rocket::request::Request;
-// use rocket::response::{self, Responder, Response};
-
-use rocket::serde::ser::*;
-
-// use mysql::serde_json::*;
+use rocket::serde::ser::{Serialize, SerializeStruct, Serializer};
+use std::marker::PhantomData;
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct Items {
+pub struct Items<'a> {
     id: u32,
     title: Option<String>,
     description: Option<String>,
     url: Option<String>,
     img_url: Option<String>,
+    lifetime: PhantomData<&'a ()>,
 }
 
-impl Items {
+impl<'a> Items<'a> {
     #[allow(dead_code)]
-    pub fn new(
+    pub const fn new(
         id: u32,
         title: Option<String>,
         description: Option<String>,
@@ -32,20 +26,18 @@ impl Items {
             description,
             url,
             img_url,
+            lifetime: PhantomData,
         }
     }
 }
 
-impl<'a> Serialize for Items {
+impl<'a> Serialize for Items<'a> {
     fn serialize<S>(
         &self,
         serializer: S,
-    ) -> std::result::Result<
-        <S as rocket::serde::Serializer>::Ok,
-        <S as rocket::serde::Serializer>::Error,
-    >
+    ) -> std::result::Result<<S as Serializer>::Ok, <S as Serializer>::Error>
     where
-        S: rocket::serde::Serializer,
+        S: Serializer,
     {
         let mut s = serializer.serialize_struct("Items", 5)?;
         s.serialize_field("id", &self.id)?;
@@ -56,19 +48,3 @@ impl<'a> Serialize for Items {
         s.end()
     }
 }
-
-// impl<'r> Responder<'r, 'static> for Items {
-//     fn respond_to(self, _: &'r Request<'_>) -> response::Result<'static> {
-//         let json = json!(self).to_string();
-//         Response::build()
-//             .status(Status::Ok)
-//             .header_adjoin(ContentType::JSON)
-//             .sized_body(json.len(), Cursor::new(&json))
-//             .raw_header_adjoin("Access-Control-Allow-Methods", "GET")
-//             .raw_header_adjoin(
-//                 "Access-Control-Allow-Origin",
-//                 "docs.liangchengj.com,127.0.0.1,localhost",
-//             )
-//             .ok()
-//     }
-// }
