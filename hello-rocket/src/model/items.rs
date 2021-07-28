@@ -18,6 +18,7 @@ pub struct Items {
 }
 
 impl Items {
+    #[allow(dead_code)]
     pub fn new(
         id: u32,
         title: Option<String>,
