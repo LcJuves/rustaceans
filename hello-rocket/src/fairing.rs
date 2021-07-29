@@ -21,7 +21,10 @@ impl Fairing for CommomFairing {
     async fn on_response<'r>(&self, req: &'r Request<'_>, resp: &mut Response<'r>) {
         if req.method() == Method::Get && req.uri().path() == "/items" {
             resp.adjoin_raw_header("Access-Control-Allow-Methods", "GET");
-            resp.adjoin_raw_header("Access-Control-Allow-Origin", "*");
+            resp.adjoin_raw_header(
+                "Access-Control-Allow-Origin",
+                "https://docs.liangchengj.com",
+            );
         }
     }
 }

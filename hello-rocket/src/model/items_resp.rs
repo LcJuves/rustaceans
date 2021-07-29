@@ -7,8 +7,6 @@ use super::items::Items;
 
 use rocket::serde::ser::{Serialize, SerializeStruct, Serializer};
 
-use mysql::serde_json::json;
-
 pub struct ItemResp<'a> {
     flag: u8,
     data: Option<Vec<Items<'a>>>,
@@ -28,15 +26,9 @@ impl<'a> Serialize for ItemResp<'a> {
     where
         S: Serializer,
     {
-        let mut s = serializer.serialize_struct("ItemResp", 5)?;
+        let mut s = serializer.serialize_struct("ItemResp", 2)?;
         s.serialize_field("flag", &self.flag)?;
-
-        let data_json = match &self.data {
-            Some(ret) => json!(ret).to_string(),
-            None => "[]".to_string(),
-        };
-
-        s.serialize_field("data", &data_json)?;
+        s.serialize_field("data", &self.data)?;
         s.end()
     }
 }
