@@ -4,7 +4,7 @@
  * @author Liangcheng Juves
  */
 use rocket::fairing::{Fairing, Info, Kind};
-use rocket::http::Method;
+use rocket::http::{ContentType, Method};
 use rocket::{Request, Response};
 
 pub struct CommomFairing;
@@ -25,6 +25,13 @@ impl Fairing for CommomFairing {
                 "Access-Control-Allow-Origin",
                 "https://docs.liangchengj.com",
             );
+            let cty = ContentType::JSON;
+            let cty = ContentType::with_params(
+                cty.top().to_string(),
+                cty.sub().to_string(),
+                vec![("charset", "utf-8")],
+            );
+            resp.set_header(cty);
         }
     }
 }
