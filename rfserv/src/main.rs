@@ -7,10 +7,11 @@ use std::net::{TcpListener, TcpStream};
 use std::path::PathBuf;
 use std::thread::spawn;
 
-pub const CRLF: &str = "\r\n";
-
 mod header;
+mod model;
 mod request;
+
+use model::*;
 
 use request::{Request, RequestMethod};
 
@@ -35,11 +36,13 @@ fn handle_conn(mut stream: TcpStream) -> Result<()> {
     let request_lines_string = String::from_utf8(request_lines).unwrap();
     println!("{}", request_lines_string);
 
-    let first_line = request_lines_string.split("\n").collect::<Vec<_>>()[0];
+    let first_line = request_lines_string
+        .split(&LF.to_string())
+        .collect::<Vec<_>>()[0];
 
     println!("First line: {}", first_line);
 
-    let first_line_infos: Vec<_> = first_line.split(" ").collect();
+    let first_line_infos: Vec<_> = first_line.split(&SP.to_string()).collect();
     let request = Request::new(
         first_line_infos[1].to_string(),
         match first_line_infos[0] {
@@ -69,7 +72,7 @@ Content-Type: text/html;charset=utf-8\r\n\
 Server: Rust\r\n",
         )?;
 
-        let mut not_found_temp_html = include_str!("not_found_temp.html").to_string();
+        let mut not_found_temp_html = NOT_FOUND_TEMP_HTML.to_string();
         not_found_temp_html = not_found_temp_html.replace("{}", &request.uri);
 
         let not_found_temp_html_bytes = not_found_temp_html.as_bytes();
