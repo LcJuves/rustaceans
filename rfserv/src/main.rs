@@ -65,18 +65,22 @@ fn handle_conn(in_stream: TcpStream, mut out_stream: TcpStream) -> Result<()> {
     /* if false {
         // let mut file = OpenOptions::new().read(true).open(path_buf).unwrap();
     } else { */
-    out_stream.write_all(b"HTTP/1.1 404 Not Found\r\n")?;
-    out_stream.write_all(b"Content-Type: text/html;charset=utf-8\r\n")?;
+    // out_stream.write_all(b"HTTP/1.1 404 Not Found\r\n")?;
+    // out_stream.write_all(b"Content-Type: text/html;charset=utf-8\r\n")?;
+
+    out_stream.write_all(b"HTTP/1.1 404 Not Found\r\n\
+Content-Type: text/plain;charset=utf-8\r\n\r\n\
+404\r\n\r\n")?;
 
     // let mut not_found_temp_html = include_str!("not_found_temp.html").to_string();
     // not_found_temp_html = not_found_temp_html.replace("{}", &request.uri);
 
     // out_stream.write_all(b"Content-Length: ")?;
     // out_stream.write_all(format!("{}", not_found_temp_html.as_bytes().len()).as_bytes())?;
-    out_stream.write_all(b"\r\n\r\n")?;
+    // out_stream.write_all(b"\r\n\r\n")?;
 
-    out_stream.write_all(b"404")?;
-    out_stream.write_all(b"\r\n\r\n")?;
+    // out_stream.write_all(b"404")?;
+    // out_stream.write_all(b"\r\n\r\n")?;
     out_stream.flush()?;
     /* } */
 
