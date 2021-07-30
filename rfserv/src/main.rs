@@ -1,12 +1,13 @@
-use std::io::BufRead;
-use std::io::BufReader;
+use std::io::ErrorKind;
+use std::io::Read;
 use std::io::Result;
 use std::io::Write;
-// use std::net::Shutdown;
+use std::net::Shutdown;
 use std::net::{TcpListener, TcpStream};
+use std::path::PathBuf;
 use std::thread::spawn;
 
-// pub const CRLF: &str = "\r\n";
+pub const CRLF: &str = "\r\n";
 
 mod header;
 mod request;
@@ -23,8 +24,7 @@ fn init_serv(addr: &str) -> Result<()> {
     println!("Listening on {}", addr);
 
     for stream in listener.incoming() {
-        let stream = stream?;
-        spawn(|| handle_conn(stream));
+        spawn(move || handle_conn(stream?));
     }
 
     Ok(())
@@ -35,7 +35,7 @@ fn handle_conn(mut stream: TcpStream) -> Result<()> {
     let request_lines_string = String::from_utf8(request_lines).unwrap();
     println!("{}", request_lines_string);
 
-    let first_line = request_lines_string.split("\r\n").collect::<Vec<_>>()[0];
+    let first_line = request_lines_string.split("\n").collect::<Vec<_>>()[0];
 
     println!("First line: {}", first_line);
 
@@ -49,61 +49,83 @@ fn handle_conn(mut stream: TcpStream) -> Result<()> {
     );
     println!("Request: {:?}", request);
 
-    // stream.shutdown(Shutdown::Read)?;
+    stream.shutdown(Shutdown::Read)?;
 
-    /* let paths: Vec<_> = first_line_infos[1].split("/").collect();
+    let paths: Vec<_> = first_line_infos[1].split("/").collect();
     println!("paths: {:?}", paths);
     let mut path_buf = PathBuf::new();
     for path in paths {
         path_buf = path_buf.join(path);
     }
-    println!("path_buf: {:?}", path_buf); */
+    println!("path_buf: {:?}", path_buf);
 
-    /* if false {
+    if false {
         // let mut file = OpenOptions::new().read(true).open(path_buf).unwrap();
-    } else { */
-
-    stream.write(
-        b"HTTP/1.1 404 Not Found\r\n\
+    } else {
+        stream.write(
+            b"\
+HTTP/1.1 404 Not Found\r\n\
 Content-Type: text/html;charset=utf-8\r\n\
 Server: Rust\r\n",
-    )?;
+        )?;
 
-    let mut not_found_temp_html = include_str!("not_found_temp.html").to_string();
-    not_found_temp_html = not_found_temp_html.replace("{}", &request.uri);
+        let mut not_found_temp_html = include_str!("not_found_temp.html").to_string();
+        not_found_temp_html = not_found_temp_html.replace("{}", &request.uri);
 
-    let not_found_temp_html_bytes = not_found_temp_html.as_bytes();
+        let not_found_temp_html_bytes = not_found_temp_html.as_bytes();
 
-    stream.write(b"Content-Length: ")?;
-    stream.write(not_found_temp_html_bytes.len().to_string().as_bytes())?;
-    stream.write(b"\r\n\r\n")?;
-    stream.write_all(not_found_temp_html_bytes)?;
+        stream.write(b"Content-Length: ")?;
+        stream.write(not_found_temp_html_bytes.len().to_string().as_bytes())?;
+        stream.write(b"\r\n\r\n")?;
+        stream.write_all(not_found_temp_html_bytes)?;
 
-    stream.flush()?;
-    /* } */
+        stream.flush()?;
+    }
 
     println!();
     println!(">>>>>> Writed");
     println!();
 
-    // stream.shutdown(Shutdown::Write)?;
+    stream.shutdown(Shutdown::Write)?;
 
     Ok(())
 }
 
-fn read_request_lines(stream: &TcpStream) -> Result<Vec<u8>> {
+fn read_request_lines(mut stream: &TcpStream) -> Result<Vec<u8>> {
     let mut request_lines = Vec::<u8>::new();
-    let mut buf_reader = BufReader::new(stream);
+
+    let mut buf = [0u8];
+
+    fn write_and_flush<W>(w: &mut W, bytes: &[u8]) -> Result<()>
+    where
+        W: Write,
+    {
+        w.write(bytes)?;
+        w.flush()?;
+        Ok(())
+    }
+
     loop {
-        buf_reader.read_until(b'\n', &mut request_lines)?;
-        let mut check_next_line = Vec::<u8>::new();
-        buf_reader.read_until(b'\n', &mut check_next_line)?;
-        if check_next_line.len() <= 2 {
-            break;
-        } else {
-            request_lines.write_all(&check_next_line)?;
-            request_lines.flush()?;
+        let _ = match stream.read(&mut buf) {
+            Ok(0) => {
+                return Ok(request_lines);
+            }
+            len @ Ok(_) => len,
+            Err(ref e) if e.kind() == ErrorKind::Interrupted => continue,
+            Err(e) => return Err(e),
+        };
+
+        write_and_flush(&mut request_lines, &buf)?;
+
+        if b'\n' == buf[0] {
+            let mut buf_tmp = [0u8];
+            stream.read(&mut buf_tmp)?;
+
+            if b'\r' == buf_tmp[0] || b'\n' == buf_tmp[0] {
+                return Ok(request_lines);
+            } else {
+                write_and_flush(&mut request_lines, &buf_tmp)?;
+            }
         }
     }
-    Ok(request_lines)
 }
