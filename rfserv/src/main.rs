@@ -68,9 +68,13 @@ fn handle_conn(in_stream: TcpStream, mut out_stream: TcpStream) -> Result<()> {
     // out_stream.write_all(b"HTTP/1.1 404 Not Found\r\n")?;
     // out_stream.write_all(b"Content-Type: text/html;charset=utf-8\r\n")?;
 
-    out_stream.write_all(b"HTTP/1.1 404 Not Found\r\n\
-Content-Type: text/plain;charset=utf-8\r\n\r\n\
-404\r\n\r\n")?;
+    out_stream.write(
+        b"HTTP/1.1 404 Not Found\r\n\
+Content-Type: text/plain;charset=utf-8\r\n\r\n",
+    )?;
+    out_stream.flush()?;
+    out_stream.write_all(b"404")?;
+    out_stream.flush()?;
 
     // let mut not_found_temp_html = include_str!("not_found_temp.html").to_string();
     // not_found_temp_html = not_found_temp_html.replace("{}", &request.uri);
