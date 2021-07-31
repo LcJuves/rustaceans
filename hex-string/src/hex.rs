@@ -1,12 +1,11 @@
-#[allow(dead_code)]
+#![allow(dead_code)]
 pub struct HexString;
 
-#[allow(dead_code)]
 impl HexString {
     pub const RADIX: u32 = 16;
 
     pub fn from(&self, bytes: &[u8]) -> String {
-        let char_from_digit = |num: u32| char::from_digit(num, HexString::RADIX).unwrap();
+        let char_from_digit = |num: u32| char::from_digit(num, Self::RADIX).unwrap();
         let mut ret = String::new();
         for byte in bytes {
             let num = *byte as u32;
@@ -17,13 +16,7 @@ impl HexString {
     }
 
     pub fn parse(&self, hex: &str) -> Vec<u8> {
-        let char_to_digit = |n: usize| {
-            hex.chars()
-                .nth(n)
-                .unwrap()
-                .to_digit(HexString::RADIX)
-                .unwrap()
-        };
+        let char_to_digit = |n: usize| hex.chars().nth(n).unwrap().to_digit(Self::RADIX).unwrap();
         let mut ret = Vec::<u8>::new();
         for i in 0..(hex.len() / 2) {
             let dgti = 2 * i;
