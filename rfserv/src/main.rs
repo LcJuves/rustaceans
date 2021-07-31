@@ -1,10 +1,12 @@
+use std::fs::OpenOptions;
 use std::io::ErrorKind;
 use std::io::Read;
 use std::io::Result;
+
 use std::io::Write;
 use std::net::Shutdown;
 use std::net::{TcpListener, TcpStream};
-use std::path::PathBuf;
+
 use std::thread::spawn;
 
 mod header;
@@ -13,8 +15,8 @@ mod request;
 
 use model::*;
 
-use request::{Request, RequestMethod};
 use fmedia::MediaType;
+use request::{Request, RequestMethod};
 
 fn main() -> Result<()> {
     init_serv("0.0.0.0:9999")?;
@@ -23,7 +25,7 @@ fn main() -> Result<()> {
 
 fn init_serv(addr: &str) -> Result<()> {
     let listener = TcpListener::bind(addr)?;
-    println!("Listening on {}", addr);
+    println!("Listening on http://{}", addr);
 
     for stream in listener.incoming() {
         spawn(move || handle_conn(stream?));
@@ -51,20 +53,49 @@ fn handle_conn(mut stream: TcpStream) -> Result<()> {
         },
         1.1,
     );
-    println!("Request: {:?}", request);
 
     stream.shutdown(Shutdown::Read)?;
 
     let paths: Vec<_> = first_line_infos[1].split("/").collect();
-    println!("paths: {:?}", paths);
-    let mut path_buf = PathBuf::new();
+    let mut path_buf = std::env::current_dir()?;
     for path in paths {
         path_buf = path_buf.join(path);
     }
-    println!("path_buf: {:?}", path_buf);
 
-    if false {
-        // let mut file = OpenOptions::new().read(true).open(path_buf).unwrap();
+    if std::env::current_dir()? == path_buf {
+        path_buf = path_buf.join("index.html");
+    }
+
+    if path_buf.exists() {
+        let media_ty =
+            MediaType::from_file_extension(path_buf.extension().unwrap().to_str().unwrap());
+
+        stream.write(
+            b"\
+HTTP/1.1 200 OK\r\n\
+Content-Type: ",
+        )?;
+        match media_ty {
+            Some(mty) => {
+                stream.write(mty.as_bytes())?;
+            }
+            _ => {
+                stream.write(b"text/plain")?;
+            }
+        }
+        stream.write(b"; charset=utf-8\r\n")?;
+        stream.write(b"Server: Rust\r\n")?;
+
+        let mut file = OpenOptions::new().read(true).open(path_buf).unwrap();
+
+        let content_len = file.metadata().unwrap().len();
+
+        stream.write(b"Content-Length: ")?;
+        stream.write(content_len.to_string().as_bytes())?;
+        stream.write(b"\r\n\r\n")?;
+
+        std::io::copy(&mut file, &mut stream)?;
+        stream.flush()?;
     } else {
         stream.write(
             b"\
