@@ -14,6 +14,7 @@ mod request;
 use model::*;
 
 use request::{Request, RequestMethod};
+use fmedia::MediaType;
 
 fn main() -> Result<()> {
     init_serv("0.0.0.0:9999")?;
