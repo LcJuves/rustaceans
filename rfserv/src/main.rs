@@ -1,7 +1,9 @@
 use std::fs::OpenOptions;
+
 use std::io::ErrorKind;
 use std::io::Read;
 use std::io::Result;
+use std::os::unix::fs::PermissionsExt;
 
 use std::io::Write;
 use std::net::Shutdown;
@@ -14,6 +16,9 @@ mod model;
 mod request;
 
 use model::*;
+
+mod index_router;
+use index_router::*;
 
 use fmedia::MediaType;
 use request::{Request, RequestMethod};
@@ -56,46 +61,101 @@ fn handle_conn(mut stream: TcpStream) -> Result<()> {
 
     stream.shutdown(Shutdown::Read)?;
 
-    let paths: Vec<_> = first_line_infos[1].split("/").collect();
     let mut path_buf = std::env::current_dir()?;
-    for path in paths {
-        path_buf = path_buf.join(path);
-    }
 
-    if std::env::current_dir()? == path_buf {
-        path_buf = path_buf.join("index.html");
+    if !include_index_router(&request.uri) && *ROOT_ROUTER != &request.uri {
+        let paths: Vec<_> = first_line_infos[1].split(*ROOT_ROUTER).collect();
+        for path in paths {
+            path_buf = path_buf.join(path);
+        }
     }
 
     if path_buf.exists() {
-        let media_ty =
-            MediaType::from_file_extension(path_buf.extension().unwrap().to_str().unwrap());
+        let path_buf_metadata = path_buf.metadata()?;
 
-        stream.write(
-            b"\
+        if path_buf_metadata.is_dir() {
+            stream.write(
+                b"\
+HTTP/1.1 200 OK\r\n\
+Content-Type: text/html;charset=utf-8\r\n\
+Server: Rust\r\n",
+            )?;
+
+            let mut dir_viewer_html = DIR_VIEWER_HTML.to_string();
+            dir_viewer_html = dir_viewer_html.replace("${dirname}", &request.uri);
+
+            // TODO: Empty directory html
+            // TODO: Show 'Last modified'
+            // TODO: "Human file size"
+
+            let mut files_html = String::new();
+
+            for entry in (&path_buf).read_dir()? {
+                let child_file_entry = entry?;
+                let child_file_metadata = child_file_entry.metadata()?;
+
+                files_html.push_str("<tr>");
+                if cfg!(unix) {
+                    files_html.push_str(&format!(
+                        "<td>{:o}</td>",
+                        child_file_metadata.permissions().mode()
+                    ));
+                } else {
+                    files_html.push_str(&format!("<td>{}</td>", "Unknown"));
+                }
+                files_html.push_str(&format!("<td>{}</td>", child_file_metadata.len()));
+                let child_file_name = child_file_entry.file_name();
+                let child_file_name_str = child_file_name.to_str().unwrap();
+
+                let ref request_uri_ref = request.uri;
+
+                files_html.push_str(&format!(
+                    "<td><a href=\"javascript:void(0);\" onclick=\"window.location.href='{}';\">{}</a></td>",
+                    format!("{}/{}", match request_uri_ref.ends_with("/") {
+                        true => &request_uri_ref[0..request_uri_ref.rfind('/').unwrap()],
+                        _=> &request_uri_ref
+                    }, child_file_name_str), child_file_name_str
+                ));
+                files_html.push_str("</tr>");
+            }
+
+            dir_viewer_html = dir_viewer_html.replace("${files}", &files_html);
+
+            let dir_viewer_html_bytes = dir_viewer_html.as_bytes();
+
+            stream.write(b"Content-Length: ")?;
+            stream.write(dir_viewer_html_bytes.len().to_string().as_bytes())?;
+            stream.write(b"\r\n\r\n")?;
+            stream.write_all(dir_viewer_html_bytes)?;
+        } else {
+            let media_ty = match path_buf.extension() {
+                Some(extension) => MediaType::from_file_extension(extension.to_str().unwrap()),
+                _ => None,
+            };
+
+            stream.write(
+                b"\
 HTTP/1.1 200 OK\r\n\
 Content-Type: ",
-        )?;
-        match media_ty {
-            Some(mty) => {
-                stream.write(mty.as_bytes())?;
+            )?;
+            match media_ty {
+                Some(mty) => {
+                    stream.write(mty.as_bytes())?;
+                }
+                _ => {
+                    stream.write(b"text/plain")?;
+                }
             }
-            _ => {
-                stream.write(b"text/plain")?;
-            }
+            stream.write(b"; charset=utf-8\r\n")?;
+            stream.write(b"Server: Rust\r\n")?;
+            stream.write(b"Content-Length: ")?;
+            stream.write(path_buf_metadata.len().to_string().as_bytes())?;
+            stream.write(b"\r\n\r\n")?;
+
+            let mut file = OpenOptions::new().read(true).open(path_buf)?;
+
+            std::io::copy(&mut file, &mut stream)?;
         }
-        stream.write(b"; charset=utf-8\r\n")?;
-        stream.write(b"Server: Rust\r\n")?;
-
-        let mut file = OpenOptions::new().read(true).open(path_buf).unwrap();
-
-        let content_len = file.metadata().unwrap().len();
-
-        stream.write(b"Content-Length: ")?;
-        stream.write(content_len.to_string().as_bytes())?;
-        stream.write(b"\r\n\r\n")?;
-
-        std::io::copy(&mut file, &mut stream)?;
-        stream.flush()?;
     } else {
         stream.write(
             b"\
@@ -113,14 +173,13 @@ Server: Rust\r\n",
         stream.write(not_found_temp_html_bytes.len().to_string().as_bytes())?;
         stream.write(b"\r\n\r\n")?;
         stream.write_all(not_found_temp_html_bytes)?;
-
-        stream.flush()?;
     }
 
     println!();
     println!(">>>>>> Writed");
     println!();
 
+    stream.flush()?;
     stream.shutdown(Shutdown::Write)?;
 
     Ok(())

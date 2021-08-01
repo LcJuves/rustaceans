@@ -10,4 +10,5 @@ lazy_static! {
     pub static ref CRLF: &'static str = "\r\n";
     pub static ref LF: &'static str = "\n";
     pub static ref SP: &'static str = " ";
+    pub static ref DIR_VIEWER_HTML: &'static str = include_str!("dir_viewer.html");
 }
