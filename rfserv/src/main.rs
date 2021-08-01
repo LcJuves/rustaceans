@@ -86,7 +86,7 @@ Server: Rust\r\n",
 
             // TODO: Empty directory html
             // TODO: Show 'Last modified'
-            // TODO: "Human file size"
+            // TODO: Human file size
 
             let mut files_html = String::new();
 
