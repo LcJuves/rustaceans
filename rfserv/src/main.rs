@@ -63,14 +63,26 @@ fn handle_conn(mut stream: TcpStream) -> Result<()> {
 
     let mut path_buf = std::env::current_dir()?;
 
-    if !include_index_router(&request.uri) && *ROOT_ROUTER != &request.uri {
-        let paths: Vec<_> = first_line_infos[1].split(*ROOT_ROUTER).collect();
+    let mut is_index_page = false;
+
+    let paths: Vec<_> = first_line_infos[1].split(*ROOT_ROUTER).collect();
+    if *ROOT_ROUTER != &request.uri || include_index_router(&request.uri) {
         for path in paths {
             path_buf = path_buf.join(path);
         }
+    } else if *ROOT_ROUTER == &request.uri {
+        for index_router in DEFAULT_INDEX_ROUTERES.iter() {
+            let should_join = &index_router[(index_router.rfind('/').unwrap() + 1)..];
+            let check_path_buf = path_buf.join(should_join);
+            if check_path_buf.exists() {
+                is_index_page = true;
+                path_buf = check_path_buf;
+                break;
+            }
+        }
     }
 
-    if path_buf.exists() {
+    if is_index_page || path_buf.exists() {
         let path_buf_metadata = path_buf.metadata()?;
 
         if path_buf_metadata.is_dir() {
