@@ -9,6 +9,15 @@ use rocket::{Request, Response};
 
 pub struct CommomFairing;
 
+#[allow(dead_code)]
+impl CommomFairing {
+    #[cfg(debug_assertions)]
+    const ACCESS_CONTROL_ALLOW_ORIGIN: &'static str = "*";
+
+    #[cfg(not(debug_assertions))]
+    const ACCESS_CONTROL_ALLOW_ORIGIN: &'static str = "https://docs.liangchengj.com";
+}
+
 #[rocket::async_trait]
 impl Fairing for CommomFairing {
     fn info(&self) -> Info {
@@ -23,7 +32,7 @@ impl Fairing for CommomFairing {
             resp.adjoin_raw_header("Access-Control-Allow-Methods", "GET");
             resp.adjoin_raw_header(
                 "Access-Control-Allow-Origin",
-                "https://docs.liangchengj.com",
+                Self::ACCESS_CONTROL_ALLOW_ORIGIN,
             );
             let cty = ContentType::JSON;
             let cty = ContentType::with_params(
