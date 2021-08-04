@@ -3,6 +3,9 @@
 use lazy_static::lazy_static;
 
 use crate::model::items::Items;
+use mysql::Error::MySqlError;
+use mysql::MySqlError as InnerMySqlError;
+
 use mysql::prelude::*;
 use mysql::*;
 
@@ -15,7 +18,16 @@ lazy_static! {
 }
 
 pub fn read() -> Result<Vec<Items<'static>>> {
-    let mut conn = MYSQL_CONN_POOL.as_ref().unwrap().get_conn()?;
+    let mysql_conn_url_ref = MYSQL_CONN_POOL.as_ref();
+    if mysql_conn_url_ref.is_err() {
+        return Err(MySqlError(InnerMySqlError {
+            state: String::from("MySQL Connection pool"),
+            code: 1u16,
+            message: String::from("setup with error"),
+        }));
+    }
+
+    let mut conn = mysql_conn_url_ref.unwrap().get_conn()?;
 
     let selected_items = conn.query_map(
         "SELECT id,title,description,url,img_url FROM t_item;",
