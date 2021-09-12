@@ -40,11 +40,11 @@ impl<'a> Serialize for Items<'a> {
         S: Serializer,
     {
         let mut s = serializer.serialize_struct("Items", 5)?;
-        s.serialize_field("id", &self.id)?;
+        // s.serialize_field("id", &self.id)?;
         s.serialize_field("title", &self.title)?;
-        s.serialize_field("description", &self.description)?;
+        // s.serialize_field("desc", &self.description)?;
         s.serialize_field("url", &self.url)?;
-        s.serialize_field("img_url", &self.img_url)?;
+        s.serialize_field("imgUrl", &self.img_url)?;
         s.end()
     }
 }
