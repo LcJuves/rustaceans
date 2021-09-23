@@ -7,11 +7,9 @@
 #ifndef _RUSTDEF_H
 #define _RUSTDEF_H
 
-#include <stdint.h>
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <stddef.h>
-#include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -44,8 +42,8 @@ extern "C"
     typedef int128_t i128;         /* 128-bit */
     typedef uint128_t u128;        /* 128-bit */
 
-    typedef ptrdiff_t isize; /* arch */
-    typedef size_t usize;    /* arch */
+    typedef intptr_t isize;  /* arch */
+    typedef uintptr_t usize; /* arch */
 
     /// Floating-Point
     typedef float f32;  /* 32-bit */
