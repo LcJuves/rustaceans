@@ -6,7 +6,7 @@
 #include "rustdef.h"
 #include <unistd.h>
 
-int main(int argc, char const *argv[])
+void main(void)
 {
     u128 q = 2;
     println("%ld", sizeof(q) * 8);
@@ -24,5 +24,4 @@ int main(int argc, char const *argv[])
         usleep(6000);
         count++;
     }
-    return 0;
 }
