@@ -1,6 +1,5 @@
 use std::fs::OpenOptions;
 
-use std::io::ErrorKind;
 use std::io::Read;
 use std::io::Result;
 use std::os::unix::fs::PermissionsExt;
@@ -212,15 +211,7 @@ fn read_request_lines(mut stream: &TcpStream) -> Result<Vec<u8>> {
     }
 
     loop {
-        let _ = match stream.read(&mut buf) {
-            Ok(0) => {
-                return Ok(request_lines);
-            }
-            len @ Ok(_) => len,
-            Err(ref e) if e.kind() == ErrorKind::Interrupted => continue,
-            Err(e) => return Err(e),
-        };
-
+        stream.read(&mut buf)?;
         write_and_flush(&mut request_lines, &buf)?;
 
         if b'\n' == buf[0] {
