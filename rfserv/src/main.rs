@@ -158,7 +158,7 @@ Content-Type: ",
                 }
             }
             stream.write(b"; charset=utf-8\r\n")?;
-            stream.write(b"Server: Rust\r\n")?;
+            stream.write(b"Server: rfserv\r\n")?;
             stream.write(b"Content-Length: ")?;
             stream.write(path_buf_metadata.len().to_string().as_bytes())?;
             stream.write(b"\r\n\r\n")?;
