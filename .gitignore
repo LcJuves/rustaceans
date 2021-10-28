@@ -8,4 +8,3 @@ a.out
 *.dylib
 *.dll
 *.so
-xlsx_example/tests/tmp.json
