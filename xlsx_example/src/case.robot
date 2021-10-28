@@ -3,7 +3,7 @@ Resource    resource${/}common${/}common.robot
 
 *** Test Cases ***
 {{caseTitle}}
-    [Tags]        ID-{{caseId}}    {{useCaseLevel}}    {{authorTag}}    {{modTag}}    UnImpl
+    [Tags]        ID-{{caseId}}    {{useCaseLevel}}    UnNamedAuthor    UnNamedModule    UnImpl
     [Teardown]    CaseTeardown
 
     {{preconditions}}
