@@ -1,3 +1,4 @@
+use bytes::Buf;
 use bytes::Bytes;
 use calamine::DataType;
 use calamine::Range;
@@ -5,6 +6,7 @@ use calamine::{open_workbook_auto, Error, Reader};
 use std::env::current_dir;
 
 use std::io::BufRead;
+use std::io::BufReader;
 use std::io::{stdin, stdout};
 use tokio::runtime::Runtime;
 
@@ -61,27 +63,33 @@ async fn dl_xlsx(url: &str) -> Result<Bytes, Box<dyn std::error::Error>> {
     Ok(resp_bytes)
 }
 
-fn sync_dl_xlsx(url: &str) -> Vec<u8> {
+fn sync_dl_xlsx(url: &str) -> Option<BufReader<bytes::buf::Reader<Bytes>>> {
     let tokio_rt = Runtime::new().unwrap();
     let ret_bytes = tokio_rt.block_on(dl_xlsx(url));
-    let mut vec_bytes = Vec::<u8>::new();
     if let Ok(bytes) = ret_bytes {
-        for byte in bytes {
-            vec_bytes.push(byte);
-        }
+        return Some(BufReader::new(bytes.reader()));
     }
-    vec_bytes
+    None
 }
 
-fn open_workbook_from_http_link<R>(url: &str) -> Result<R, R::Error>
-where
-    R: Reader<RS = Vec<u8>>,
-{
-    let bytes: Vec<u8> = sync_dl_xlsx(url);
-    R::new(bytes)
+// fn open_workbook_from_http_link<R>(url: &str) -> Result<R, R::Error>
+// where
+//     R: Reader<RS = BufReader<bytes::buf::Reader<Bytes>>>,
+// {
+//     R::new(sync_dl_xlsx(url).unwrap())
+// }
+
+fn open_workbook_from_http_link(url: &str) -> Result<impl Reader, Error> {
+    let pwd = current_dir().unwrap();
+    let default_path = pwd.join(format!("{}{}", "tmp", &url[(url.rfind(".").unwrap())..]));
+    let result = open_workbook_auto(default_path)?;
+    Ok(result)
 }
 
 fn main() -> Result<(), Error> {
+    let http_url="http://199.200.0.8/exports/aTrust-%E5%9F%BA%E7%BA%BF-Directory%20object%20(37478)-20211029-133012.xlsx";
+    let mut workbook = open_workbook_from_http_link(http_url)?;
+
     let pwd = current_dir().unwrap();
     let path = pwd.join("tests").join("exam0.xlsx");
     let mut workbook = open_workbook_auto(path)?;
