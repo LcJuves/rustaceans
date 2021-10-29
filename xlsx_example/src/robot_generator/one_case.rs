@@ -1,0 +1,162 @@
+use serde::{Deserialize, Serialize};
+use std::fs::{create_dir_all, File};
+use std::io::{stdin, stdout, BufRead, Write};
+use std::path::{Path, MAIN_SEPARATOR};
+
+use crate::reflection::Reflection;
+use crate::robot_generator::robot_util::*;
+
+use lazy_static::lazy_static;
+
+lazy_static! {
+    static ref AUTHOR_AND_MOD_TAG: (String, String) = get_author_and_mod_tag()
+        .unwrap_or((String::from("UnNamedAuthor"), String::from("UnNamedModule")));
+    static ref ROBOT_TEMPLATE: String = String::from(include_str!("case.robot"));
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct OneCase {
+    pub feature_name: String,
+    pub case_id: String,
+    pub case_title: String,
+    pub preconditions: String,
+    pub steps: String,
+    pub postcondition: String,
+    pub desired_result: String,
+    pub test_methods: String,
+    pub use_case_type: String,
+    pub can_be_automated: String,
+    pub tag: String,
+    pub author: String,
+    pub product_requirement_id: String,
+    pub online_question_id: String,
+    pub test_experience_id: String,
+    pub use_case_level: String,
+    pub notes: String,
+}
+
+impl Reflection for OneCase {
+    fn field_names() -> Vec<String> {
+        vec![
+            "feature_name".to_string(),
+            "case_id".to_string(),
+            "case_title".to_string(),
+            "preconditions".to_string(),
+            "steps".to_string(),
+            "postcondition".to_string(),
+            "desired_result".to_string(),
+            "test_methods".to_string(),
+            "use_case_type".to_string(),
+            "can_be_automated".to_string(),
+            "tag".to_string(),
+            "author".to_string(),
+            "product_requirement_id".to_string(),
+            "online_question_id".to_string(),
+            "test_experience_id".to_string(),
+            "use_case_level".to_string(),
+            "notes".to_string(),
+        ]
+    }
+}
+
+impl OneCase {
+    pub fn save_robot_to(&mut self, dir: &Path) -> std::io::Result<()> {
+        if self.test_methods.starts_with("自动化") && self.can_be_automated.starts_with("否") {
+            self.feature_name = self.feature_name.replace('/', &MAIN_SEPARATOR.to_string());
+            let case_dir = &dir.join(&self.feature_name);
+            if !case_dir.exists() {
+                create_dir_all(&case_dir)?;
+            }
+            let robot_path = case_dir.join(format!("{}{}", &self.case_title, ".robot"));
+            if !robot_path.exists() {
+                let mut robot_file = File::create(&robot_path)?;
+
+                let mut robot_template = ROBOT_TEMPLATE.clone();
+                robot_template = robot_template.replace("{{case_title}}", &self.case_title);
+                robot_template = robot_template.replace("{{case_id}}", &self.case_id);
+                robot_template = robot_template.replace("{{use_case_level}}", &self.use_case_level);
+
+                robot_template = robot_template.replace(
+                    "{{preconditions}}",
+                    &("# 前置条件".to_owned()
+                        + &ROBOT_COMMENT_EOL
+                        + &fmt_robot_comment_lines(&self.preconditions)),
+                );
+
+                robot_template = robot_template.replace(
+                    "{{steps}}",
+                    &("# 步骤".to_owned()
+                        + &ROBOT_COMMENT_EOL
+                        + &fmt_robot_comment_lines(&self.steps)),
+                );
+
+                robot_template = robot_template.replace(
+                    "{{desired_result}}",
+                    &("# 期望结果".to_owned()
+                        + &ROBOT_COMMENT_EOL
+                        + &fmt_robot_comment_lines(&self.desired_result)),
+                );
+
+                if !&self.notes.is_empty() {
+                    robot_template = robot_template.replace(
+                        "{{notes}}",
+                        &("# 备注".to_owned()
+                            + &ROBOT_COMMENT_EOL
+                            + &fmt_robot_comment_lines(&self.notes)),
+                    );
+                } else {
+                    robot_template = robot_template.replace("{{notes}}", "");
+                }
+
+                if !&self.postcondition.is_empty() {
+                    robot_template = robot_template.replace(
+                        "{{postcondition}}",
+                        &("# 后置条件".to_owned()
+                            + &ROBOT_COMMENT_EOL
+                            + &fmt_robot_comment_lines(&self.postcondition)),
+                    );
+                } else {
+                    robot_template = robot_template.replace("{{postcondition}}", "");
+                }
+
+                let (author_tag, mod_tag) = AUTHOR_AND_MOD_TAG.clone();
+
+                if !&author_tag.is_empty() {
+                    robot_template = robot_template.replace("UnNamedAuthor", &author_tag);
+                }
+
+                if !&mod_tag.is_empty() {
+                    robot_template = robot_template.replace("UnNamedModule", &mod_tag);
+                }
+
+                robot_file.write_all(robot_template.as_bytes())?;
+                robot_file.flush()?;
+            }
+        }
+
+        Ok(())
+    }
+}
+
+fn get_author_and_mod_tag() -> std::io::Result<(String, String)> {
+    stdout().write(b"Please enter author tag: ")?;
+    stdout().flush()?;
+    let mut author_tag = String::new();
+    stdin().lock().read_line(&mut author_tag)?;
+
+    stdout().write(b"Please enter module tag: ")?;
+    stdout().flush()?;
+    let mut mod_tag = String::new();
+    stdin().lock().read_line(&mut mod_tag)?;
+
+    Ok((
+        author_tag
+            .get(0..(author_tag.len() - 1))
+            .unwrap_or_default()
+            .to_string(),
+        mod_tag
+            .get(0..(mod_tag.len() - 1))
+            .unwrap_or_default()
+            .to_string(),
+    ))
+}

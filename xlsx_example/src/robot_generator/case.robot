@@ -2,8 +2,8 @@
 Resource    resource${/}common${/}common.robot
 
 *** Test Cases ***
-{{caseTitle}}
-    [Tags]        ID-{{caseId}}    {{useCaseLevel}}    UnNamedAuthor    UnNamedModule    UnImpl
+{{case_title}}
+    [Tags]        ID-{{case_id}}    {{use_case_level}}    UnNamedAuthor    UnNamedModule    UnImpl
     [Teardown]    CaseTeardown
 
     {{preconditions}}
@@ -12,7 +12,7 @@ Resource    resource${/}common${/}common.robot
 
     {{steps}}
 
-    {{desiredResult}}
+    {{desired_result}}
 
     {{notes}}
 
