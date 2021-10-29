@@ -1,9 +1,12 @@
+use bytes::Bytes;
 use calamine::DataType;
 use calamine::Range;
-use calamine::{open_workbook_auto, Error, Reader, Sheets};
+use calamine::{open_workbook_auto, Error, Reader};
 use std::env::current_dir;
+
 use std::io::BufRead;
 use std::io::{stdin, stdout};
+use tokio::runtime::Runtime;
 
 use std::io::Write;
 use std::path::MAIN_SEPARATOR;
@@ -51,6 +54,31 @@ fn get_author_and_mod_tag() -> std::io::Result<(String, String)> {
             .unwrap_or_default()
             .to_string(),
     ))
+}
+
+async fn dl_xlsx(url: &str) -> Result<Bytes, Box<dyn std::error::Error>> {
+    let resp_bytes = reqwest::get(url).await?.bytes().await?;
+    Ok(resp_bytes)
+}
+
+fn sync_dl_xlsx(url: &str) -> Vec<u8> {
+    let tokio_rt = Runtime::new().unwrap();
+    let ret_bytes = tokio_rt.block_on(dl_xlsx(url));
+    let mut vec_bytes = Vec::<u8>::new();
+    if let Ok(bytes) = ret_bytes {
+        for byte in bytes {
+            vec_bytes.push(byte);
+        }
+    }
+    vec_bytes
+}
+
+fn open_workbook_from_http_link<R>(url: &str) -> Result<R, R::Error>
+where
+    R: Reader<RS = Vec<u8>>,
+{
+    let bytes: Vec<u8> = sync_dl_xlsx(url);
+    R::new(bytes)
 }
 
 fn main() -> Result<(), Error> {
@@ -193,7 +221,7 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn default_sheet_of_wb(wb: &mut Sheets) -> Option<Range<DataType>> {
+fn default_sheet_of_wb(wb: &mut impl Reader) -> Option<Range<DataType>> {
     if let Some(range_ret) = wb.worksheet_range_at(0) {
         if let Ok(default_sheet) = range_ret {
             return Some(default_sheet);
