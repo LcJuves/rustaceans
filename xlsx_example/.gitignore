@@ -1,7 +1,6 @@
 *.lock
 target
 a.out
-.vscode
 .DS_Store
 *.md
 *.html
