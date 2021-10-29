@@ -1,17 +1,13 @@
-use bytes::Buf;
-use bytes::Bytes;
-use calamine::DataType;
-use calamine::Range;
-use calamine::{open_workbook_auto, Error, Reader};
-use std::env::current_dir;
+use bytes::{Buf, Bytes};
+use calamine::{open_workbook_auto, DataType, Error, Range, Reader, Sheets};
 
-use std::io::BufRead;
-use std::io::BufReader;
-use std::io::{stdin, stdout};
+use std::env::{args_os, current_dir, temp_dir};
+use std::ffi::OsString;
+use std::fs::{create_dir_all, remove_file, File};
+use std::io::{stdin, stdout, BufRead, BufReader, Write};
+use std::path::{Path, MAIN_SEPARATOR};
+
 use tokio::runtime::Runtime;
-
-use std::io::Write;
-use std::path::MAIN_SEPARATOR;
 
 mod one_case;
 use one_case::OneCase;
@@ -72,27 +68,27 @@ fn sync_dl_xlsx(url: &str) -> Option<BufReader<bytes::buf::Reader<Bytes>>> {
     None
 }
 
-// fn open_workbook_from_http_link<R>(url: &str) -> Result<R, R::Error>
-// where
-//     R: Reader<RS = BufReader<bytes::buf::Reader<Bytes>>>,
-// {
-//     R::new(sync_dl_xlsx(url).unwrap())
-// }
-
-fn open_workbook_from_http_link(url: &str) -> Result<impl Reader, Error> {
-    let pwd = current_dir().unwrap();
-    let default_path = pwd.join(format!("{}{}", "tmp", &url[(url.rfind(".").unwrap())..]));
-    let result = open_workbook_auto(default_path)?;
+fn open_workbook_from_http_link(url: &str) -> Result<Sheets, Error> {
+    let tmp_dir = temp_dir();
+    let default_path = tmp_dir.join(format!("{}{}", ".tmp", &url[(url.rfind(".").unwrap())..]));
+    let mut tmp_xlsx = File::create(&default_path)?;
+    let mut xlsx_reader = sync_dl_xlsx(url).unwrap();
+    std::io::copy(&mut xlsx_reader, &mut tmp_xlsx)?;
+    let result = open_workbook_auto(&default_path)?;
+    remove_file(&default_path)?;
     Ok(result)
 }
 
 fn main() -> Result<(), Error> {
-    let http_url="http://199.200.0.8/exports/aTrust-%E5%9F%BA%E7%BA%BF-Directory%20object%20(37478)-20211029-133012.xlsx";
-    let mut workbook = open_workbook_from_http_link(http_url)?;
+    let args_vec = args_os().collect::<Vec<OsString>>();
 
-    let pwd = current_dir().unwrap();
-    let path = pwd.join("tests").join("exam0.xlsx");
-    let mut workbook = open_workbook_auto(path)?;
+    let arg_1 = &args_vec[1];
+    let arg_1_string = &arg_1.clone().into_string().unwrap();
+    let mut workbook = if arg_1_string.starts_with("http") {
+        open_workbook_from_http_link(&arg_1_string)?
+    } else {
+        open_workbook_auto(Path::new(&arg_1))?
+    };
 
     let (author_tag, mod_tag) = get_author_and_mod_tag()?;
 
@@ -113,7 +109,7 @@ fn main() -> Result<(), Error> {
                     };
 
                     json.push('"');
-                    json.push_str(&(*one_case_field_name));
+                    json.push_str(one_case_field_name);
                     json.push_str("\":\"");
                     json.push_str(
                         &r#str
@@ -140,7 +136,6 @@ fn main() -> Result<(), Error> {
         json.push(']');
 
         let deserialized: Vec<OneCase> = serde_json::from_str(&json).unwrap();
-
         for mut one_case in deserialized {
             if one_case.test_methods.starts_with("自动化")
                 && one_case.can_be_automated.starts_with("否")
@@ -150,11 +145,11 @@ fn main() -> Result<(), Error> {
                     .replace('/', &MAIN_SEPARATOR.to_string());
                 let case_dir = current_dir().unwrap().join(&one_case.feature_name);
                 if !case_dir.exists() {
-                    std::fs::create_dir_all(&case_dir)?;
+                    create_dir_all(&case_dir)?;
                 }
                 let robot_path = case_dir.join(String::from(&one_case.case_title) + ".robot");
                 if !robot_path.exists() {
-                    let mut robot_file = std::fs::File::create(&robot_path)?;
+                    let mut robot_file = File::create(&robot_path)?;
 
                     let mut robot_template = String::from(include_str!("case.robot"));
                     robot_template = robot_template.replace("{{caseTitle}}", &one_case.case_title);
