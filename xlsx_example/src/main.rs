@@ -1,16 +1,15 @@
-use bytes::{Buf, Bytes};
-use calamine::{open_workbook_auto, DataType, Error, Range, Reader, Sheets};
-
 use std::env::{args_os, current_dir, temp_dir};
 use std::ffi::OsString;
 use std::fs::{create_dir_all, remove_file, File};
 use std::io::{stdin, stdout, BufRead, BufReader, Write};
 use std::path::{Path, MAIN_SEPARATOR};
 
-use tokio::runtime::Runtime;
-
 mod one_case;
 use one_case::OneCase;
+
+use bytes::{Buf, Bytes};
+use calamine::{open_workbook_auto, DataType, Error, Range, Reader, Sheets};
+use tokio::runtime::Runtime;
 
 const ROBOT_COMMENT_EOL: &'static str = "\n    ";
 
@@ -19,13 +18,10 @@ fn fmt_robot_comment_lines(from: &str) -> String {
     let lines: Vec<&str> = from.split('\n').collect();
     let lines_len = lines.len();
     for i in 0..lines_len {
-        let line = lines[i];
-        if !line.is_empty() {
-            ret.push_str("# ");
-            ret.push_str(line.trim_end());
-            if i != lines_len - 1 {
-                ret.push_str(&ROBOT_COMMENT_EOL);
-            }
+        ret.push_str("# ");
+        ret.push_str(lines[i].trim_end());
+        if i != lines_len - 1 {
+            ret.push_str(&ROBOT_COMMENT_EOL);
         }
     }
     ret
@@ -132,7 +128,6 @@ fn main() -> Result<(), Error> {
                 json.push(',');
             }
         }
-
         json.push(']');
 
         let deserialized: Vec<OneCase> = serde_json::from_str(&json).unwrap();
@@ -157,16 +152,12 @@ fn main() -> Result<(), Error> {
                     robot_template =
                         robot_template.replace("{{useCaseLevel}}", &one_case.use_case_level);
 
-                    if !&one_case.preconditions.is_empty() {
-                        robot_template = robot_template.replace(
-                            "{{preconditions}}",
-                            &("# 前置条件".to_owned()
-                                + ROBOT_COMMENT_EOL
-                                + &fmt_robot_comment_lines(&one_case.preconditions)),
-                        );
-                    } else {
-                        robot_template = robot_template.replace("{{preconditions}}", "");
-                    }
+                    robot_template = robot_template.replace(
+                        "{{preconditions}}",
+                        &("# 前置条件".to_owned()
+                            + ROBOT_COMMENT_EOL
+                            + &fmt_robot_comment_lines(&one_case.preconditions)),
+                    );
 
                     robot_template = robot_template.replace(
                         "{{steps}}",
