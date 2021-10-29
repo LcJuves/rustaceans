@@ -9,8 +9,8 @@ use crate::robot_generator::robot_util::*;
 use lazy_static::lazy_static;
 
 lazy_static! {
-    static ref AUTHOR_AND_MOD_TAG: (String, String) = get_author_and_mod_tag()
-        .unwrap_or((String::from("UnNamedAuthor"), String::from("UnNamedModule")));
+    static ref AUTHOR_AND_MOD_TAG: (String, String) =
+        get_author_and_mod_tag().unwrap_or(("".to_string(), "".to_string()));
     static ref ROBOT_TEMPLATE: String = String::from(include_str!("case.robot"));
 }
 
