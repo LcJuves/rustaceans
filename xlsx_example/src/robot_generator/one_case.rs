@@ -1,13 +1,13 @@
-use serde::{Deserialize, Serialize};
-use std::fs::{create_dir_all, OpenOptions};
-use std::io::{stdin, stdout, BufRead, Write};
-use std::path::{Path, MAIN_SEPARATOR};
-
 use crate::reflection::Reflection;
 use crate::robot_generator::cli_parser::CLI_MATCHES;
 use crate::robot_generator::robot_util::*;
 
+use std::fs::{create_dir_all, OpenOptions};
+use std::io::{stdin, stdout, BufRead, Write};
+use std::path::{Path, MAIN_SEPARATOR};
+
 use lazy_static::lazy_static;
+use serde::{Deserialize, Serialize};
 
 lazy_static! {
     static ref AUTHOR_AND_MOD_TAG: (String, String) =
