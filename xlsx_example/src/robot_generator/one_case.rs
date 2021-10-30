@@ -16,23 +16,23 @@ lazy_static! {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct OneCase {
-    pub feature_name: String,
-    pub case_id: String,
-    pub case_title: String,
-    pub preconditions: String,
-    pub steps: String,
-    pub postcondition: String,
-    pub desired_result: String,
-    pub test_methods: String,
-    pub use_case_type: String,
-    pub can_be_automated: String,
-    pub tag: String,
-    pub author: String,
-    pub product_requirement_id: String,
-    pub online_question_id: String,
-    pub test_experience_id: String,
-    pub use_case_level: String,
-    pub notes: String,
+    feature_name: String,
+    case_id: String,
+    case_title: String,
+    preconditions: String,
+    steps: String,
+    postcondition: String,
+    desired_result: String,
+    test_methods: String,
+    use_case_type: String,
+    can_be_automated: String,
+    tag: String,
+    author: String,
+    product_requirement_id: String,
+    online_question_id: String,
+    test_experience_id: String,
+    use_case_level: String,
+    notes: String,
 }
 
 impl Reflection for OneCase {
@@ -61,6 +61,8 @@ impl Reflection for OneCase {
 
 impl OneCase {
     pub fn save_robot_to(&mut self, dir: &Path) -> std::io::Result<()> {
+        let (ref author_tag, mod_tag) = &*AUTHOR_AND_MOD_TAG;
+
         if self.test_methods.starts_with("自动化") && self.can_be_automated.starts_with("否") {
             self.feature_name = self.feature_name.replace('/', &MAIN_SEPARATOR.to_string());
             let case_dir = &dir.join(&self.feature_name);
@@ -118,8 +120,6 @@ impl OneCase {
                 } else {
                     robot_template = robot_template.replace("{{postcondition}}", "");
                 }
-
-                let (author_tag, mod_tag) = AUTHOR_AND_MOD_TAG.clone();
 
                 if !&author_tag.is_empty() {
                     robot_template = robot_template.replace("UnNamedAuthor", &author_tag);
