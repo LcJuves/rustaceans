@@ -9,25 +9,28 @@ use std::path::Path;
 use calamine::{open_workbook_auto, Error, Sheets};
 
 pub(crate) fn robot_generator_main() -> Result<(), Error> {
-    let args_vec = args_os().collect::<Vec<OsString>>();
+    let mut args_vec = args_os().collect::<Vec<OsString>>();
     if args_vec.len() < 2 {
         eprintln!("At least one command line parameter needs to be passed!");
         std::process::exit(-1);
     }
-
-    let ref cli_matches = CLI_MATCHES;
-    let mut workbook: Sheets;
-
     let arg_1 = &args_vec[1];
     let arg_1_string = &arg_1.clone().into_string().unwrap();
+
+    let mut workbook: Sheets;
 
     if !arg_1_string.starts_with("-") {
         workbook = if arg_1_string.starts_with("http") {
             open_workbook_by_url(&arg_1_string)?
         } else {
-            open_workbook_auto(Path::new(&arg_1))?
+            let wb_path = &arg_1.clone();
+            // if cfg!(windows) {
+            //     args_vec[1] = OsString::new();
+            // }
+            open_workbook_auto(Path::new(wb_path))?
         };
     } else {
+        let ref cli_matches = CLI_MATCHES;
         let xlsx_url = cli_matches.value_of("xlsx-url").unwrap_or("");
         let xlsx_path = cli_matches.value_of("xlsx-path").unwrap_or("");
 
