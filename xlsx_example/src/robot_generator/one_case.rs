@@ -1,9 +1,10 @@
 use serde::{Deserialize, Serialize};
-use std::fs::{create_dir_all, File};
+use std::fs::{create_dir_all, OpenOptions};
 use std::io::{stdin, stdout, BufRead, Write};
 use std::path::{Path, MAIN_SEPARATOR};
 
 use crate::reflection::Reflection;
+use crate::robot_generator::cli_parser::CLI_MATCHES;
 use crate::robot_generator::robot_util::*;
 
 use lazy_static::lazy_static;
@@ -62,6 +63,7 @@ impl Reflection for OneCase {
 impl OneCase {
     pub fn save_robot_to(&mut self, dir: &Path) -> std::io::Result<()> {
         let (ref author_tag, mod_tag) = &*AUTHOR_AND_MOD_TAG;
+        let ref cli_matches = CLI_MATCHES;
 
         if self.test_methods.starts_with("自动化") && self.can_be_automated.starts_with("否") {
             self.feature_name = self.feature_name.replace('/', &MAIN_SEPARATOR.to_string());
@@ -70,8 +72,37 @@ impl OneCase {
                 create_dir_all(&case_dir)?;
             }
             let robot_path = case_dir.join(format!("{}{}", &self.case_title, ".robot"));
-            if !robot_path.exists() {
-                let mut robot_file = File::create(&robot_path)?;
+            let overwritten_and_confirm_by_user = || -> std::io::Result<bool> {
+                if !cli_matches.is_present("overwritten") {
+                    return Ok(false);
+                }
+
+                stdout().write_all(
+                    format!("Overwritten '{}' ? [y/N] ", &robot_path.to_string_lossy()).as_bytes(),
+                )?;
+                stdout().flush()?;
+                let mut confirmation = String::new();
+                stdin().lock().read_line(&mut confirmation)?;
+
+                if confirmation.starts_with("y") || confirmation.starts_with("Y") {
+                    return Ok(true);
+                }
+
+                Ok(false)
+            };
+            if overwritten_and_confirm_by_user().unwrap_or(false)
+                || cli_matches.is_present("overwritten-slient")
+                || !robot_path.exists()
+            {
+                if cli_matches.is_present("v") {
+                    println!("Generating {}", &robot_path.to_string_lossy());
+                }
+                let mut robot_file = OpenOptions::new()
+                    .create(true)
+                    .read(true)
+                    .write(true)
+                    .truncate(true)
+                    .open(&robot_path)?;
 
                 let mut robot_template = ROBOT_TEMPLATE.clone();
                 robot_template = robot_template.replace("{{case_title}}", &self.case_title);

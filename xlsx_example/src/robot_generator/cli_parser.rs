@@ -27,11 +27,18 @@ lazy_static! {
                 .long("verbose")
                 .multiple(true)
                 .help("Verbose"),
-        ).arg(
+        )
+        .arg(
+            Arg::with_name("overwritten-slient")
+                .long("overwritten-slient")
+                .multiple(true)
+                .help("If the robot file to be generated already exists, it will be overwritten"),
+        )
+        .arg(
             Arg::with_name("overwritten")
                 .long("overwritten")
                 .multiple(true)
-                .help("If the single Robot file to be generated already exists, it will be overwritten (user confirmation is required)"),
+                .help("If the robot file to be generated already exists, it will be overwritten (user confirmation is required)"),
         )
         .get_matches()
     };
