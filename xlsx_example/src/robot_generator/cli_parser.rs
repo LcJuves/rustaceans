@@ -10,7 +10,7 @@ lazy_static! {
         .arg(
             Arg::with_name("xlsx-url")
                 .long("xlsx-url")
-                .help("Set an xlsx url to generate robot files; priority is higher than `xlsx-path` option")
+                .help("Set an xlsx url to generate robot files (priority is higher than `xlsx-path` option)")
                 .takes_value(true)
                 .required_unless("xlsx-path"),
         )
