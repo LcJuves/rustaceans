@@ -9,7 +9,7 @@ use std::path::Path;
 use calamine::{open_workbook_auto, Error, Sheets};
 
 pub(crate) fn robot_generator_main() -> Result<(), Error> {
-    let mut args_vec = args_os().collect::<Vec<OsString>>();
+    let args_vec = args_os().collect::<Vec<OsString>>();
     if args_vec.len() < 2 {
         eprintln!("At least one command line parameter needs to be passed!");
         std::process::exit(-1);
@@ -24,9 +24,6 @@ pub(crate) fn robot_generator_main() -> Result<(), Error> {
             open_workbook_by_url(&arg_1_string)?
         } else {
             let wb_path = &arg_1.clone();
-            // if cfg!(windows) {
-            //     args_vec[1] = OsString::new();
-            // }
             open_workbook_auto(Path::new(wb_path))?
         };
     } else {

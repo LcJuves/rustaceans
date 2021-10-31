@@ -1,5 +1,5 @@
 use crate::reflection::Reflection;
-use crate::robot_generator::cli_parser::CLI_MATCHES;
+use crate::robot_generator::cli_parser::*;
 use crate::robot_generator::robot_util::*;
 
 use std::fs::{create_dir_all, OpenOptions};
@@ -63,7 +63,6 @@ impl Reflection for OneCase {
 impl OneCase {
     pub fn save_robot_to(&mut self, dir: &Path) -> std::io::Result<()> {
         let (ref author_tag, mod_tag) = &*AUTHOR_AND_MOD_TAG;
-        let ref cli_matches = CLI_MATCHES;
 
         if self.test_methods.starts_with("自动化") && self.can_be_automated.starts_with("否") {
             self.feature_name = self.feature_name.replace('/', &MAIN_SEPARATOR.to_string());
@@ -73,7 +72,7 @@ impl OneCase {
             }
             let robot_path = case_dir.join(format!("{}{}", &self.case_title, ".robot"));
             let overwritten_and_confirm_by_user = || -> std::io::Result<bool> {
-                if !cli_matches.is_present("overwritten") {
+                if !args_os_has_flag("--overwritten") {
                     return Ok(false);
                 }
 
@@ -91,10 +90,10 @@ impl OneCase {
                 Ok(false)
             };
             if overwritten_and_confirm_by_user().unwrap_or(false)
-                || cli_matches.is_present("overwritten-slient")
+                || args_os_has_flag("--overwritten-slient")
                 || !robot_path.exists()
             {
-                if cli_matches.is_present("v") {
+                if args_os_has_flag("-v") || args_os_has_flag("--verbose") {
                     println!("Generating {}", &robot_path.to_string_lossy());
                 }
                 let mut robot_file = OpenOptions::new()

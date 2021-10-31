@@ -1,3 +1,6 @@
+use std::env::args_os;
+use std::ffi::OsString;
+
 use clap::{App, Arg, ArgMatches};
 use lazy_static::lazy_static;
 
@@ -42,4 +45,14 @@ lazy_static! {
         )
         .get_matches()
     };
+}
+
+pub(crate) fn args_os_has_flag(name: &str) -> bool {
+    let args_vec = args_os().collect::<Vec<OsString>>();
+    for arg in args_vec {
+        if arg == name {
+            return true;
+        }
+    }
+    false
 }

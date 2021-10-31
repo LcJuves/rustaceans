@@ -20,7 +20,8 @@
                 }
             },
             "args": [
-                "tests/exam0.xlsx"
+                "tests/exam0.xlsx",
+                "-v"
             ],
             "cwd": "${workspaceFolder}"
         },
@@ -41,7 +42,8 @@
                 }
             },
             "args": [
-                "tests/exam0.xlsx"
+                "tests/exam0.xlsx",
+                "-v"
             ],
             "cwd": "${workspaceFolder}"
         }
