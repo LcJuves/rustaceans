@@ -21,7 +21,8 @@ pub(crate) fn robot_generator_main() -> Result<(), Error> {
 
     if !arg_1_string.starts_with("-") {
         workbook = if arg_1_string.starts_with("http") {
-            open_workbook_by_url(&arg_1_string)?
+            let wb_url = &arg_1_string.clone();
+            open_workbook_by_url(&wb_url)?
         } else {
             let wb_path = &arg_1.clone();
             open_workbook_auto(Path::new(wb_path))?
