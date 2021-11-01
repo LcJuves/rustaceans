@@ -180,13 +180,10 @@ fn get_author_and_mod_tag() -> std::io::Result<(String, String)> {
     stdin().lock().read_line(&mut mod_tag)?;
 
     Ok((
-        author_tag
-            .get(0..(author_tag.len() - 1))
-            .unwrap_or_default()
+        author_tag[..(author_tag
+            .rfind("\r")
+            .unwrap_or(author_tag.rfind("\n").unwrap()))]
             .to_string(),
-        mod_tag
-            .get(0..(mod_tag.len() - 1))
-            .unwrap_or_default()
-            .to_string(),
+        mod_tag[..(mod_tag.rfind("\r").unwrap_or(mod_tag.rfind("\n").unwrap()))].to_string(),
     ))
 }
