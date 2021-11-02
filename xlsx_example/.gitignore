@@ -9,3 +9,5 @@ a.out
 *.so
 aTr*
 tests/tmp.json
+*.exe
+*.dll

@@ -11,7 +11,11 @@ use calamine::{open_workbook_auto, Error, Sheets};
 pub(crate) fn robot_generator_main() -> Result<(), Error> {
     let args_vec = args_os().collect::<Vec<OsString>>();
     if args_vec.len() < 2 {
-        eprintln!("At least one command line parameter needs to be passed!");
+        println!(
+            "\u{1b}[91m{}\u{1b}[0m",
+            "At least one command line parameter needs to be passed!"
+        );
+        println!("For more information try \u{1b}[92m{}\u{1b}[0m", "--help");
         std::process::exit(-1);
     }
     let arg_1 = &args_vec[1];
