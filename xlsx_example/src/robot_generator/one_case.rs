@@ -151,12 +151,16 @@ impl OneCase {
                     robot_template = robot_template.replace("{{postcondition}}", "");
                 }
 
-                if !&author_tag.is_empty() {
-                    robot_template = robot_template.replace("UnNamedAuthor", &author_tag);
+                if !&author_tag.trim().is_empty() {
+                    robot_template = robot_template.replace("{{author_tag}}", &author_tag);
+                } else {
+                    robot_template = robot_template.replace("{{author_tag}}", "UnNamedAuthor");
                 }
 
-                if !&mod_tag.is_empty() {
-                    robot_template = robot_template.replace("UnNamedModule", &mod_tag);
+                if !&mod_tag.trim().is_empty() {
+                    robot_template = robot_template.replace("{{mod_tag}}", &mod_tag);
+                } else {
+                    robot_template = robot_template.replace("{{mod_tag}}", "UnNamedModule");
                 }
 
                 robot_file.write_all(robot_template.as_bytes())?;
