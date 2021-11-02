@@ -6,14 +6,15 @@ use lazy_static::lazy_static;
 
 lazy_static! {
     pub static ref CLI_MATCHES: ArgMatches<'static> = {
-        App::new("RF Robot Generator")
+        App::new("RF TestCase Generator")
         .version("1.0")
         .author("Liangcheng Juves <liangchengj@outlook.com>")
-        .usage("xlsx_example [FLAGS] [OPTIONS]")
+        .usage("genrobot [FLAGS] [OPTIONS]")
         .arg(
             Arg::with_name("xlsx-url")
                 .long("xlsx-url")
-                .help("Set an xlsx url to generate robot files (priority is higher than `xlsx-path` option)")
+                .help("Set an xlsx url to generate robot files (priority is higher than `--xlsx-path` option)")
+                .value_name("XLSX_URL")
                 .takes_value(true)
                 .required_unless("xlsx-path"),
         )
@@ -21,6 +22,7 @@ lazy_static! {
             Arg::with_name("xlsx-path")
                 .long("xlsx-path")
                 .help("Set an xlsx path to generate robot files")
+                .value_name("XLSX_PATH")
                 .takes_value(true)
                 .required_unless("xlsx-url"),
         )
