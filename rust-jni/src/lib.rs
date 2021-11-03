@@ -16,10 +16,10 @@ impl_jni_on_unload!(_, _, {
 
 unsafe_jni_fn_def!(
     Java_CallJNI_getVersion,
-    (env: *mut JNIEnv, _: jclass),
-    jint,
+    (env: *mut JNIEnv, _: Jclass),
+    Jint,
     {
-        let fn_get_version = (*(*env)).GetVersion.unwrap();
+        let fn_get_version = (*(*env)).get_version.unwrap();
         fn_get_version(env)
     }
 );
@@ -28,41 +28,41 @@ unsafe_jni_fn_def!(
     Java_CallJNI_defineClass,
     (
         env: *mut JNIEnv,
-        _: jclass,
+        _: Jclass,
         _name: *const c_char,
-        _loader: jobject,
-        _buf: *const jbyte,
-        _len: jsize
+        _loader: Jobject,
+        _buf: *const Jbyte,
+        _len: Jsize
     ),
-    jclass,
+    Jclass,
     {
-        let fn_find_class = (*(*env)).FindClass.unwrap();
+        let fn_find_class = (*(*env)).find_class.unwrap();
         fn_find_class(env, CString::new("java/lang/Class").unwrap().into_raw())
     }
 );
 
 unsafe_jni_fn_def!(
     Java_CallJNI_findClass,
-    (env: *mut JNIEnv, _: jclass, name: jstring),
-    jclass,
+    (env: *mut JNIEnv, _: Jclass, name: Jstring),
+    Jclass,
     {
-        let fn_get_string_utf_chars = (*(*env)).GetStringUTFChars.unwrap();
-        let c_str = fn_get_string_utf_chars(env, name, JNI_FALSE as *mut jboolean);
+        let fn_get_string_utf_chars = (*(*env)).get_string_utfchars.unwrap();
+        let c_str = fn_get_string_utf_chars(env, name, JNI_FALSE as *mut Jboolean);
 
-        let fn_find_class = (*(*env)).FindClass.unwrap();
+        let fn_find_class = (*(*env)).find_class.unwrap();
         fn_find_class(env, c_str)
     }
 );
 
 unsafe_jni_fn_def!(
     Java_CallJNI_getSystemOut,
-    (env: *mut JNIEnv, _: jclass),
-    jobject,
+    (env: *mut JNIEnv, _: Jclass),
+    Jobject,
     {
-        let fn_find_class = (*(*env)).FindClass.unwrap();
+        let fn_find_class = (*(*env)).find_class.unwrap();
         let jcls_system = fn_find_class(env, CString::new("java/lang/System").unwrap().into_raw());
 
-        let fn_get_static_field_id = (*(*env)).GetStaticFieldID.unwrap();
+        let fn_get_static_field_id = (*(*env)).get_static_field_id.unwrap();
         let jfid_out = fn_get_static_field_id(
             env,
             jcls_system,
@@ -70,7 +70,7 @@ unsafe_jni_fn_def!(
             CString::new("Ljava/io/PrintStream;").unwrap().into_raw(),
         );
 
-        let fn_get_static_object_field = (*(*env)).GetStaticObjectField.unwrap();
+        let fn_get_static_object_field = (*(*env)).get_static_object_field.unwrap();
         let out = fn_get_static_object_field(env, jcls_system, jfid_out);
 
         out
