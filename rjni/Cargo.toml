@@ -1,5 +1,5 @@
 [package]
-name = "rust-jni"
+name = "rjni"
 version = "0.1.0"
 authors = ["Liangcheng Juves <liangchengj@outlook.com>"]
 edition = "2018"
