@@ -1,19 +1,19 @@
 [package]
-name = "xlsx_example"
-version = "0.1.0"
+name = "xlsx-example"
+version = "1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 calamine = "0.18.0"
-serde = { version = "1.0.130", features = ["derive"] }
-serde_json = "1.0.68"
 reqwest = "0.11.6"
 tokio = { version = "1", features = ["full"] }
-lazy_static = "1.4.0"
 clap = "2.33.3"
-rrflect = { version = "0.1.0", path = "../rrflect" }
+# rrflect = { version = "0.1.0", path = "../rrflect" }
+serde = { version = "1.0.130", features = ["derive"] }
+serde_json = "1.0.68"
+lazy_static = "1.4.0"
 
 [dependencies.bytes]
 version = "1.0"
