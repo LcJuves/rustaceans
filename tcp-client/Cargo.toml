@@ -1,5 +1,5 @@
 [package]
-name = "tcp_client"
+name = "tcp-client"
 version = "0.1.0"
 authors = ["Liangcheng Juves <liangchengj@outlook.com>"]
 edition = "2021"
