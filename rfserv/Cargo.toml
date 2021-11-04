@@ -7,5 +7,6 @@ edition = "2021"
 
 [dependencies]
 fmedia = "0.2.0"
+
 [dependencies.lazy_static]
 version = "1.4.0"
