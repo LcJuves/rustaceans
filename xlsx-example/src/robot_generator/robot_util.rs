@@ -28,7 +28,7 @@ pub(crate) fn fmt_robot_comment_lines(from: &str) -> String {
     ret
 }
 
-pub(crate) fn get_one_line_comment_prefix() -> String {
+fn get_one_line_comment_prefix() -> String {
     return if args_os_has_flag("--log-comments") {
         "Log    ".to_string()
     } else {
