@@ -27,6 +27,22 @@ lazy_static! {
                 .required_unless("xlsx-url"),
         )
         .arg(
+            Arg::with_name("author-tag")
+                .long("author-tag")
+                .help("The author tag is included in robot files to be generated")
+                .value_name("AUTHOR_TAG")
+                .takes_value(true)
+                .required(false)
+        )
+        .arg(
+            Arg::with_name("mod-tag")
+                .long("mod-tag")
+                .help("The module tag is included in robot files to be generated")
+                .value_name("MOD_TAG")
+                .takes_value(true)
+                .required(false)
+        )
+        .arg(
             Arg::with_name("v")
                 .short("v")
                 .long("verbose")
@@ -57,4 +73,23 @@ pub(crate) fn args_os_has_flag(name: &str) -> bool {
         }
     }
     false
+}
+
+pub(crate) fn option_value_of(name: &str) -> Option<String> {
+    let args_vec = args_os().collect::<Vec<OsString>>();
+    for idx in 0..(args_vec.len() - 1) {
+        if args_vec[idx] == name {
+            if let Some(os_string) = args_vec.get(idx + 1usize) {
+                let ret_string = os_string.to_string_lossy().to_string();
+                return if !ret_string.trim().is_empty() {
+                    Some(ret_string)
+                } else {
+                    None
+                };
+            } else {
+                return None;
+            }
+        }
+    }
+    None
 }

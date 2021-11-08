@@ -70,6 +70,7 @@ impl OneCase {
             if !case_dir.exists() {
                 create_dir_all(&case_dir)?;
             }
+            self.case_title = self.case_title.replace("/", "---").replace(r"\", "---");
             let robot_path = case_dir.join(format!("{}{}", &self.case_title, ".robot"));
             let overwritten_and_confirm_by_user = || -> std::io::Result<bool> {
                 if !args_os_has_flag("--overwritten") {
@@ -173,21 +174,33 @@ impl OneCase {
 }
 
 fn get_author_and_mod_tag() -> std::io::Result<(String, String)> {
-    stdout().write(b"Please enter author tag: ")?;
-    stdout().flush()?;
     let mut author_tag = String::new();
-    stdin().lock().read_line(&mut author_tag)?;
-
-    stdout().write(b"Please enter module tag: ")?;
-    stdout().flush()?;
     let mut mod_tag = String::new();
-    stdin().lock().read_line(&mut mod_tag)?;
+
+    if let Some(val) = option_value_of("--author-tag") {
+        author_tag = val.trim().to_string();
+    } else {
+        stdout().write(b"Please enter author tag: ")?;
+        stdout().flush()?;
+        stdin().lock().read_line(&mut author_tag)?;
+    }
+
+    if let Some(val) = option_value_of("--mod-tag") {
+        mod_tag = val.trim().to_string();
+    } else {
+        stdout().write(b"Please enter module tag: ")?;
+        stdout().flush()?;
+        stdin().lock().read_line(&mut mod_tag)?;
+    }
 
     Ok((
         author_tag[..(author_tag
             .rfind("\r")
-            .unwrap_or(author_tag.rfind("\n").unwrap()))]
+            .unwrap_or(author_tag.rfind("\n").unwrap_or(author_tag.len())))]
             .to_string(),
-        mod_tag[..(mod_tag.rfind("\r").unwrap_or(mod_tag.rfind("\n").unwrap()))].to_string(),
+        mod_tag[..(mod_tag
+            .rfind("\r")
+            .unwrap_or(mod_tag.rfind("\n").unwrap_or(mod_tag.len())))]
+            .to_string(),
     ))
 }
