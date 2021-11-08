@@ -2,6 +2,7 @@ use crate::reflection::Reflection;
 use crate::robot_generator::cli_parser::*;
 use crate::robot_generator::robot_util::*;
 
+use core::char::REPLACEMENT_CHARACTER;
 use std::fs::{create_dir_all, OpenOptions};
 use std::io::{stdin, stdout, BufRead, Write};
 use std::path::{Path, MAIN_SEPARATOR};
@@ -70,7 +71,17 @@ impl OneCase {
             if !case_dir.exists() {
                 create_dir_all(&case_dir)?;
             }
-            self.case_title = self.case_title.replace("/", "---").replace(r"\", "---");
+            self.case_title = self
+                .case_title
+                .replace(r"\", &REPLACEMENT_CHARACTER.to_string())
+                .replace("/", &REPLACEMENT_CHARACTER.to_string())
+                .replace(":", &REPLACEMENT_CHARACTER.to_string())
+                .replace("*", &REPLACEMENT_CHARACTER.to_string())
+                .replace("?", &REPLACEMENT_CHARACTER.to_string())
+                .replace(r#"""#, &REPLACEMENT_CHARACTER.to_string())
+                .replace("<", &REPLACEMENT_CHARACTER.to_string())
+                .replace(">", &REPLACEMENT_CHARACTER.to_string())
+                .replace("|", &REPLACEMENT_CHARACTER.to_string());
             let robot_path = case_dir.join(format!("{}{}", &self.case_title, ".robot"));
             let overwritten_and_confirm_by_user = || -> std::io::Result<bool> {
                 if !args_os_has_flag("--overwritten") {
