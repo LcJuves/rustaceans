@@ -81,14 +81,13 @@ pub(crate) fn args_os_has_flag(name: &str) -> bool {
     false
 }
 
-pub(crate) fn option_value_of(name: &str) -> Option<String> {
+pub(crate) fn option_value_of(name: &str) -> Option<OsString> {
     let args_vec = args_os().collect::<Vec<OsString>>();
     for idx in 0..(args_vec.len() - 1) {
         if args_vec[idx] == name {
             if let Some(os_string) = args_vec.get(idx + 1usize) {
-                let ret_string = os_string.to_string_lossy().to_string();
-                return if !ret_string.trim().is_empty() {
-                    Some(ret_string)
+                return if !os_string.to_string_lossy().trim().is_empty() {
+                    Some(os_string.clone())
                 } else {
                     None
                 };

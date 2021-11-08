@@ -178,7 +178,7 @@ fn get_author_and_mod_tag() -> std::io::Result<(String, String)> {
     let mut mod_tag = String::new();
 
     if let Some(val) = option_value_of("--author-tag") {
-        author_tag = val.trim().to_string();
+        author_tag = val.to_string_lossy().trim().to_string();
     } else {
         stdout().write(b"Please enter author tag: ")?;
         stdout().flush()?;
@@ -186,7 +186,7 @@ fn get_author_and_mod_tag() -> std::io::Result<(String, String)> {
     }
 
     if let Some(val) = option_value_of("--mod-tag") {
-        mod_tag = val.trim().to_string();
+        mod_tag = val.to_string_lossy().trim().to_string();
     } else {
         stdout().write(b"Please enter module tag: ")?;
         stdout().flush()?;

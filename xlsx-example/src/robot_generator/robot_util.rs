@@ -4,7 +4,13 @@ use lazy_static::lazy_static;
 
 lazy_static! {
     pub static ref ROBOT_COMMENT_EOL: &'static str = "\n    ";
-    pub static ref ONE_LINE_COMMENT_PREFIX: String = get_one_line_comment_prefix();
+    pub static ref ONE_LINE_COMMENT_PREFIX: &'static str = {
+        if args_os_has_flag("--log-comments") {
+            "Log    "
+        } else {
+            "# "
+        }
+    };
 }
 
 pub(crate) fn fmt_robot_comment_lines(from: &str) -> String {
@@ -26,12 +32,4 @@ pub(crate) fn fmt_robot_comment_lines(from: &str) -> String {
         }
     }
     ret
-}
-
-fn get_one_line_comment_prefix() -> String {
-    return if args_os_has_flag("--log-comments") {
-        "Log    ".to_string()
-    } else {
-        "# ".to_string()
-    };
 }
