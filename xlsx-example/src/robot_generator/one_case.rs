@@ -111,21 +111,21 @@ impl OneCase {
 
                 robot_template = robot_template.replace(
                     "{{preconditions}}",
-                    &("# 前置条件".to_owned()
+                    &(format!("{}前置条件", &*ONE_LINE_COMMENT_PREFIX).to_owned()
                         + &ROBOT_COMMENT_EOL
                         + &fmt_robot_comment_lines(&self.preconditions)),
                 );
 
                 robot_template = robot_template.replace(
                     "{{steps}}",
-                    &("# 步骤".to_owned()
+                    &(format!("{}步骤", &*ONE_LINE_COMMENT_PREFIX).to_owned()
                         + &ROBOT_COMMENT_EOL
                         + &fmt_robot_comment_lines(&self.steps)),
                 );
 
                 robot_template = robot_template.replace(
                     "{{desired_result}}",
-                    &("# 期望结果".to_owned()
+                    &(format!("{}期望结果", &*ONE_LINE_COMMENT_PREFIX).to_owned()
                         + &ROBOT_COMMENT_EOL
                         + &fmt_robot_comment_lines(&self.desired_result)),
                 );
@@ -133,7 +133,7 @@ impl OneCase {
                 if !&self.notes.is_empty() {
                     robot_template = robot_template.replace(
                         "{{notes}}",
-                        &("# 备注".to_owned()
+                        &(format!("{}备注", &*ONE_LINE_COMMENT_PREFIX).to_owned()
                             + &ROBOT_COMMENT_EOL
                             + &fmt_robot_comment_lines(&self.notes)),
                     );
@@ -144,7 +144,7 @@ impl OneCase {
                 if !&self.postcondition.is_empty() {
                     robot_template = robot_template.replace(
                         "{{postcondition}}",
-                        &("# 后置条件".to_owned()
+                        &(format!("{}后置条件", &*ONE_LINE_COMMENT_PREFIX).to_owned()
                             + &ROBOT_COMMENT_EOL
                             + &fmt_robot_comment_lines(&self.postcondition)),
                     );

@@ -7,7 +7,7 @@ use lazy_static::lazy_static;
 lazy_static! {
     pub static ref CLI_MATCHES: ArgMatches<'static> = {
         App::new("RF TestCase Generator")
-        .version("1.0")
+        .version("1.0.0")
         .author("Liangcheng Juves <liangchengj@outlook.com>")
         .usage("genrobot [FLAGS] [OPTIONS]")
         .arg(
@@ -60,6 +60,12 @@ lazy_static! {
                 .long("overwritten")
                 .multiple(true)
                 .help("If the robot file to be generated already exists, it will be overwritten (user confirmation is required)"),
+        )
+        .arg(
+            Arg::with_name("log-comments")
+                .long("log-comments")
+                .multiple(true)
+                .help("Use the `BuiltIn.Log` keyword to output comments in the robot file to be generated"),
         )
         .get_matches()
     };
