@@ -13,7 +13,7 @@ pub(crate) fn fmt_robot_comment_lines(from: &str) -> String {
     let lines_len = lines.len();
     for i in 0..lines_len {
         let mut line = lines[i].trim_end();
-        if args_os_has_flag("--log-comments") && line.trim().is_empty() {
+        if line.trim().is_empty() && i > 0 {
             continue;
         }
         ret.push_str(&ONE_LINE_COMMENT_PREFIX);
