@@ -7,7 +7,7 @@ use lazy_static::lazy_static;
 lazy_static! {
     pub static ref CLI_MATCHES: ArgMatches<'static> = {
         App::new("RF TestCase Generator")
-        .version("1.0.0")
+        .version("1.0.1")
         .author("Liangcheng Juves <liangchengj@outlook.com>")
         .usage("genrobot [FLAGS] [OPTIONS]")
         .arg(
@@ -45,7 +45,7 @@ lazy_static! {
         .arg(
             Arg::with_name("export-def-temp")
                 .long("export-def-temp")
-                .help("Export the template used in the generated robot files")
+                .help("Export the default template used in the generated robot files")
                 .value_name("EXPORT_PATH")
                 .takes_value(true)
                 .required(false)
