@@ -51,6 +51,14 @@ lazy_static! {
                 .required(false)
         )
         .arg(
+            Arg::with_name("use-temp")
+                .long("use-temp")
+                .help("Use the specified template to generate robot files")
+                .value_name("TEMP_PATH")
+                .takes_value(true)
+                .required_unless_one(&vec!["xlsx-url","xlsx-path"])
+        )
+        .arg(
             Arg::with_name("v")
                 .short("v")
                 .long("verbose")

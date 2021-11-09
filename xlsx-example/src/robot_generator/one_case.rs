@@ -3,7 +3,7 @@ use crate::robot_generator::cli_parser::*;
 use crate::robot_generator::robot_util::*;
 
 use core::char::REPLACEMENT_CHARACTER;
-use std::fs::{create_dir_all, OpenOptions};
+use std::fs::{create_dir_all, File, OpenOptions};
 use std::io::{stdin, stdout, BufRead, Write};
 use std::path::{Path, MAIN_SEPARATOR};
 
@@ -14,6 +14,44 @@ lazy_static! {
     static ref AUTHOR_AND_MOD_TAG: (String, String) =
         get_author_and_mod_tag().unwrap_or(("".to_string(), "".to_string()));
     pub static ref ROBOT_TEMPLATE: String = String::from(include_str!("case.robot"));
+    static ref USER_ROBOT_TEMPLATE: String = {
+        let read_user_robot_template = || -> std::io::Result<String> {
+            if let Some(temp_path) = option_value_of("--use-temp") {
+                let mut temp_file = File::open(Path::new(&temp_path))?;
+                let mut ret_vec = Vec::<u8>::new();
+                std::io::copy(&mut temp_file, &mut ret_vec)?;
+                let temp_file_text = String::from_utf8_lossy(&ret_vec);
+                for interpolation_expression in vec![
+                    "{{case_title}}",
+                    "{{case_id}}",
+                    "{{use_case_level}}",
+                    "{{preconditions}}",
+                    "{{steps}}",
+                    "{{desired_result}}",
+                    "{{notes}}",
+                    "{{postcondition}}",
+                    "{{author_tag}}",
+                    "{{mod_tag}}",
+                ] {
+                    if !temp_file_text.contains(interpolation_expression) {
+                        println!(
+                            "There is no interpolation expression in your template: {}",
+                            interpolation_expression
+                        );
+                        std::process::exit(-1);
+                    }
+                }
+                Ok(temp_file_text.to_string())
+            } else {
+                Ok(String::new())
+            }
+        };
+        if let Ok(ret_string) = read_user_robot_template() {
+            ret_string
+        } else {
+            String::new()
+        }
+    };
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -64,6 +102,7 @@ impl Reflection for OneCase {
 impl OneCase {
     pub fn save_robot_to(&mut self, dir: &Path) -> std::io::Result<()> {
         let (ref author_tag, mod_tag) = &*AUTHOR_AND_MOD_TAG;
+        let user_robot_template = &*USER_ROBOT_TEMPLATE;
 
         if self.test_methods.starts_with("自动化") && self.can_be_automated.starts_with("否") {
             self.feature_name = self
@@ -125,7 +164,11 @@ impl OneCase {
                     .truncate(true)
                     .open(&robot_path)?;
 
-                let mut robot_template = ROBOT_TEMPLATE.clone();
+                let mut robot_template = if !user_robot_template.is_empty() {
+                    user_robot_template.clone()
+                } else {
+                    ROBOT_TEMPLATE.clone()
+                };
                 robot_template = robot_template.replace("{{case_title}}", &self.case_title);
                 robot_template = robot_template.replace("{{case_id}}", &self.case_id);
                 robot_template = robot_template.replace("{{use_case_level}}", &self.use_case_level);
