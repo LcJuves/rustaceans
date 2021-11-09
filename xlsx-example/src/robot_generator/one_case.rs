@@ -66,7 +66,17 @@ impl OneCase {
         let (ref author_tag, mod_tag) = &*AUTHOR_AND_MOD_TAG;
 
         if self.test_methods.starts_with("自动化") && self.can_be_automated.starts_with("否") {
-            self.feature_name = self.feature_name.replace('/', &MAIN_SEPARATOR.to_string());
+            self.feature_name = self
+                .feature_name
+                .replace('/', &MAIN_SEPARATOR.to_string())
+                .replace(r"\", &REPLACEMENT_CHARACTER.to_string())
+                .replace(":", &REPLACEMENT_CHARACTER.to_string())
+                .replace("*", &REPLACEMENT_CHARACTER.to_string())
+                .replace("?", &REPLACEMENT_CHARACTER.to_string())
+                .replace(r#"""#, &REPLACEMENT_CHARACTER.to_string())
+                .replace("<", &REPLACEMENT_CHARACTER.to_string())
+                .replace(">", &REPLACEMENT_CHARACTER.to_string())
+                .replace("|", &REPLACEMENT_CHARACTER.to_string());
             let case_dir = &dir.join(&self.feature_name);
             if !case_dir.exists() {
                 create_dir_all(&case_dir)?;
