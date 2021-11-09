@@ -1,9 +1,10 @@
 use crate::robot_generator::cli_parser::*;
-use crate::robot_generator::one_case::OneCase;
+use crate::robot_generator::one_case::{OneCase, ROBOT_TEMPLATE};
 use crate::util::calamine_util::*;
 
 use std::env::{args_os, current_dir};
 use std::ffi::OsString;
+use std::fs::OpenOptions;
 use std::path::Path;
 
 use calamine::{open_workbook_auto, Error, Sheets};
@@ -36,6 +37,29 @@ pub(crate) fn robot_generator_main() -> Result<(), Error> {
         };
     } else {
         let ref cli_matches = CLI_MATCHES;
+
+        if let Some(export_temp_path_os_string) = option_value_of("--export-def-temp") {
+            let export_temp_path = Path::new(&export_temp_path_os_string);
+            let export_temp_path = if export_temp_path.is_dir() {
+                export_temp_path.join("case.temp")
+            } else {
+                export_temp_path.to_path_buf()
+            };
+            let mut temp_file = OpenOptions::new()
+                .create(true)
+                .read(true)
+                .write(true)
+                .truncate(true)
+                .open(&export_temp_path)?;
+            let robot_template = &*ROBOT_TEMPLATE;
+            std::io::copy(&mut robot_template.as_bytes(), &mut temp_file)?;
+            println!(
+                "Export template to `{}` successfully",
+                &export_temp_path.to_string_lossy()
+            );
+            return Ok(());
+        }
+
         let xlsx_url = cli_matches.value_of("xlsx-url").unwrap_or("");
         let xlsx_path = cli_matches.value_of("xlsx-path").unwrap_or("");
 

@@ -16,7 +16,7 @@ lazy_static! {
                 .help("Set an xlsx url to generate robot files (priority is higher than `--xlsx-path` option)")
                 .value_name("XLSX_URL")
                 .takes_value(true)
-                .required_unless("xlsx-path"),
+                .required_unless_one(&vec!["xlsx-path","export-def-temp"])
         )
         .arg(
             Arg::with_name("xlsx-path")
@@ -24,7 +24,7 @@ lazy_static! {
                 .help("Set an xlsx path to generate robot files")
                 .value_name("XLSX_PATH")
                 .takes_value(true)
-                .required_unless("xlsx-url"),
+                .required_unless_one(&vec!["xlsx-url","export-def-temp"])
         )
         .arg(
             Arg::with_name("author-tag")
@@ -43,11 +43,19 @@ lazy_static! {
                 .required(false)
         )
         .arg(
+            Arg::with_name("export-def-temp")
+                .long("export-def-temp")
+                .help("Export the template used in the generated robot files")
+                .value_name("EXPORT_PATH")
+                .takes_value(true)
+                .required(false)
+        )
+        .arg(
             Arg::with_name("v")
                 .short("v")
                 .long("verbose")
                 .multiple(true)
-                .help("Verbose"),
+                .help("Verbose")
         )
         .arg(
             Arg::with_name("overwritten-slient")

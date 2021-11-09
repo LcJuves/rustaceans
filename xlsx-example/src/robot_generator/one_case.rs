@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 lazy_static! {
     static ref AUTHOR_AND_MOD_TAG: (String, String) =
         get_author_and_mod_tag().unwrap_or(("".to_string(), "".to_string()));
-    static ref ROBOT_TEMPLATE: String = String::from(include_str!("case.robot"));
+    pub static ref ROBOT_TEMPLATE: String = String::from(include_str!("case.robot"));
 }
 
 #[derive(Serialize, Deserialize, Debug)]
