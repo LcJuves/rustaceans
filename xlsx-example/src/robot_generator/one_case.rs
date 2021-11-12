@@ -107,7 +107,6 @@ impl OneCase {
         if self.test_methods.starts_with("自动化") && self.can_be_automated.starts_with("否") {
             self.feature_name = self
                 .feature_name
-                .replace(r"\", &REPLACEMENT_CHARACTER.to_string())
                 .replace('/', &MAIN_SEPARATOR.to_string())
                 .replace(":", &REPLACEMENT_CHARACTER.to_string())
                 .replace("*", &REPLACEMENT_CHARACTER.to_string())
