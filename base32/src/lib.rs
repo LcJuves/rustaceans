@@ -1,21 +1,6 @@
 mod base32;
 
-fn main() {
-    // let string = "Liangcheng Juves";
-    // // println!("{:?}", "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567".chars());
-    // let ret = base32::encode(string.as_bytes());
-    // println!("{}", String::from_utf8_lossy(&ret));
-
-    let encoded_string = "IE======";
-
-    println!("{:?}", "Man".as_bytes());
-
-    let encoded_string_bytes = encoded_string.as_bytes();
-
-    let ret = base32::decode(encoded_string_bytes);
-
-    println!("{}", String::from_utf8_lossy(&ret));
-}
+pub use crate::base32::*;
 
 #[test]
 fn test_base32_encode() {

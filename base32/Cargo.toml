@@ -1,9 +1,12 @@
 [package]
-name = "base32"
+name = "rb32"
 version = "0.1.0"
 authors = ["Liangcheng Juves <liangchengj@outlook.com>"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "rb32"
 
 [dependencies]
