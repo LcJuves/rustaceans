@@ -10,40 +10,36 @@ pub enum HmacShaAlgorithm {
 }
 
 fn hmac_sha(key: &[u8], input: &[u8], algorithm: HmacShaAlgorithm) -> Vec<u8> {
-    let mut ret = Vec::<u8>::new();
     match algorithm {
         HmacShaAlgorithm::SHA1 => {
-            let mut hmac_sha1_ret = hmac_sha1(&key, &input).iter().cloned().collect::<Vec<u8>>();
-            ret.append(&mut hmac_sha1_ret);
+            return hmac_sha1(&key, &input).iter().cloned().collect::<Vec<u8>>();
         }
         HmacShaAlgorithm::SHA256 => {
             type HmacSha256 = Hmac<Sha256>;
             if let Ok(mut mac) = HmacSha256::new_from_slice(&key) {
                 mac.update(&input);
-                let mut hmac_sha256_ret = mac
+                return mac
                     .finalize()
                     .into_bytes()
                     .iter()
                     .cloned()
                     .collect::<Vec<u8>>();
-                ret.append(&mut hmac_sha256_ret);
             }
         }
         HmacShaAlgorithm::SHA512 => {
             type HmacSha512 = Hmac<Sha512>;
             if let Ok(mut mac) = HmacSha512::new_from_slice(&key) {
                 mac.update(&input);
-                let mut hmac_sha512_ret = mac
+                return mac
                     .finalize()
                     .into_bytes()
                     .iter()
                     .cloned()
                     .collect::<Vec<u8>>();
-                ret.append(&mut hmac_sha512_ret);
             }
         }
     }
-    ret
+    Vec::<u8>::new()
 }
 
 pub fn gen_otp(key: &[u8], counter: u64, digits: usize, algorithm: HmacShaAlgorithm) -> String {
@@ -52,9 +48,9 @@ pub fn gen_otp(key: &[u8], counter: u64, digits: usize, algorithm: HmacShaAlgori
 
     let offset = (digest.last().unwrap() & 0xf) as usize;
     let binary = (((digest[offset] & 0x7f) as u32) << 24)
-        | (((digest[offset + 1] & 0xff) as u32) << 16)
-        | (((digest[offset + 2] & 0xff) as u32) << 8)
-        | (digest[offset + 3] & 0xff) as u32;
+        | ((digest[offset + 1] as u32) << 16)
+        | ((digest[offset + 2] as u32) << 8)
+        | digest[offset + 3] as u32;
 
     let mut digest_power = 1u32;
     for _ in 0..digits {
@@ -62,9 +58,9 @@ pub fn gen_otp(key: &[u8], counter: u64, digits: usize, algorithm: HmacShaAlgori
     }
 
     let otp = binary % digest_power;
-    let mut otp = format!("{}", otp);
+    let mut otp = otp.to_string();
     while otp.len() < digits {
-        otp = format!("0{}", otp);
+        otp = "0".to_owned() + &otp;
     }
 
     otp
