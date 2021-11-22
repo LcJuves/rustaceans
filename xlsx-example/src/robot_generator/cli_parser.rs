@@ -32,7 +32,7 @@ lazy_static! {
                 .help("The author tag is included in robot files to be generated")
                 .value_name("AUTHOR_TAG")
                 .takes_value(true)
-                .required(false)
+                .required_unless_one(&vec!["xlsx-url","xlsx-path"])
         )
         .arg(
             Arg::with_name("mod-tag")
@@ -40,7 +40,7 @@ lazy_static! {
                 .help("The module tag is included in robot files to be generated")
                 .value_name("MOD_TAG")
                 .takes_value(true)
-                .required(false)
+                .required_unless_one(&vec!["xlsx-url","xlsx-path"])
         )
         .arg(
             Arg::with_name("export-def-temp")
@@ -55,6 +55,14 @@ lazy_static! {
                 .long("use-temp")
                 .help("Use the specified template to generate robot files")
                 .value_name("TEMP_PATH")
+                .takes_value(true)
+                .required_unless_one(&vec!["xlsx-url","xlsx-path"])
+        )
+        .arg(
+            Arg::with_name("out-dir")
+                .long("out-dir")
+                .help("Specify the storage path of the robot files to be generated")
+                .value_name("DIR_NAME")
                 .takes_value(true)
                 .required_unless_one(&vec!["xlsx-url","xlsx-path"])
         )

@@ -64,6 +64,10 @@ pub(crate) fn robot_generator_main() -> Result<(), Error> {
         let xlsx_path = cli_matches.value_of("xlsx-path").unwrap_or("");
 
         workbook = if !xlsx_url.trim().is_empty() {
+            if !xlsx_url.trim_start().starts_with("http://") {
+                println!("Error option with --xlsx-url, is not a valid URL");
+                std::process::exit(-1);
+            }
             open_workbook_by_url(&xlsx_url)?
         } else {
             open_workbook_auto(Path::new(&xlsx_path))?
@@ -71,9 +75,14 @@ pub(crate) fn robot_generator_main() -> Result<(), Error> {
     }
 
     if let Some(default_sheet) = default_sheet_of_wb(&mut workbook) {
+        let save_robot_dir = if let Some(option_out_dir_os_string) = option_value_of("--out-dir") {
+            Path::new(&option_out_dir_os_string).to_path_buf()
+        } else {
+            current_dir().unwrap()
+        };
         if let Ok(cases) = sheet_reflect::<OneCase>(&default_sheet) {
             for mut one_case in cases {
-                one_case.save_robot_to(&current_dir().unwrap())?;
+                one_case.save_robot_to(&save_robot_dir)?;
             }
         }
     }
