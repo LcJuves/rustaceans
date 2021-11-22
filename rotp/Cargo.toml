@@ -7,6 +7,6 @@ edition = "2021"
 
 [dependencies]
 hmac = "0.11.0"
+sha-1 = "0.9.8"
 sha2 = "0.9.8"
-hmac-sha1 = "0.1.3"
 rb32 = { version = "0.1.0", path = "../base32" }

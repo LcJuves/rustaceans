@@ -1,5 +1,5 @@
 use hmac::{Hmac, Mac, NewMac};
-use hmacsha1::hmac_sha1;
+use sha1::Sha1;
 use sha2::{Sha256, Sha512};
 
 #[allow(dead_code)]
@@ -9,35 +9,20 @@ pub enum HmacShaAlgorithm {
     SHA512,
 }
 
-fn hmac_sha(key: &[u8], input: &[u8], algorithm: HmacShaAlgorithm) -> Vec<u8> {
+macro_rules! compute_digest_by_sha_type {
+    ($sha_ty:ty, $key:ident, $input:ident) => {
+        if let Ok(mut mac) = Hmac::<$sha_ty>::new_from_slice(&$key) {
+            mac.update(&$input);
+            return mac.finalize().into_bytes().as_slice().to_vec();
+        }
+    };
+}
+
+fn compute_digest(key: &[u8], input: &[u8], algorithm: HmacShaAlgorithm) -> Vec<u8> {
     match algorithm {
-        HmacShaAlgorithm::SHA1 => {
-            return hmac_sha1(&key, &input).iter().cloned().collect::<Vec<u8>>();
-        }
-        HmacShaAlgorithm::SHA256 => {
-            type HmacSha256 = Hmac<Sha256>;
-            if let Ok(mut mac) = HmacSha256::new_from_slice(&key) {
-                mac.update(&input);
-                return mac
-                    .finalize()
-                    .into_bytes()
-                    .iter()
-                    .cloned()
-                    .collect::<Vec<u8>>();
-            }
-        }
-        HmacShaAlgorithm::SHA512 => {
-            type HmacSha512 = Hmac<Sha512>;
-            if let Ok(mut mac) = HmacSha512::new_from_slice(&key) {
-                mac.update(&input);
-                return mac
-                    .finalize()
-                    .into_bytes()
-                    .iter()
-                    .cloned()
-                    .collect::<Vec<u8>>();
-            }
-        }
+        HmacShaAlgorithm::SHA1 => compute_digest_by_sha_type!(Sha1, key, input),
+        HmacShaAlgorithm::SHA256 => compute_digest_by_sha_type!(Sha256, key, input),
+        HmacShaAlgorithm::SHA512 => compute_digest_by_sha_type!(Sha512, key, input),
     }
     Vec::<u8>::new()
 }
@@ -49,7 +34,7 @@ pub fn gen_otp(
     algorithm: HmacShaAlgorithm,
 ) -> String {
     let input = &moving_factor.to_be_bytes();
-    let digest = hmac_sha(secret, input, algorithm);
+    let digest = compute_digest(secret, input, algorithm);
 
     let offset = (digest.last().unwrap() & 0xf) as usize;
     let binary = (((digest[offset] & 0x7f) as u32) << 24)
