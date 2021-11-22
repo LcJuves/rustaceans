@@ -42,9 +42,14 @@ fn hmac_sha(key: &[u8], input: &[u8], algorithm: HmacShaAlgorithm) -> Vec<u8> {
     Vec::<u8>::new()
 }
 
-pub fn gen_otp(key: &[u8], counter: u64, digits: usize, algorithm: HmacShaAlgorithm) -> String {
-    let input = &counter.to_be_bytes();
-    let digest = hmac_sha(key, input, algorithm);
+pub fn gen_otp(
+    secret: &[u8],
+    moving_factor: u64,
+    digits: usize,
+    algorithm: HmacShaAlgorithm,
+) -> String {
+    let input = &moving_factor.to_be_bytes();
+    let digest = hmac_sha(secret, input, algorithm);
 
     let offset = (digest.last().unwrap() & 0xf) as usize;
     let binary = (((digest[offset] & 0x7f) as u32) << 24)
@@ -73,7 +78,7 @@ fn test_gen_otp_sha1() {
 
     type T = u64;
 
-    let key = rb32::decode("FHCIDHYW3N46EJBIQWOSP4VURTYIJ3W7".as_bytes());
+    let secret = rb32::decode("FHCIDHYW3N46EJBIQWOSP4VURTYIJ3W7".as_bytes());
     let digits = 6;
 
     let test_data_vec = vec![
@@ -83,13 +88,13 @@ fn test_gen_otp_sha1() {
     ];
 
     for test_data in test_data_vec {
-        let timestamp = test_data.0;
-        let timestamp = timestamp / 1000;
+        let time_millis = test_data.0;
+        let time_secs = time_millis / 1000;
         //////////////////////////////////////
         //////////////////////////////////////
-        let counter: T = (timestamp - T0) / X;
-        assert_eq!(counter, test_data.1);
-        let otp = gen_otp(&key, counter, digits, HmacShaAlgorithm::SHA1);
+        let time: T = (time_secs - T0) / X;
+        assert_eq!(time, test_data.1);
+        let otp = gen_otp(&secret, time, digits, HmacShaAlgorithm::SHA1);
         assert_eq!(otp, test_data.2);
     }
 }
