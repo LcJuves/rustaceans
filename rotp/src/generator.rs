@@ -71,6 +71,37 @@ pub fn gen_otp(
     otp
 }
 
+#[allow(dead_code)]
+pub fn gen_otp_from_time(
+    secret: &[u8],
+    time_millis: u128,
+    period: u64,
+    digits: usize,
+    algorithm: HmacShaAlgorithm,
+) -> String {
+    const T0: u64 = 0;
+    #[allow(non_snake_case)]
+    let X: u64 = period;
+
+    type T = u64;
+
+    let time_secs = (time_millis / 1000) as u64;
+    let time: T = (time_secs - T0) / X;
+
+    gen_otp(secret, time, digits, algorithm)
+}
+
+#[inline]
+#[allow(dead_code)]
+pub fn gen_otp_from_counter(
+    secret: &[u8],
+    counter: u64,
+    digits: usize,
+    algorithm: HmacShaAlgorithm,
+) -> String {
+    gen_otp(secret, counter, digits, algorithm)
+}
+
 #[test]
 fn test_gen_otp_sha1() {
     const T0: u64 = 0;
