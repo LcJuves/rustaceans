@@ -72,24 +72,28 @@ lazy_static! {
                 .long("verbose")
                 .multiple(true)
                 .help("Verbose")
+                .required_unless_one(&vec!["xlsx-url","xlsx-path"])
         )
         .arg(
             Arg::with_name("overwritten-slient")
                 .long("overwritten-slient")
                 .multiple(true)
-                .help("If the robot file to be generated already exists, it will be overwritten"),
+                .help("If the robot file to be generated already exists, it will be overwritten")
+                .required_unless_one(&vec!["xlsx-url","xlsx-path"])
         )
         .arg(
             Arg::with_name("overwritten")
                 .long("overwritten")
                 .multiple(true)
-                .help("If the robot file to be generated already exists, it will be overwritten (user confirmation is required)"),
+                .help("If the robot file to be generated already exists, it will be overwritten (user confirmation is required)")
+                .required_unless_one(&vec!["xlsx-url","xlsx-path"])
         )
         .arg(
             Arg::with_name("log-comments")
                 .long("log-comments")
                 .multiple(true)
-                .help("Use the `BuiltIn.Log` keyword to output comments in the robot file to be generated"),
+                .help("Use the `BuiltIn.Log` keyword to output comments in the robot file to be generated")
+                .required_unless_one(&vec!["xlsx-url","xlsx-path"])
         )
         .get_matches()
     };
