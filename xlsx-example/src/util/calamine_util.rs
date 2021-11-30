@@ -11,7 +11,7 @@ use serde::Deserialize;
 use tokio::runtime::Runtime;
 
 lazy_static! {
-    static ref TOKIO_RT: Runtime = Runtime::new().unwrap();
+    pub static ref TOKIO_RT: Runtime = Runtime::new().unwrap();
 }
 
 pub(crate) fn default_sheet_of_wb(wb: &mut impl Reader) -> Option<Range<DataType>> {

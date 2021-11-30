@@ -11,3 +11,4 @@ aTr*
 tests/tmp.json
 *.exe
 *.dll
+test*.*
