@@ -64,7 +64,7 @@ pub(crate) fn robot_generator_main() -> Result<(), Error> {
         let xlsx_path = cli_matches.value_of("xlsx-path").unwrap_or("");
 
         workbook = if !xlsx_url.trim().is_empty() {
-            if !xlsx_url.trim_start().starts_with("http://") {
+            if !xlsx_url.trim_start().starts_with("http") {
                 println!("Error option with --xlsx-url, is not a valid URL");
                 std::process::exit(-1);
             }
