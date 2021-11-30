@@ -8,6 +8,8 @@ edition = "2021"
 [dependencies]
 calamine = "0.18.0"
 reqwest = "0.11.6"
+hyper = "0.14.15"
+hyper-tls = "0.5.0"
 tokio = { version = "1", features = ["full"] }
 clap = "2.33.3"
 # rrflect = { version = "0.1.0", path = "../rrflect" }
