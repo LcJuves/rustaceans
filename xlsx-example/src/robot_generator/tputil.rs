@@ -1,16 +1,16 @@
 // use rhexstr::HexString;
 
-use std::time::{SystemTime, UNIX_EPOCH};
+// use std::time::{SystemTime, UNIX_EPOCH};
 
 use guid_create::GUID;
 use josekit::jws::{JwsHeader, HS256};
 use josekit::jwt::{encode_with_signer, JwtPayload};
 use josekit::{JoseError, Value};
 
-use hyper::body::Buf;
+// use hyper::body::Buf;
 use hyper::{Body, Client, Method, Request, Version};
 use hyper_tls::HttpsConnector;
-use serde::Deserialize;
+// use serde::Deserialize;
 
 use lazy_static::lazy_static;
 
@@ -188,7 +188,11 @@ pub(crate) async fn send_sms_and_get_user_name(
     let req = Request::builder()
         .header("user-agent", UA.to_string())
         .header("Cookie", format!("AUTHSESSID={}", session_id))
-        .header("Zxy", "")
+        .header(
+            "Content-Type",
+            "application/x-www-form-urlencoded; charset=UTF-8",
+        )
+        .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY).unwrap())
         .method(Method::POST)
         .uri("https://idtrust.sangfor.com:444/ac_portal/login.php")
         .version(Version::HTTP_11)
@@ -202,7 +206,7 @@ pub(crate) async fn send_sms_and_get_user_name(
     Ok(())
 }
 
-pub(crate) async fn get_handshake(
+/* pub(crate) async fn get_handshake(
     session_id: &str,
 ) -> Result<(Option<String>, String), Box<dyn std::error::Error>> {
     let time_millis = SystemTime::now()
@@ -255,7 +259,7 @@ struct RidResp {
     rid: String,
     #[allow(unused)]
     success: bool,
-}
+} */
 
 pub(crate) fn jwt_sign_with_guid(guid: &str, key: &str) -> Result<String, JoseError> {
     let mut header = JwsHeader::new();
