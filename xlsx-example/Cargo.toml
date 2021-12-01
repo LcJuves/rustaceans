@@ -10,8 +10,11 @@ calamine = "0.18.0"
 reqwest = "0.11.6"
 hyper = "0.14.15"
 hyper-tls = "0.5.0"
+josekit = "0.7.4"
+guid-create = "0.1.1"
 tokio = { version = "1", features = ["full"] }
 clap = "2.33.3"
+# rhexstr = { version = "0.1.0", path = "../hex-string" }
 # rrflect = { version = "0.1.0", path = "../rrflect" }
 serde = { version = "1.0.130", features = ["derive"] }
 serde_json = "1.0.68"
