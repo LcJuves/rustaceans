@@ -262,19 +262,34 @@ pub(crate) async fn verify_sms_code(
         .body(Body::from(body))
         .unwrap();
 
-    let mut resp = client.request(req).await?;
+    let resp = client.request(req).await?;
 
     println!("resp.headers >>> {:?}", resp.headers());
 
-    use hyper::body::HttpBody as _;
+    let resp_body = hyper::body::aggregate(resp).await?;
+    let resp_json: serde_json::Value = serde_json::from_reader(resp_body.reader())?;
+    // println!("resp_json >>> {}", resp_json);
+
+    if let serde_json::Value::Bool(success) = resp_json["success"] {
+        if success {
+            if let serde_json::Value::String(location) = &resp_json["location"] {
+                println!("location >>> {}", location);
+            }
+        } else {
+            eprintln!("msg >>> {}", resp_json["msg"]);
+            std::process::exit(-1);
+        }
+    }
+
+    /* use hyper::body::HttpBody as _;
     use tokio::io::{stdout, AsyncWriteExt as _};
 
     // And now...
     while let Some(chunk) = resp.body_mut().data().await {
         stdout().write_all(&chunk?).await?;
-    }
+    } */
 
-    Ok(())
+    std::process::exit(-1);
 }
 
 pub fn read_stdin_sms_code() -> std::io::Result<u32> {
