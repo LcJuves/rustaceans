@@ -1,4 +1,5 @@
 use std::io::{stdin, stdout, BufRead, Write};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use guid_create::GUID;
 use josekit::jws::{JwsHeader, HS256};
@@ -312,17 +313,57 @@ pub(crate) async fn req_api_v1_login_callback(
         .body(Body::empty())
         .unwrap();
 
+    let resp = client.request(req).await?;
+
+    println!("resp.headers >>> {:?}", resp.headers());
+
+    let ep_jwt_token_current =
+        String::from_utf8_lossy(resp.headers()["set-cookie"].as_bytes()).to_string();
+    let ep_jwt_token_current = (&ep_jwt_token_current
+        [(ep_jwt_token_current.find("=").unwrap() + 1)..(ep_jwt_token_current.find(";").unwrap())])
+        .to_string();
+
+    Ok(ep_jwt_token_current)
+}
+
+pub(crate) async fn req_api_v1_users_info(
+    ep_jwt_token_current: &str,
+    sessionid: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let client = Client::new();
+
+    let req = Request::builder()
+        .header("user-agent", UA.to_string())
+        .header(
+            "cookie",
+            format!(
+                "sessionid={}; ep_jwt_token_current={}",
+                sessionid, ep_jwt_token_current
+            ),
+        )
+        .method(Method::GET)
+        .uri(format!(
+            "http://199.200.0.8/api/v1/users/info/?_t={}",
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+                .to_string()
+        ))
+        .version(Version::HTTP_11)
+        .body(Body::empty())
+        .unwrap();
+
     let mut resp = client.request(req).await?;
 
     println!("resp.headers >>> {:?}", resp.headers());
 
     use hyper::body::HttpBody as _;
     use tokio::io::{stdout, AsyncWriteExt as _};
-
-    // And now...
     while let Some(chunk) = resp.body_mut().data().await {
         stdout().write_all(&chunk?).await?;
     }
+    stdout().write_all(b"\n").await?;
 
     let ep_jwt_token_current =
         String::from_utf8_lossy(resp.headers()["set-cookie"].as_bytes()).to_string();
@@ -339,7 +380,7 @@ pub(crate) async fn req_api_v1_login_callback(
 
 pub(crate) async fn sign_in_tp_by_sms(
     phone_num: &str,
-) -> Result<String, Box<dyn std::error::Error>> {
+) -> Result<(String, String), Box<dyn std::error::Error>> {
     let (redirect_url, sessionid) = req_api_v1_login().await?;
 
     let (redirect_url, sso_provider_session) =
@@ -367,7 +408,7 @@ pub(crate) async fn sign_in_tp_by_sms(
     let redirect_url = req_ss_login(&redirect_url, &sso_provider_session).await?;
     let ep_jwt_token_current = req_api_v1_login_callback(&redirect_url, &sessionid).await?;
 
-    Ok(ep_jwt_token_current)
+    Ok((ep_jwt_token_current, sessionid))
 }
 
 ////////////////////////////////////////////////////////
