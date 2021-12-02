@@ -16,8 +16,7 @@ lazy_static! {
     static ref JWT_KEY: &'static str = "32293231323532373241325132713273328533033339335733613403343934413469350335713605364136513735376937813863393139494017409141594161";
 }
 
-pub(crate) async fn get_login_redirect_url_and_session_id(
-) -> Result<(String, String), Box<dyn std::error::Error>> {
+pub(crate) async fn req_api_v1_login() -> Result<(String, String), Box<dyn std::error::Error>> {
     let client = Client::new();
 
     let req = Request::builder()
@@ -32,25 +31,25 @@ pub(crate) async fn get_login_redirect_url_and_session_id(
 
     println!("resp.headers >>> {:?}", resp.headers());
 
-    let location = String::from_utf8_lossy(resp.headers()["location"].as_bytes()).to_string();
+    let redirect_url = String::from_utf8_lossy(resp.headers()["location"].as_bytes()).to_string();
 
-    let session_id = String::from_utf8_lossy(resp.headers()["set-cookie"].as_bytes()).to_string();
-    let session_id = (&session_id
-        [(session_id.find("=").unwrap() + 1)..(session_id.find(";").unwrap())])
+    let sessionid = String::from_utf8_lossy(resp.headers()["set-cookie"].as_bytes()).to_string();
+    let sessionid = (&sessionid
+        [(sessionid.find("=").unwrap() + 1)..(sessionid.find(";").unwrap())])
         .to_string();
 
-    Ok((location, session_id))
+    Ok((redirect_url, sessionid))
 }
 
-pub(crate) async fn get_authorize_redirect_url_and_session_id(
+pub(crate) async fn req_ss_auth_att_oauth2_authorize(
     url: &str,
-    session_id: &str,
+    sessionid: &str,
 ) -> Result<(String, String), Box<dyn std::error::Error>> {
     let client = Client::new();
 
     let req = Request::builder()
         .header("user-agent", UA.to_string())
-        .header("cookie", format!("sessionid={}", session_id))
+        .header("cookie", format!("sessionid={}", sessionid))
         .method(Method::GET)
         .uri(url)
         .version(Version::HTTP_11)
@@ -61,20 +60,21 @@ pub(crate) async fn get_authorize_redirect_url_and_session_id(
 
     println!("resp.headers >>> {:?}", resp.headers());
 
-    let location = String::from_utf8_lossy(resp.headers()["location"].as_bytes()).to_string();
+    let redirect_url = String::from_utf8_lossy(resp.headers()["location"].as_bytes()).to_string();
 
-    let session_id = String::from_utf8_lossy(resp.headers()["set-cookie"].as_bytes()).to_string();
-    let session_id = (&session_id
-        [(session_id.find("=").unwrap() + 1)..(session_id.find(";").unwrap())])
+    let sso_provider_session =
+        String::from_utf8_lossy(resp.headers()["set-cookie"].as_bytes()).to_string();
+    let sso_provider_session = (&sso_provider_session
+        [(sso_provider_session.find("=").unwrap() + 1)..(sso_provider_session.find(";").unwrap())])
         .to_string();
 
-    Ok((location, session_id))
+    Ok((redirect_url, sso_provider_session))
 }
 
-pub(crate) async fn get_sign_in_client_id_and_response_type(
+pub(crate) async fn req_ss_users_sign_in(
     url: &str,
     sso_provider_session: &str,
-) -> Result<(String, String), Box<dyn std::error::Error>> {
+) -> Result<(String, String, String), Box<dyn std::error::Error>> {
     let client = Client::new();
     let req = Request::builder()
         .header("user-agent", UA.to_string())
@@ -99,10 +99,16 @@ pub(crate) async fn get_sign_in_client_id_and_response_type(
 
     let response_type = (&location[(location.rfind("=").unwrap() + 1)..]).to_string();
 
-    Ok((client_id, response_type))
+    let sso_provider_session =
+        String::from_utf8_lossy(resp.headers()["set-cookie"].as_bytes()).to_string();
+    let sso_provider_session = (&sso_provider_session
+        [(sso_provider_session.find("=").unwrap() + 1)..(sso_provider_session.find(";").unwrap())])
+        .to_string();
+
+    Ok((client_id, response_type, sso_provider_session))
 }
 
-pub(crate) async fn get_userauth_should_tokens_and_session_id(
+pub(crate) async fn req_ac_portal_userauth(
     client_id: &str,
     response_type: &str,
 ) -> Result<(String, String, String), Box<dyn std::error::Error>> {
@@ -142,18 +148,18 @@ pub(crate) async fn get_userauth_should_tokens_and_session_id(
         ..(location.find("&auth=").unwrap())])
         .to_string();
 
-    let session_id = String::from_utf8_lossy(resp.headers()["set-cookie"].as_bytes()).to_string();
-    let session_id = (&session_id
-        [(session_id.find("=").unwrap() + 1)..(session_id.find(";").unwrap())])
+    let authsessid = String::from_utf8_lossy(resp.headers()["set-cookie"].as_bytes()).to_string();
+    let authsessid = (&authsessid
+        [(authsessid.find("=").unwrap() + 1)..(authsessid.find(";").unwrap())])
         .to_string();
 
-    Ok((auth_token, app_token, session_id))
+    Ok((auth_token, app_token, authsessid))
 }
 
-pub(crate) async fn send_sms_and_get_user_name(
+pub(crate) async fn req_ac_portal_login(
     auth_token: &str,
     app_token: &str,
-    session_id: &str,
+    authsessid: &str,
     phone_num: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let mut body = String::from("authToken=");
@@ -169,7 +175,7 @@ pub(crate) async fn send_sms_and_get_user_name(
     let client = Client::builder().build::<_, hyper::Body>(https);
     let req = Request::builder()
         .header("user-agent", UA.to_string())
-        .header("Cookie", format!("AUTHSESSID={}", session_id))
+        .header("Cookie", format!("AUTHSESSID={}", authsessid))
         .header(
             "Content-Type",
             "application/x-www-form-urlencoded; charset=UTF-8",
@@ -206,14 +212,14 @@ pub(crate) async fn send_sms_and_get_user_name(
     std::process::exit(-1);
 }
 
-pub(crate) async fn verify_sms_code(
+pub(crate) async fn verify_sms_req_ac_portal_login(
     auth_token: &str,
     app_token: &str,
     session_id: &str,
     phone_num: &str,
     user_name: &str,
     sms_code: &u32,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<String, Box<dyn std::error::Error>> {
     let mut body = String::from("authToken=");
     body.push_str(auth_token);
     body.push_str("&appToken=");
@@ -254,7 +260,7 @@ pub(crate) async fn verify_sms_code(
     if let serde_json::Value::Bool(success) = resp_json["success"] {
         if success {
             if let serde_json::Value::String(location) = &resp_json["location"] {
-                println!("location >>> {}", location);
+                return Ok(location.clone());
             }
         } else {
             eprintln!("msg >>> {}", resp_json["msg"]);
@@ -262,16 +268,111 @@ pub(crate) async fn verify_sms_code(
         }
     }
 
-    /* use hyper::body::HttpBody as _;
+    std::process::exit(-1);
+}
+
+pub(crate) async fn req_ss_login(
+    url: &str,
+    sso_provider_session: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let client = Client::new();
+    let req = Request::builder()
+        .header("user-agent", UA.to_string())
+        .header(
+            "cookie",
+            format!("_sso_provider_session={}", sso_provider_session),
+        )
+        .method(Method::GET)
+        .uri(url)
+        .version(Version::HTTP_11)
+        .body(Body::empty())
+        .unwrap();
+
+    let resp = client.request(req).await?;
+
+    println!("resp.headers >>> {:?}", resp.headers());
+
+    let redirect_url = String::from_utf8_lossy(resp.headers()["location"].as_bytes()).to_string();
+
+    Ok(redirect_url)
+}
+
+pub(crate) async fn req_api_v1_login_callback(
+    url: &str,
+    sessionid: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let client = Client::new();
+
+    let req = Request::builder()
+        .header("user-agent", UA.to_string())
+        .header("cookie", format!("sessionid={}", sessionid))
+        .method(Method::GET)
+        .uri(url)
+        .version(Version::HTTP_11)
+        .body(Body::empty())
+        .unwrap();
+
+    let mut resp = client.request(req).await?;
+
+    println!("resp.headers >>> {:?}", resp.headers());
+
+    use hyper::body::HttpBody as _;
     use tokio::io::{stdout, AsyncWriteExt as _};
 
     // And now...
     while let Some(chunk) = resp.body_mut().data().await {
         stdout().write_all(&chunk?).await?;
-    } */
+    }
 
-    std::process::exit(-1);
+    let ep_jwt_token_current =
+        String::from_utf8_lossy(resp.headers()["set-cookie"].as_bytes()).to_string();
+    let ep_jwt_token_current = (&ep_jwt_token_current
+        [(ep_jwt_token_current.find("=").unwrap() + 1)..(ep_jwt_token_current.find(";").unwrap())])
+        .to_string();
+
+    Ok(ep_jwt_token_current)
 }
+
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
+
+pub(crate) async fn sign_in_tp_by_sms(
+    phone_num: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let (redirect_url, sessionid) = req_api_v1_login().await?;
+
+    let (redirect_url, sso_provider_session) =
+        req_ss_auth_att_oauth2_authorize(&redirect_url, &sessionid).await?;
+
+    let (client_id, response_type, sso_provider_session) =
+        req_ss_users_sign_in(&redirect_url, &sso_provider_session).await?;
+
+    let (auth_token, app_token, authsessid) =
+        req_ac_portal_userauth(&client_id, &response_type).await?;
+
+    let user_name = req_ac_portal_login(&auth_token, &app_token, &authsessid, phone_num).await?;
+
+    let sms_code = read_stdin_sms_code()?;
+    let redirect_url = verify_sms_req_ac_portal_login(
+        &auth_token,
+        &app_token,
+        &authsessid,
+        phone_num,
+        &user_name,
+        &sms_code,
+    )
+    .await?;
+
+    let redirect_url = req_ss_login(&redirect_url, &sso_provider_session).await?;
+    let ep_jwt_token_current = req_api_v1_login_callback(&redirect_url, &sessionid).await?;
+
+    Ok(ep_jwt_token_current)
+}
+
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
 
 pub fn read_stdin_sms_code() -> std::io::Result<u32> {
     let mut sms_code = String::new();
@@ -305,7 +406,7 @@ pub(crate) fn jwt_sign_with_guid(guid: &str, key: &str) -> Result<String, JoseEr
     Ok(jwt)
 }
 
-pub(crate) fn gen_guid() -> String {
+fn gen_guid() -> String {
     GUID::rand().to_string().to_lowercase()
 }
 
