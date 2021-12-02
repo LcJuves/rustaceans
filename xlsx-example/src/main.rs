@@ -57,18 +57,29 @@ fn main() -> Result<(), Error> {
         userauth_should_tokens_and_session_id
     );
 
-    TOKIO_RT
+    let phone_num = "15211467428";
+    let user_name = TOKIO_RT
         .block_on(send_sms_and_get_user_name(
             &userauth_should_tokens_and_session_id.0,
             &userauth_should_tokens_and_session_id.1,
             &userauth_should_tokens_and_session_id.2,
-            "15211467428",
+            phone_num,
         ))
         .unwrap();
 
-    // TOKIO_RT
-    //     .block_on(get_handshake(&userauth_should_tokens_and_session_id.2))
-    //     .unwrap();
+    println!("user_name >>> {}", user_name);
+
+    let sms_code = read_stdin_sms_code()?;
+    TOKIO_RT
+        .block_on(verify_sms_code(
+            &userauth_should_tokens_and_session_id.0,
+            &userauth_should_tokens_and_session_id.1,
+            &userauth_should_tokens_and_session_id.2,
+            phone_num,
+            &user_name,
+            &sms_code,
+        ))
+        .unwrap();
 
     Ok(())
 }

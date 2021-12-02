@@ -1,13 +1,14 @@
 // use rhexstr::HexString;
 
 // use std::time::{SystemTime, UNIX_EPOCH};
+use std::io::{stdin, stdout, BufRead, Write};
 
 use guid_create::GUID;
 use josekit::jws::{JwsHeader, HS256};
 use josekit::jwt::{encode_with_signer, JwtPayload};
 use josekit::{JoseError, Value};
 
-// use hyper::body::Buf;
+use hyper::body::Buf;
 use hyper::{Body, Client, Method, Request, Version};
 use hyper_tls::HttpsConnector;
 // use serde::Deserialize;
@@ -172,8 +173,8 @@ pub(crate) async fn send_sms_and_get_user_name(
     auth_token: &str,
     app_token: &str,
     session_id: &str,
-    tel: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+    phone_num: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
     let mut body = String::from("authToken=");
     body.push_str(auth_token);
     body.push_str("&appToken=");
@@ -181,7 +182,7 @@ pub(crate) async fn send_sms_and_get_user_name(
     body.push_str(
         "&auth=oauth&template=default&uuid=014a6560486429cada00afc53fe1017c&opr=getSmsCode&phone=",
     );
-    body.push_str(tel);
+    body.push_str(phone_num);
 
     let https = HttpsConnector::new();
     let client = Client::builder().build::<_, hyper::Body>(https);
@@ -203,7 +204,95 @@ pub(crate) async fn send_sms_and_get_user_name(
 
     println!("resp.headers >>> {:?}", resp.headers());
 
+    let resp_body = hyper::body::aggregate(resp).await?;
+    let mut resp_json = Vec::new();
+    std::io::copy(&mut resp_body.reader(), &mut resp_json)?;
+    let resp_json = String::from_utf8_lossy(&resp_json);
+    let resp_json = resp_json.replace("'", r#"""#);
+    // println!("resp_json >>> {}", resp_json);
+    let resp_json: serde_json::Value = serde_json::from_str(&resp_json)?;
+
+    if let serde_json::Value::Bool(success) = resp_json["success"] {
+        if success {
+            let user_name = resp_json["userName"].to_string();
+            return Ok((&user_name[1..(user_name.len() - 1)]).to_string());
+        } else {
+            eprintln!("msg >>> {}", resp_json["msg"]);
+            std::process::exit(-1);
+        }
+    }
+
+    std::process::exit(-1);
+}
+
+pub(crate) async fn verify_sms_code(
+    auth_token: &str,
+    app_token: &str,
+    session_id: &str,
+    phone_num: &str,
+    user_name: &str,
+    sms_code: &u32,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mut body = String::from("authToken=");
+    body.push_str(auth_token);
+    body.push_str("&appToken=");
+    body.push_str(app_token);
+    body.push_str(
+        "&auth=oauth&template=default&uuid=014a6560486429cada00afc53fe1017c&opr=firstSmsLogin&phone=",
+    );
+    body.push_str(phone_num);
+    body.push_str("&smsCode=");
+    body.push_str(&sms_code.to_string());
+    body.push_str("&userName=");
+    body.push_str(user_name);
+
+    let https = HttpsConnector::new();
+    let client = Client::builder().build::<_, hyper::Body>(https);
+    let req = Request::builder()
+        .header("user-agent", UA.to_string())
+        .header("Cookie", format!("AUTHSESSID={}", session_id))
+        .header(
+            "Content-Type",
+            "application/x-www-form-urlencoded; charset=UTF-8",
+        )
+        .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY).unwrap())
+        .method(Method::POST)
+        .uri("https://idtrust.sangfor.com:444/ac_portal/login.php")
+        .version(Version::HTTP_11)
+        .body(Body::from(body))
+        .unwrap();
+
+    let mut resp = client.request(req).await?;
+
+    println!("resp.headers >>> {:?}", resp.headers());
+
+    use hyper::body::HttpBody as _;
+    use tokio::io::{stdout, AsyncWriteExt as _};
+
+    // And now...
+    while let Some(chunk) = resp.body_mut().data().await {
+        stdout().write_all(&chunk?).await?;
+    }
+
     Ok(())
+}
+
+pub fn read_stdin_sms_code() -> std::io::Result<u32> {
+    let mut sms_code = String::new();
+
+    stdout().write(b"Please enter the SMS verification code you received: ")?;
+    stdout().flush()?;
+    stdin().lock().read_line(&mut sms_code)?;
+
+    let sms_code = sms_code[..(sms_code
+        .rfind("\r")
+        .unwrap_or(sms_code.rfind("\n").unwrap()))]
+        .to_string();
+
+    println!("sms_code >>> {}", sms_code);
+
+    use std::str::FromStr;
+    Ok(u32::from_str(&sms_code).unwrap())
 }
 
 /* pub(crate) async fn get_handshake(

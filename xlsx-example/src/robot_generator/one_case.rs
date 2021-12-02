@@ -259,11 +259,8 @@ fn get_author_and_mod_tag() -> std::io::Result<(String, String)> {
     Ok((
         author_tag[..(author_tag
             .rfind("\r")
-            .unwrap_or(author_tag.rfind("\n").unwrap_or(author_tag.len())))]
+            .unwrap_or(author_tag.rfind("\n").unwrap()))]
             .to_string(),
-        mod_tag[..(mod_tag
-            .rfind("\r")
-            .unwrap_or(mod_tag.rfind("\n").unwrap_or(mod_tag.len())))]
-            .to_string(),
+        mod_tag[..(mod_tag.rfind("\r").unwrap_or(mod_tag.rfind("\n").unwrap()))].to_string(),
     ))
 }
