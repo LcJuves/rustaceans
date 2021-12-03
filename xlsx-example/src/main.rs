@@ -17,7 +17,7 @@ fn main() -> Result<(), Error> {
     let phone_num = "15211467428";
     let (ep_jwt_token_current, sessionid) =
         TOKIO_RT.block_on(sign_in_tp_by_sms(&phone_num)).unwrap();
-    println!("ep_jwt_token_current >>> {}", ep_jwt_token_current);
+    seeval!(ep_jwt_token_current);
 
     TOKIO_RT
         .block_on(req_api_v1_users_info(&ep_jwt_token_current, &sessionid))

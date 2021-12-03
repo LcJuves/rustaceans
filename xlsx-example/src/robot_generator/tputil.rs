@@ -13,6 +13,25 @@ use hyper_tls::HttpsConnector;
 
 use lazy_static::lazy_static;
 
+macro_rules! print_resp_body {
+    ($resp:ident) => {
+        use hyper::body::HttpBody as _;
+        use tokio::io::{stdout, AsyncWriteExt as _};
+        let mut $resp = $resp;
+        while let Some(chunk) = $resp.body_mut().data().await {
+            stdout().write_all(&chunk?).await?;
+        }
+        stdout().write_all(b"\n").await?;
+    };
+}
+
+#[macro_export]
+macro_rules! seeval {
+    ($val:expr) => {
+        println!("{} >>> {:?}", stringify!($val), $val);
+    };
+}
+
 lazy_static! {
     static ref UA: &'static str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36";
     static ref JWT_KEY: &'static str = "32293231323532373241325132713273328533033339335733613403343934413469350335713605364136513735376937813863393139494017409141594161";
@@ -30,8 +49,7 @@ pub(crate) async fn req_api_v1_login() -> Result<(String, String), Box<dyn std::
         .unwrap();
 
     let resp = client.request(req).await?;
-
-    println!("resp.headers >>> {:?}", resp.headers());
+    seeval!(resp.headers());
 
     let redirect_url = String::from_utf8_lossy(resp.headers()["location"].as_bytes()).to_string();
 
@@ -59,8 +77,7 @@ pub(crate) async fn req_ss_auth_att_oauth2_authorize(
         .unwrap();
 
     let resp = client.request(req).await?;
-
-    println!("resp.headers >>> {:?}", resp.headers());
+    seeval!(resp.headers());
 
     let redirect_url = String::from_utf8_lossy(resp.headers()["location"].as_bytes()).to_string();
 
@@ -91,8 +108,7 @@ pub(crate) async fn req_ss_users_sign_in(
         .unwrap();
 
     let resp = client.request(req).await?;
-
-    println!("resp.headers >>> {:?}", resp.headers());
+    seeval!(resp.headers());
 
     let location = String::from_utf8_lossy(resp.headers()["location"].as_bytes()).to_string();
 
@@ -133,8 +149,7 @@ pub(crate) async fn req_ac_portal_userauth(
         .unwrap();
 
     let resp = client.request(req).await?;
-
-    println!("resp.headers >>> {:?}", resp.headers());
+    seeval!(resp.headers());
 
     let location = String::from_utf8_lossy(resp.headers()["location"].as_bytes()).to_string();
 
@@ -158,7 +173,7 @@ pub(crate) async fn req_ac_portal_userauth(
     Ok((auth_token, app_token, authsessid))
 }
 
-pub(crate) async fn req_ac_portal_login(
+pub(crate) async fn req_vsms_ac_portal_login(
     auth_token: &str,
     app_token: &str,
     authsessid: &str,
@@ -190,24 +205,26 @@ pub(crate) async fn req_ac_portal_login(
         .unwrap();
 
     let resp = client.request(req).await?;
-
-    println!("resp.headers >>> {:?}", resp.headers());
+    seeval!(resp.headers());
 
     let resp_body = hyper::body::aggregate(resp).await?;
     let mut resp_json = Vec::new();
     std::io::copy(&mut resp_body.reader(), &mut resp_json)?;
     let resp_json = String::from_utf8_lossy(&resp_json);
     let resp_json = resp_json.replace("'", r#"""#);
-    // println!("resp_json >>> {}", resp_json);
+    // seeval!(resp_json);
     let resp_json: serde_json::Value = serde_json::from_str(&resp_json)?;
 
     if let serde_json::Value::Bool(success) = resp_json["success"] {
-        if success {
-            let user_name = resp_json["userName"].to_string();
-            return Ok((&user_name[1..(user_name.len() - 1)]).to_string());
-        } else {
-            eprintln!("msg >>> {}", resp_json["msg"]);
-            std::process::exit(-1);
+        if let serde_json::Value::String(msg) = &resp_json["msg"] {
+            if success {
+                if let serde_json::Value::String(user_name) = &resp_json["userName"] {
+                    return Ok((&user_name[1..(user_name.len() - 1)]).to_string());
+                }
+            } else {
+                eprintln!("{}", msg);
+                std::process::exit(-1);
+            }
         }
     }
 
@@ -217,7 +234,7 @@ pub(crate) async fn req_ac_portal_login(
 pub(crate) async fn verify_sms_req_ac_portal_login(
     auth_token: &str,
     app_token: &str,
-    session_id: &str,
+    authsessid: &str,
     phone_num: &str,
     user_name: &str,
     sms_code: &u32,
@@ -239,7 +256,7 @@ pub(crate) async fn verify_sms_req_ac_portal_login(
     let client = Client::builder().build::<_, hyper::Body>(https);
     let req = Request::builder()
         .header("user-agent", UA.to_string())
-        .header("Cookie", format!("AUTHSESSID={}", session_id))
+        .header("Cookie", format!("AUTHSESSID={}", authsessid))
         .header(
             "Content-Type",
             "application/x-www-form-urlencoded; charset=UTF-8",
@@ -252,21 +269,22 @@ pub(crate) async fn verify_sms_req_ac_portal_login(
         .unwrap();
 
     let resp = client.request(req).await?;
-
-    println!("resp.headers >>> {:?}", resp.headers());
+    seeval!(resp.headers());
 
     let resp_body = hyper::body::aggregate(resp).await?;
     let resp_json: serde_json::Value = serde_json::from_reader(resp_body.reader())?;
-    // println!("resp_json >>> {}", resp_json);
+    // seeval!(resp_json);
 
     if let serde_json::Value::Bool(success) = resp_json["success"] {
-        if success {
-            if let serde_json::Value::String(location) = &resp_json["location"] {
-                return Ok(location.clone());
+        if let serde_json::Value::String(msg) = &resp_json["msg"] {
+            if success {
+                if let serde_json::Value::String(location) = &resp_json["location"] {
+                    return Ok(location.to_owned());
+                }
+            } else {
+                eprintln!("{}", msg);
+                std::process::exit(-1);
             }
-        } else {
-            eprintln!("msg >>> {}", resp_json["msg"]);
-            std::process::exit(-1);
         }
     }
 
@@ -291,8 +309,7 @@ pub(crate) async fn req_ss_login(
         .unwrap();
 
     let resp = client.request(req).await?;
-
-    println!("resp.headers >>> {:?}", resp.headers());
+    seeval!(resp.headers());
 
     let redirect_url = String::from_utf8_lossy(resp.headers()["location"].as_bytes()).to_string();
 
@@ -315,8 +332,7 @@ pub(crate) async fn req_api_v1_login_callback(
         .unwrap();
 
     let resp = client.request(req).await?;
-
-    println!("resp.headers >>> {:?}", resp.headers());
+    seeval!(resp.headers());
 
     let ep_jwt_token_current =
         String::from_utf8_lossy(resp.headers()["set-cookie"].as_bytes()).to_string();
@@ -355,16 +371,9 @@ pub(crate) async fn req_api_v1_users_info(
         .body(Body::empty())
         .unwrap();
 
-    let mut resp = client.request(req).await?;
-
-    println!("resp.headers >>> {:?}", resp.headers());
-
-    use hyper::body::HttpBody as _;
-    use tokio::io::{stdout, AsyncWriteExt as _};
-    while let Some(chunk) = resp.body_mut().data().await {
-        stdout().write_all(&chunk?).await?;
-    }
-    stdout().write_all(b"\n").await?;
+    let resp = client.request(req).await?;
+    seeval!(resp.headers());
+    print_resp_body!(resp);
 
     let ep_jwt_token_current =
         String::from_utf8_lossy(resp.headers()["set-cookie"].as_bytes()).to_string();
@@ -393,7 +402,8 @@ pub(crate) async fn sign_in_tp_by_sms(
     let (auth_token, app_token, authsessid) =
         req_ac_portal_userauth(&client_id, &response_type).await?;
 
-    let user_name = req_ac_portal_login(&auth_token, &app_token, &authsessid, phone_num).await?;
+    let user_name =
+        req_vsms_ac_portal_login(&auth_token, &app_token, &authsessid, phone_num).await?;
 
     let sms_code = read_stdin_sms_code()?;
     let redirect_url = verify_sms_req_ac_portal_login(
