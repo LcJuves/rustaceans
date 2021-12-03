@@ -11,6 +11,9 @@ use hyper::body::Buf;
 use hyper::{Body, Client, Method, Request, Version};
 use hyper_tls::HttpsConnector;
 
+use qrcode::render::unicode;
+use qrcode::QrCode;
+
 use lazy_static::lazy_static;
 
 macro_rules! print_resp_body {
@@ -219,7 +222,7 @@ pub(crate) async fn req_vsms_ac_portal_login(
         if let serde_json::Value::String(msg) = &resp_json["msg"] {
             if success {
                 if let serde_json::Value::String(user_name) = &resp_json["userName"] {
-                    return Ok((&user_name[1..(user_name.len() - 1)]).to_string());
+                    return Ok(user_name.to_owned());
                 }
             } else {
                 eprintln!("{}", msg);
@@ -283,6 +286,126 @@ pub(crate) async fn verify_sms_req_ac_portal_login(
                 }
             } else {
                 eprintln!("{}", msg);
+                std::process::exit(-1);
+            }
+        }
+    }
+
+    std::process::exit(-1);
+}
+
+pub(crate) async fn req_vscan_moa_qrcode_ac_portal_login(
+    auth_token: &str,
+    app_token: &str,
+    authsessid: &str,
+) -> Result<(String, String, String, String), Box<dyn std::error::Error>> {
+    let mut body = String::from("authToken=");
+    body.push_str(auth_token);
+    body.push_str("&appToken=");
+    body.push_str(app_token);
+    body.push_str("&auth=oauth&template=default&uuid=014a6560486429cada00afc53fe1017c");
+    body.push_str("&opr=addAppAuth&app_auth_way=6");
+
+    let https = HttpsConnector::new();
+    let client = Client::builder().build::<_, hyper::Body>(https);
+    let req = Request::builder()
+        .header("user-agent", UA.to_string())
+        .header("Cookie", format!("AUTHSESSID={}", authsessid))
+        .header(
+            "Content-Type",
+            "application/x-www-form-urlencoded; charset=UTF-8",
+        )
+        .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY).unwrap())
+        .method(Method::POST)
+        .uri("https://idtrust.sangfor.com:444/ac_portal/login.php")
+        .version(Version::HTTP_11)
+        .body(Body::from(body))
+        .unwrap();
+
+    let resp = client.request(req).await?;
+    seeval!(resp.headers());
+
+    let resp_body = hyper::body::aggregate(resp).await?;
+    let resp_json: serde_json::Value = serde_json::from_reader(resp_body.reader())?;
+    // seeval!(resp_json);
+
+    if let serde_json::Value::Bool(success) = resp_json["success"] {
+        if success {
+            if let serde_json::Value::String(goto) = &resp_json["goto"] {
+                let did_prefix = "did=";
+                let session_prefix = "session=";
+                let goto = goto.to_owned();
+                let did = (&goto[(goto.find(did_prefix).unwrap() + did_prefix.len())
+                    ..(goto.find(&format!("&{}", session_prefix)).unwrap())])
+                    .to_string();
+                let session = (&goto
+                    [(goto.find(session_prefix).unwrap() + session_prefix.len())..])
+                    .to_string();
+                if let serde_json::Value::String(nonce) = &resp_json["nonce"] {
+                    return Ok((did, session, nonce.to_owned(), goto));
+                }
+            }
+        } else {
+            if let serde_json::Value::String(json) = resp_json {
+                eprintln!("{}", json);
+            }
+        }
+    }
+
+    std::process::exit(-1);
+}
+
+pub(crate) async fn req_cgi_bin_tdc_get(
+    did: &str,
+    session: &str,
+    authsessid: &str,
+) -> Result<(String, u64), Box<dyn std::error::Error>> {
+    let mut url = String::from("https://idtrust.sangfor.com:444/cgi-bin/tdc/get?did=");
+    url.push_str(did);
+    url.push_str("&session=");
+    url.push_str(session);
+    url.push_str("&_=");
+    url.push_str(
+        &SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis()
+            .to_string(),
+    );
+
+    let https = HttpsConnector::new();
+    let client = Client::builder().build::<_, hyper::Body>(https);
+    let req = Request::builder()
+        .header("user-agent", UA.to_string())
+        .header("Cookie", format!("AUTHSESSID={}", authsessid))
+        .header(
+            "Content-Type",
+            "application/x-www-form-urlencoded; charset=UTF-8",
+        )
+        .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY).unwrap())
+        .method(Method::GET)
+        .uri(url)
+        .version(Version::HTTP_11)
+        .body(Body::empty())
+        .unwrap();
+
+    let resp = client.request(req).await?;
+    seeval!(resp.headers());
+
+    let resp_body = hyper::body::aggregate(resp).await?;
+    let resp_json: serde_json::Value = serde_json::from_reader(resp_body.reader())?;
+    // seeval!(resp_json);
+
+    if let serde_json::Value::Number(result) = &resp_json["result"] {
+        if let serde_json::Value::String(errmsg) = &resp_json["errmsg"] {
+            if result.as_u64().unwrap() == 0 {
+                if let serde_json::Value::Object(data) = &resp_json["data"] {
+                    let tdc_info = data.get("tdc_info").unwrap().as_str().unwrap().to_owned();
+                    let time_limit = data.get("time_limit").unwrap().as_u64().unwrap();
+                    return Ok((tdc_info, time_limit));
+                }
+            } else {
+                eprintln!("{}", errmsg);
                 std::process::exit(-1);
             }
         }
@@ -420,6 +543,43 @@ pub(crate) async fn sign_in_tp_by_sms(
     let ep_jwt_token_current = req_api_v1_login_callback(&redirect_url, &sessionid).await?;
 
     Ok((ep_jwt_token_current, sessionid))
+}
+
+pub(crate) async fn sign_in_tp_by_scan_moa_arcode() -> Result<(), Box<dyn std::error::Error>> {
+    let (redirect_url, sessionid) = req_api_v1_login().await?;
+    // seeval!((&redirect_url, &sessionid));
+
+    let (redirect_url, sso_provider_session) =
+        req_ss_auth_att_oauth2_authorize(&redirect_url, &sessionid).await?;
+    // seeval!((&redirect_url, &sso_provider_session));
+
+    let (client_id, response_type, sso_provider_session) =
+        req_ss_users_sign_in(&redirect_url, &sso_provider_session).await?;
+    // seeval!((&client_id, &response_type, &sso_provider_session));
+
+    let (auth_token, app_token, authsessid) =
+        req_ac_portal_userauth(&client_id, &response_type).await?;
+    // seeval!((&auth_token, &app_token, &authsessid));
+
+    let (did, session, ..) =
+        req_vscan_moa_qrcode_ac_portal_login(&auth_token, &app_token, &authsessid).await?;
+    // seeval!((&did, &session));
+
+    let (tdc_info, time_limit) = req_cgi_bin_tdc_get(&did, &session, &authsessid).await?;
+    seeval!((&tdc_info, &time_limit));
+
+    let code = QrCode::new(tdc_info)?;
+    let image = code
+        .render::<unicode::Dense1x2>()
+        .dark_color(unicode::Dense1x2::Light)
+        .light_color(unicode::Dense1x2::Dark)
+        .build();
+    println!("{}", image);
+
+    // let redirect_url = req_ss_login(&redirect_url, &sso_provider_session).await?;
+    // let ep_jwt_token_current = req_api_v1_login_callback(&redirect_url, &sessionid).await?;
+
+    Ok(())
 }
 
 ////////////////////////////////////////////////////////
