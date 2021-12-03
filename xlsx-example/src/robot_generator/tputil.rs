@@ -1,10 +1,11 @@
+use std::collections::BTreeMap;
 use std::io::{stdin, stdout, BufRead, Write};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use guid_create::GUID;
-use josekit::jws::{JwsHeader, HS256};
-use josekit::jwt::{encode_with_signer, JwtPayload};
-use josekit::{JoseError, Value};
+use hmac::{Hmac, NewMac};
+use jwt::{Error, SignWithKey};
+use sha2::Sha256;
 
 use hyper::body::Buf;
 use hyper::{Body, Client, Method, Request, Version};
@@ -427,24 +428,18 @@ pub fn read_stdin_sms_code() -> std::io::Result<u32> {
         .unwrap_or(sms_code.rfind("\n").unwrap()))]
         .to_string();
 
-    println!("sms_code >>> {}", sms_code);
-
     use std::str::FromStr;
     Ok(u32::from_str(&sms_code).unwrap())
 }
 
-pub(crate) fn jwt_sign_with_guid(guid: &str, key: &str) -> Result<String, JoseError> {
-    let mut header = JwsHeader::new();
-    header.set_algorithm("HS256");
-    header.set_token_type("JWT");
+pub(crate) fn jwt_sign_with_guid(guid: &str, key: &str) -> Result<String, Error> {
+    let key: Hmac<Sha256> = Hmac::new_from_slice(key.as_bytes())?;
+    let mut claims = BTreeMap::new();
+    claims.insert("alg", "HS256");
+    claims.insert("typ", "JWT");
+    claims.insert("id", guid);
 
-    let mut payload = JwtPayload::new();
-    payload.set_claim("id", Some(Value::String(guid.to_string())))?;
-
-    let signer = HS256.signer_from_bytes(key)?;
-    let jwt = encode_with_signer(&payload, &header, &signer)?;
-
-    Ok(jwt)
+    Ok(claims.sign_with_key(&key)?)
 }
 
 fn gen_guid() -> String {
@@ -452,7 +447,7 @@ fn gen_guid() -> String {
 }
 
 #[test]
-fn test_jwt_sign_with_guid() -> Result<(), JoseError> {
+fn test_jwt_sign_with_guid() -> Result<(), Error> {
     let jwt = jwt_sign_with_guid("06294495-2134-6603-e716-97ef9c0089a2", &JWT_KEY)?;
     assert_eq!(jwt,"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA2Mjk0NDk1LTIxMzQtNjYwMy1lNzE2LTk3ZWY5YzAwODlhMiJ9.mb5eymv3yZtyGutvt9qeRkLVlHzA2pRrIJ-3m4QWLH4");
     let jwt = jwt_sign_with_guid("69b20cdd-6d77-0b32-1fd9-86fea6742863", &JWT_KEY)?;
