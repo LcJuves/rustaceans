@@ -378,10 +378,6 @@ pub(crate) async fn req_cgi_bin_tdc_get(
     let req = Request::builder()
         .header("user-agent", UA.to_string())
         .header("Cookie", format!("AUTHSESSID={}", authsessid))
-        .header(
-            "Content-Type",
-            "application/x-www-form-urlencoded; charset=UTF-8",
-        )
         .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY).unwrap())
         .method(Method::GET)
         .uri(url)
@@ -437,10 +433,6 @@ pub(crate) async fn req_cgi_bin_tdc_wait(
     let req = Request::builder()
         .header("user-agent", UA.to_string())
         .header("Cookie", format!("AUTHSESSID={}", authsessid))
-        .header(
-            "Content-Type",
-            "application/x-www-form-urlencoded; charset=UTF-8",
-        )
         .header("Connection", "keep-alive")
         .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY).unwrap())
         .method(Method::GET)
@@ -466,6 +458,50 @@ pub(crate) async fn req_cgi_bin_tdc_wait(
             } else {
                 eprintln!("{}", errmsg);
                 std::process::exit(-1);
+            }
+        }
+    }
+
+    std::process::exit(-1);
+}
+
+pub(crate) async fn req_ac_portal_auth_moa(
+    authsessid: &str,
+    search_params: &str,
+) -> Result<(String, String), Box<dyn std::error::Error>> {
+    let mut url = String::from("https://idtrust.sangfor.com:444/ac_portal/auth/moa.php");
+    url.push_str(search_params);
+
+    let https = HttpsConnector::new();
+    let client = Client::builder().build::<_, hyper::Body>(https);
+    let req = Request::builder()
+        .header("user-agent", UA.to_string())
+        .header("Cookie", format!("AUTHSESSID={}", authsessid))
+        .header("Connection", "keep-alive")
+        .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY).unwrap())
+        .method(Method::GET)
+        .uri(url)
+        .version(Version::HTTP_11)
+        .body(Body::empty())
+        .unwrap();
+
+    let resp = client.request(req).await?;
+    seeval!(resp.headers());
+
+    let resp_body = hyper::body::aggregate(resp).await?;
+    let resp_json: serde_json::Value = serde_json::from_reader(resp_body.reader())?;
+    // seeval!(resp_json);
+
+    if let serde_json::Value::Bool(success) = resp_json["success"] {
+        if success {
+            if let serde_json::Value::String(moa_state) = &resp_json["moaState"] {
+                if let serde_json::Value::String(user_name) = &resp_json["userName"] {
+                    return Ok((moa_state.to_owned(), user_name.to_owned()));
+                }
+            }
+        } else {
+            if let serde_json::Value::String(json) = resp_json {
+                eprintln!("{}", json);
             }
         }
     }
@@ -635,8 +671,11 @@ pub(crate) async fn sign_in_tp_by_scan_moa_arcode() -> Result<(), Box<dyn std::e
         .build();
     println!("{}", image);
 
-    let url_params = req_cgi_bin_tdc_wait(&did, &session, &authsessid).await?;
-    seeval!(&url_params);
+    let search_params = req_cgi_bin_tdc_wait(&did, &session, &authsessid).await?;
+    // seeval!(&search_params);
+
+    let (moa_state, user_name) = req_ac_portal_auth_moa(&authsessid, &search_params).await?;
+    seeval!((&moa_state, &user_name));
 
     // let redirect_url = req_ss_login(&redirect_url, &sso_provider_session).await?;
     // let ep_jwt_token_current = req_api_v1_login_callback(&redirect_url, &sessionid).await?;
