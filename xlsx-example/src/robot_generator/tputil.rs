@@ -1,6 +1,5 @@
 use std::collections::BTreeMap;
 use std::io::{stdin, stdout, BufRead, Write};
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use guid_create::GUID;
 use hmac::{Hmac, NewMac};
@@ -28,6 +27,19 @@ macro_rules! print_resp_body {
     };
 }
 
+macro_rules! time_millis_string {
+    () => {
+        (|| {
+            use std::time::{SystemTime, UNIX_EPOCH};
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+                .to_string()
+        })()
+    };
+}
+
 #[macro_export]
 macro_rules! seeval {
     ($val:expr) => {
@@ -38,6 +50,7 @@ macro_rules! seeval {
 lazy_static! {
     static ref UA: &'static str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36";
     static ref JWT_KEY: &'static str = "32293231323532373241325132713273328533033339335733613403343934413469350335713605364136513735376937813863393139494017409141594161";
+    static ref BR_UUID: &'static str = "014a6560486429cada00afc53fe1017c";
 }
 
 pub(crate) async fn req_api_v1_login() -> Result<(String, String), Box<dyn std::error::Error>> {
@@ -186,9 +199,9 @@ pub(crate) async fn req_vsms_ac_portal_login(
     body.push_str(auth_token);
     body.push_str("&appToken=");
     body.push_str(app_token);
-    body.push_str(
-        "&auth=oauth&template=default&uuid=014a6560486429cada00afc53fe1017c&opr=getSmsCode&phone=",
-    );
+    body.push_str("&auth=oauth&template=default&uuid=");
+    body.push_str(&BR_UUID);
+    body.push_str("&opr=getSmsCode&phone=");
     body.push_str(phone_num);
 
     let https = HttpsConnector::new();
@@ -246,9 +259,9 @@ pub(crate) async fn verify_sms_req_ac_portal_login(
     body.push_str(auth_token);
     body.push_str("&appToken=");
     body.push_str(app_token);
-    body.push_str(
-        "&auth=oauth&template=default&uuid=014a6560486429cada00afc53fe1017c&opr=firstSmsLogin&phone=",
-    );
+    body.push_str("&auth=oauth&template=default&uuid=");
+    body.push_str(&BR_UUID);
+    body.push_str("&opr=firstSmsLogin&phone=");
     body.push_str(phone_num);
     body.push_str("&smsCode=");
     body.push_str(&sms_code.to_string());
@@ -303,7 +316,8 @@ pub(crate) async fn req_vscan_moa_qrcode_ac_portal_login(
     body.push_str(auth_token);
     body.push_str("&appToken=");
     body.push_str(app_token);
-    body.push_str("&auth=oauth&template=default&uuid=014a6560486429cada00afc53fe1017c");
+    body.push_str("&auth=oauth&template=default&uuid=");
+    body.push_str(&BR_UUID);
     body.push_str("&opr=addAppAuth&app_auth_way=6");
 
     let https = HttpsConnector::new();
@@ -365,13 +379,7 @@ pub(crate) async fn req_cgi_bin_tdc_get(
     url.push_str("&session=");
     url.push_str(session);
     url.push_str("&_=");
-    url.push_str(
-        &SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_millis()
-            .to_string(),
-    );
+    url.push_str(&time_millis_string!());
 
     let https = HttpsConnector::new();
     let client = Client::builder().build::<_, hyper::Body>(https);
@@ -420,13 +428,7 @@ pub(crate) async fn req_cgi_bin_tdc_wait(
     url.push_str("&session=");
     url.push_str(session);
     url.push_str("&_=");
-    url.push_str(
-        &SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_millis()
-            .to_string(),
-    );
+    url.push_str(&time_millis_string!());
 
     let https = HttpsConnector::new();
     let client = Client::builder().build::<_, hyper::Body>(https);
@@ -579,11 +581,7 @@ pub(crate) async fn req_api_v1_users_info(
         .method(Method::GET)
         .uri(format!(
             "http://199.200.0.8/api/v1/users/info/?_t={}",
-            SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_millis()
-                .to_string()
+            time_millis_string!()
         ))
         .version(Version::HTTP_11)
         .body(Body::empty())
