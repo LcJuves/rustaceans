@@ -227,6 +227,13 @@ impl OneCase {
                     robot_template = robot_template.replace("{{mod_tag}}", "UnNamedModule");
                 }
 
+                if self.case_title.contains("二合一") {
+                    robot_template = robot_template
+                        .replace("${SdpConsoleUrl}", "${HyrBirdUrl}")
+                        .replace("${SdpConsoleUser}", "${HyrBirdUser}")
+                        .replace("${SdpConsolePasswd}", "${HyrBirdPasswd}");
+                }
+
                 robot_file.write_all(robot_template.as_bytes())?;
                 robot_file.flush()?;
             }
