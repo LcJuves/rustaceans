@@ -1,4 +1,6 @@
 use std::collections::BTreeMap;
+use std::env::home_dir;
+use std::fs::OpenOptions;
 use std::io::{stdin, stdout, BufRead, Write};
 
 use guid_create::GUID;
@@ -15,6 +17,7 @@ use qrcode::QrCode;
 
 use lazy_static::lazy_static;
 
+#[allow(unused_macros)]
 macro_rules! print_resp_body {
     ($resp:ident) => {
         use hyper::body::HttpBody as _;
@@ -657,8 +660,27 @@ pub(crate) async fn req_api_v1_users_info(
         .to_string();
 
     let resp_body = hyper::body::aggregate(resp).await?;
-    let resp_json: serde_json::Value = serde_json::from_reader(resp_body.reader())?;
-    seeval!(resp_json);
+    let mut resp_body_bytes = Vec::new();
+
+    std::io::copy(&mut resp_body.reader(), &mut resp_body_bytes)?;
+
+    let resp_json: serde_json::Value =
+        serde_json::from_str(&String::from_utf8_lossy(&resp_body_bytes))?;
+    // seeval!(resp_json);
+
+    if let Some(home_dir) = home_dir() {
+        let user_info_path = home_dir.join(".user_info.json");
+        if !user_info_path.exists() {
+            let mut user_info_json = OpenOptions::new()
+                .create(true)
+                .read(true)
+                .write(true)
+                .truncate(true)
+                .open(&user_info_path)?;
+            user_info_json.write_all(&resp_body_bytes)?;
+            user_info_json.flush()?;
+        }
+    }
 
     if let serde_json::Value::Number(id) = &resp_json["id"] {
         if id.as_u64().unwrap() > 0 {
