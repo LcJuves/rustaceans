@@ -4,7 +4,7 @@ pub struct HexString;
 impl HexString {
     pub const RADIX: u32 = 16;
 
-    pub fn from(&self, bytes: &[u8]) -> String {
+    pub fn from(bytes: &[u8]) -> String {
         let char_from_digit = |num: u32| char::from_digit(num, Self::RADIX).unwrap();
         let mut ret = String::new();
         for byte in bytes {
@@ -15,7 +15,7 @@ impl HexString {
         ret
     }
 
-    pub fn parse(&self, hex: &str) -> Vec<u8> {
+    pub fn parse(hex: &str) -> Vec<u8> {
         let char_to_digit = |n: usize| hex.chars().nth(n).unwrap().to_digit(Self::RADIX).unwrap();
         let mut ret = Vec::<u8>::new();
         for i in 0..(hex.len() / 2) {
