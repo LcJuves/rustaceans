@@ -111,11 +111,11 @@ pub fn decode(string: &str, url_safe: bool) -> Vec<u8> {
         let mut albeti = (-1i8, -1i8, -1i8, -1i8);
         let mut count = 0u8;
 
-        for i in 0..alphabet.len() {
+        for i in 0..(alphabet.len()) {
             // Single element in Base64 encoding table
             let ale = alphabet[i] as u8;
 
-            for elemi in 0..elems.len() {
+            for elemi in 0..(elems.len()) {
                 if ale == elems[elemi] {
                     let i_i = i as i8;
                     match elemi {
@@ -148,7 +148,7 @@ pub fn decode(string: &str, url_safe: bool) -> Vec<u8> {
 
         // Find the index of every four elements from the Base64 encoding table
         let (albeti_0, albeti_1, albeti_2, albeti_3) =
-            find_albeti(&src[srci..=(srci + (NUMBER_OF_ENCODED_BYTES_PER_GROUP - 1))]);
+            find_albeti(&src[srci..(srci + NUMBER_OF_ENCODED_BYTES_PER_GROUP)]);
 
         dst.push((albeti_0 << 2 | albeti_1 >> 4) as u8);
 

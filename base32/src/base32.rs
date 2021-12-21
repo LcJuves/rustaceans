@@ -86,11 +86,11 @@ pub fn decode(src: &[u8]) -> Vec<u8> {
         let mut albeti = (-1i8, -1i8, -1i8, -1i8, -1i8, -1i8, -1i8, -1i8);
         let mut count = 0u8;
 
-        for i in 0..ALPHABET.len() {
+        for i in 0..(ALPHABET.len()) {
             // Single element in Base32 encoding table
             let ale = ALPHABET[i] as u8;
 
-            for elemi in 0..elems.len() {
+            for elemi in 0..(elems.len()) {
                 if ale == elems[elemi] {
                     let i_i = i as i8;
                     match elemi {
@@ -126,7 +126,7 @@ pub fn decode(src: &[u8]) -> Vec<u8> {
 
         // Find the index of every eight elements from the Base32 encoding table
         let (albeti_0, albeti_1, albeti_2, albeti_3, albeti_4, albeti_5, albeti_6, albeti_7) =
-            find_albeti(&src[srci..=(srci + (NUMBER_OF_ENCODED_BYTES_PER_GROUP - 1))]);
+            find_albeti(&src[srci..(srci + NUMBER_OF_ENCODED_BYTES_PER_GROUP)]);
 
         dst.push((albeti_0 << 3 | albeti_1 >> 2) as u8);
 

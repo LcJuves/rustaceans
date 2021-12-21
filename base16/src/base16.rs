@@ -65,7 +65,7 @@ pub fn decode(src: &[u8]) -> Vec<u8> {
         let srci = NUMBER_OF_ENCODED_BYTES_PER_GROUP * i;
         // Find the index of every two elements from the Base16 encoding table
         let (albeti_0, albeti_1) =
-            find_albeti(&src[srci..=(srci + (NUMBER_OF_ENCODED_BYTES_PER_GROUP - 1))]);
+            find_albeti(&src[srci..(srci + NUMBER_OF_ENCODED_BYTES_PER_GROUP)]);
         let mut diget = albeti_0 << 4;
         diget |= albeti_1;
         dst.push(diget as u8);
