@@ -2,6 +2,7 @@ mod reflection;
 mod robot_generator;
 mod util;
 
+#[allow(unused_imports)]
 use crate::robot_generator::main::*;
 use crate::robot_generator::tputil::*;
 

@@ -104,7 +104,9 @@ impl OneCase {
         let (ref author_tag, mod_tag) = &*AUTHOR_AND_MOD_TAG;
         let user_robot_template = &*USER_ROBOT_TEMPLATE;
 
-        if self.test_methods.starts_with("自动化") && self.can_be_automated.starts_with("否") {
+        if
+        /* self.test_methods.starts_with("自动化") && */
+        self.can_be_automated.starts_with("否") {
             self.feature_name = self
                 .feature_name
                 .replace('/', &MAIN_SEPARATOR.to_string())
