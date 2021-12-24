@@ -2,10 +2,10 @@ use std::fs::OpenOptions;
 
 use std::io::Read;
 use std::io::Result;
-use std::os::unix::fs::PermissionsExt;
 
 use std::io::Write;
-use std::net::Shutdown;
+// #[cfg(any(target_os = "linux", target_os = "l4re"))]
+// use std::net::Shutdown;
 use std::net::{TcpListener, TcpStream};
 
 use std::thread::spawn;
@@ -50,6 +50,7 @@ fn handle_conn(mut stream: TcpStream) -> Result<()> {
     println!("First line: {}", first_line);
 
     let first_line_infos: Vec<_> = first_line.split(&SP.to_string()).collect();
+    // println!("first_line_infos >>> {:?}", first_line_infos);
     let request = Request::new(
         first_line_infos[1].to_string(),
         match first_line_infos[0] {
@@ -58,12 +59,11 @@ fn handle_conn(mut stream: TcpStream) -> Result<()> {
         1.1,
     );
 
-    stream.shutdown(Shutdown::Read)?;
+    // #[cfg(any(target_os = "linux", target_os = "l4re"))]
+    // stream.shutdown(Shutdown::Read)?;
 
     let mut path_buf = std::env::current_dir()?;
-
     let mut is_index_page = false;
-
     let paths: Vec<_> = first_line_infos[1].split(*ROOT_ROUTER).collect();
     if *ROOT_ROUTER != &request.uri || include_index_router(&request.uri) {
         for path in paths {
@@ -80,6 +80,8 @@ fn handle_conn(mut stream: TcpStream) -> Result<()> {
             }
         }
     }
+
+    // println!("PASS");
 
     if is_index_page || path_buf.exists() {
         let path_buf_metadata = path_buf.metadata()?;
@@ -106,14 +108,21 @@ Server: Rust\r\n",
                 let child_file_metadata = child_file_entry.metadata()?;
 
                 files_html.push_str("<tr>");
-                if cfg!(unix) {
+
+                #[cfg(not(any(unix, target_os = "hermit")))]
+                {
+                    files_html.push_str(&format!("<td>{}</td>", "Unknown"));
+                }
+
+                #[cfg(any(unix, target_os = "hermit"))]
+                {
+                    use std::os::unix::fs::PermissionsExt;
                     files_html.push_str(&format!(
                         "<td>{:o}</td>",
                         child_file_metadata.permissions().mode()
                     ));
-                } else {
-                    files_html.push_str(&format!("<td>{}</td>", "Unknown"));
                 }
+
                 files_html.push_str(&format!("<td>{}</td>", child_file_metadata.len()));
                 let child_file_name = child_file_entry.file_name();
                 let child_file_name_str = child_file_name.to_str().unwrap();
@@ -191,7 +200,9 @@ Server: Rust\r\n",
     println!();
 
     stream.flush()?;
-    stream.shutdown(Shutdown::Write)?;
+
+    // #[cfg(any(target_os = "linux", target_os = "l4re"))]
+    // stream.shutdown(Shutdown::Write)?;
 
     Ok(())
 }
