@@ -81,8 +81,6 @@ fn handle_conn(mut stream: TcpStream) -> Result<()> {
         }
     }
 
-    // println!("PASS");
-
     if is_index_page || path_buf.exists() {
         let path_buf_metadata = path_buf.metadata()?;
 
@@ -95,6 +93,7 @@ Server: Rust\r\n",
             )?;
 
             let mut dir_viewer_html = DIR_VIEWER_HTML.to_string();
+            // FIXME: Can't run on `i686-unknown-linux-musl`
             dir_viewer_html = dir_viewer_html.replace("${dirname}", &request.uri);
 
             // TODO: Empty directory html
@@ -139,6 +138,7 @@ Server: Rust\r\n",
                 files_html.push_str("</tr>");
             }
 
+            // FIXME: Can't run on `i686-unknown-linux-musl`
             dir_viewer_html = dir_viewer_html.replace("${files}", &files_html);
 
             let dir_viewer_html_bytes = dir_viewer_html.as_bytes();
