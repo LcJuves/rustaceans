@@ -3,7 +3,9 @@ use crate::robot_generator::tputil::*;
 use std::fs::File;
 
 use lazy_static::lazy_static;
+use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct LoginedAuthInfo<'a> {
     ep_jwt_token_current: &'a str,
     sessionid: &'a str,
@@ -51,14 +53,14 @@ impl<'a> LoginedAuthInfo<'a> {
 }
 
 lazy_static! {
-    pub static ref AUTH_CONF: LoginedAuthInfo<'static> = {
-        let mut login_auth_info = LoginedAuthInfo::new();
+    pub static ref AUTH_CONF_JSON: Result<&'static str, Box<dyn std::error::Error>> = {
         if user_info_json_exist() {
-            if let Ok(user_info_json_path) = USER_INFO_JSON_PATH.as_ref() {
-                let mut user_info_json = File::open(&user_info_json_path).unwrap();
-                let mut user_info_json_bytes = Vec::<u8>::new();
-                std::io::copy(&mut user_info_json, &mut user_info_json_bytes).unwrap();
-            }
+            let user_info_json_path = USER_INFO_JSON_PATH.as_ref()?;
+            let mut user_info_json = File::open(&user_info_json_path)?;
+            let mut user_info_json_bytes = Vec::<u8>::new();
+            std::io::copy(&mut user_info_json, &mut user_info_json_bytes)?;
+            let mut ret_string = (&String::from_utf8_lossy(&user_info_json_bytes)).to_string();
+            return Ok(Box::leak(ret_string.into_boxed_str()));
         } else {
             println!("\u{1b}[91m{}\u{1b}[0m", "Please login first!");
             println!(
@@ -67,6 +69,5 @@ lazy_static! {
             );
             std::process::exit(-1);
         }
-        login_auth_info
     };
 }
