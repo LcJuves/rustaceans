@@ -1,4 +1,4 @@
-POST http://127.0.0.1:9999/target/release/rfserv.exe HTTP/1.1
+GET http://127.0.0.1:9999/target/release/rfserv.exe HTTP/1.1
 Host: 127.0.0.1:9999
 Connection: keep-alive
 sec-ch-ua: " Not A;Brand";v="99", "Chromium";v="96", "Microsoft Edge";v="96"
