@@ -1,3 +1,7 @@
+use crate::robot_generator::tputil::*;
+
+use std::fs::File;
+
 use lazy_static::lazy_static;
 
 pub struct LoginedAuthInfo<'a> {
@@ -49,7 +53,20 @@ impl<'a> LoginedAuthInfo<'a> {
 lazy_static! {
     pub static ref AUTH_CONF: LoginedAuthInfo<'static> = {
         let mut login_auth_info = LoginedAuthInfo::new();
-
+        if user_info_json_exist() {
+            if let Ok(user_info_json_path) = USER_INFO_JSON_PATH.as_ref() {
+                let mut user_info_json = File::open(&user_info_json_path).unwrap();
+                let mut user_info_json_bytes = Vec::<u8>::new();
+                std::io::copy(&mut user_info_json, &mut user_info_json_bytes).unwrap();
+            }
+        } else {
+            println!("\u{1b}[91m{}\u{1b}[0m", "Please login first!");
+            println!(
+                "For more information try \u{1b}[92m{}\u{1b}[0m or \u{1b}[92m{}\u{1b}[0m",
+                "--help", "-h"
+            );
+            std::process::exit(-1);
+        }
         login_auth_info
     };
 }

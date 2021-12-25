@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
-use std::env::home_dir;
 use std::fs::OpenOptions;
 use std::io::{stdin, stdout, BufRead, Write};
+use std::path::PathBuf;
 
 use guid_create::GUID;
 use hmac::{Hmac, NewMac};
@@ -46,7 +46,16 @@ macro_rules! time_millis_string {
 #[macro_export]
 macro_rules! seeval {
     ($val:expr) => {
+        #[cfg(debug_assertions)]
         println!("{} >>> {:?}", stringify!($val), $val);
+    };
+}
+
+#[allow(unused_macros)]
+macro_rules! pass {
+    () => {
+        #[cfg(debug_assertions)]
+        println!("\u{1b}[91m{}\u{1b}[0m", ">>> PASS");
     };
 }
 
@@ -54,6 +63,12 @@ lazy_static! {
     static ref UA: &'static str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36";
     static ref JWT_KEY: &'static str = "32293231323532373241325132713273328533033339335733613403343934413469350335713605364136513735376937813863393139494017409141594161";
     static ref BR_UUID: &'static str = "014a6560486429cada00afc53fe1017c";
+    pub static ref USER_INFO_JSON_PATH: std::io::Result<PathBuf> = {
+        if let Some(home_dir) = std::env::home_dir() {
+            return Ok(home_dir.join(".user_info.json"));
+        }
+        panic!("Init `USER_INFO_JSON_PATH` with error");
+    };
 }
 
 pub(crate) async fn req_api_v1_login() -> Result<(String, String), Box<dyn std::error::Error>> {
@@ -668,20 +683,6 @@ pub(crate) async fn req_api_v1_users_info(
         serde_json::from_str(&String::from_utf8_lossy(&resp_body_bytes))?;
     // seeval!(resp_json);
 
-    if let Some(home_dir) = home_dir() {
-        let user_info_path = home_dir.join(".user_info.json");
-        if !user_info_path.exists() {
-            let mut user_info_json = OpenOptions::new()
-                .create(true)
-                .read(true)
-                .write(true)
-                .truncate(true)
-                .open(&user_info_path)?;
-            user_info_json.write_all(&resp_body_bytes)?;
-            user_info_json.flush()?;
-        }
-    }
-
     if let serde_json::Value::Number(id) = &resp_json["id"] {
         if id.as_u64().unwrap() > 0 {
             if let serde_json::Value::String(username) = &resp_json["username"] {
@@ -754,6 +755,15 @@ pub(crate) async fn sign_in_tp_by_sms(
         &token
     ));
 
+    save_user_info_json(
+        &ep_jwt_token_current,
+        &sessionid,
+        &username,
+        &email,
+        &staff_code,
+        &token,
+    )?;
+
     Ok((
         ep_jwt_token_current,
         sessionid,
@@ -785,7 +795,7 @@ pub(crate) async fn sign_in_tp_by_scan_moa_arcode(
         req_vscan_moa_qrcode_ac_portal_login(&auth_token, &app_token, &authsessid).await?;
     // seeval!((&did, &session));
 
-    let (tdc_info, time_limit) = req_cgi_bin_tdc_get(&did, &session, &authsessid).await?;
+    let (tdc_info, _time_limit) = req_cgi_bin_tdc_get(&did, &session, &authsessid).await?;
     // seeval!((&tdc_info, &time_limit));
 
     let code = QrCode::new(tdc_info)?;
@@ -824,6 +834,15 @@ pub(crate) async fn sign_in_tp_by_scan_moa_arcode(
         &staff_code,
         &token
     ));
+
+    save_user_info_json(
+        &ep_jwt_token_current,
+        &sessionid,
+        &username,
+        &email,
+        &staff_code,
+        &token,
+    )?;
 
     Ok((
         ep_jwt_token_current,
@@ -867,6 +886,47 @@ pub(crate) fn jwt_sign_with_guid(guid: &str, key: &str) -> Result<String, Error>
 
 fn gen_guid() -> String {
     GUID::rand().to_string().to_lowercase()
+}
+
+pub fn user_info_json_exist() -> bool {
+    if let Ok(user_info_json_path) = USER_INFO_JSON_PATH.as_ref() {
+        if user_info_json_path.exists() {
+            return true;
+        }
+    }
+    false
+}
+
+pub fn save_user_info_json(
+    ep_jwt_token_current: &str,
+    sessionid: &str,
+    user_name: &str,
+    email: &str,
+    staff_code: &str,
+    token: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    if !user_info_json_exist() {
+        use serde_json::json;
+        let user_info_json_path = USER_INFO_JSON_PATH.as_ref()?;
+        let mut user_info_json = OpenOptions::new()
+            .create(true)
+            .read(true)
+            .write(true)
+            .truncate(true)
+            .open(&user_info_json_path)?;
+        let json = json!({
+            "ep_jwt_token_current": ep_jwt_token_current,
+            "sessionid": sessionid,
+            "user_name": user_name,
+            "email": email,
+            "staff_code": staff_code,
+            "token": token
+        })
+        .to_string();
+        user_info_json.write_all(&json.as_bytes())?;
+        user_info_json.flush()?;
+    }
+    Ok(())
 }
 
 #[test]
