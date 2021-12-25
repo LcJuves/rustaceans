@@ -1,0 +1,61 @@
+:root {
+  --background-color: #fafafa;
+  --color: rgba(0, 0, 0, 0.87);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background-color: #303030;
+    --color: #fff;
+  }
+}
+
+@media (min-width: 960px) {
+  main {
+    max-width: 960px;
+  }
+  body {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
+@media (min-width: 600px) {
+  main {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+body {
+  background: var(--background-color);
+  color: var(--color);
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  font-weight: 400;
+  line-height: 1.43;
+  font-size: 0.875rem;
+}
+
+a {
+  color: #2196f3;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+a:visited {
+  color: pink;
+}
+
+#main table {
+  border-spacing: 40px 4px;
+  font-size: 16px;
+  position: relative;
+  left: -40px;
+}
+
+#main table th {
+  text-align: left;
+}

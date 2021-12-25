@@ -1,26 +1,22 @@
+mod header;
+mod index_router;
+mod model;
+mod request;
+mod util;
+
+use crate::index_router::*;
+use crate::model::*;
+use crate::request::{Request, RequestMethod};
+use crate::util::*;
+
 use std::fs::OpenOptions;
 
-use std::io::Read;
-use std::io::Result;
-
-use std::io::Write;
+use std::io::{Result, Write};
 // #[cfg(any(target_os = "linux", target_os = "l4re"))]
 // use std::net::Shutdown;
 use std::net::{TcpListener, TcpStream};
-
 use std::thread::spawn;
-
-mod header;
-mod model;
-mod request;
-
-use model::*;
-
-mod index_router;
-use index_router::*;
-
-use fmedia::MediaType;
-use request::{Request, RequestMethod};
+use std::time::UNIX_EPOCH;
 
 fn main() -> Result<()> {
     init_serv("0.0.0.0:9999")?;
@@ -50,7 +46,6 @@ fn handle_conn(mut stream: TcpStream) -> Result<()> {
     println!("First line: {}", first_line);
 
     let first_line_infos: Vec<_> = first_line.split(&SP.to_string()).collect();
-    // println!("first_line_infos >>> {:?}", first_line_infos);
     let request = Request::new(
         first_line_infos[1].to_string(),
         match first_line_infos[0] {
@@ -64,14 +59,22 @@ fn handle_conn(mut stream: TcpStream) -> Result<()> {
 
     let mut path_buf = std::env::current_dir()?;
     let mut is_index_page = false;
-    let paths: Vec<_> = first_line_infos[1].split(*ROOT_ROUTER).collect();
-    if *ROOT_ROUTER != &request.uri || include_index_router(&request.uri) {
+    let simple_request_uri = if request.uri.ends_with("/") {
+        &request.uri[..(request.uri.rfind("/").unwrap_or(request.uri.len()))]
+    } else {
+        &request.uri
+    };
+
+    let paths: Vec<_> = simple_request_uri.split(*ROOT_ROUTER).collect();
+    if *ROOT_ROUTER != simple_request_uri || include_index_router(simple_request_uri) {
         for path in paths {
             path_buf = path_buf.join(path);
         }
-    } else if *ROOT_ROUTER == &request.uri {
+    } else if *ROOT_ROUTER == simple_request_uri {
         for index_router in DEFAULT_INDEX_ROUTERES.iter() {
-            let should_join = &index_router[(index_router.rfind('/').unwrap() + 1)..];
+            let should_join =
+                (&index_router[(index_router.find('/').unwrap_or(0) + 1)..]).to_string();
+            let should_join = &should_join[..(should_join.find('/').unwrap_or(should_join.len()))];
             let check_path_buf = path_buf.join(should_join);
             if check_path_buf.exists() {
                 is_index_page = true;
@@ -88,103 +91,66 @@ fn handle_conn(mut stream: TcpStream) -> Result<()> {
             stream.write(
                 b"\
 HTTP/1.1 200 OK\r\n\
-Content-Type: text/html;charset=utf-8\r\n\
-Server: Rust\r\n",
+Content-Type: text/html;charset=utf-8\r\n",
             )?;
+            write_server_line(&mut stream)?;
 
-            let mut dir_viewer_html = DIR_VIEWER_HTML.to_string();
-            // FIXME: Can't run on `i686-unknown-linux-musl`
-            //        May be OOM
-            dir_viewer_html = dir_viewer_html.replace("${dirname}", &request.uri);
-
-            // TODO: Empty directory html
-            // TODO: Show 'Last modified'
-            // TODO: Human file size
-
-            let mut files_html = String::new();
+            let mut file_infos = Vec::<FileInfo>::new();
 
             for entry in (&path_buf).read_dir()? {
                 let child_file_entry = entry?;
                 let child_file_metadata = child_file_entry.metadata()?;
 
-                files_html.push_str("<tr>");
+                let child_file_name_str = child_file_entry
+                    .file_name()
+                    .to_str()
+                    .unwrap_or("Unknown")
+                    .to_owned();
 
-                #[cfg(not(any(unix, target_os = "hermit")))]
-                {
-                    files_html.push_str(&format!("<td>{}</td>", "Unknown"));
-                }
+                let modified_time = child_file_metadata.modified()?;
 
-                #[cfg(any(unix, target_os = "hermit"))]
-                {
-                    use std::os::unix::fs::PermissionsExt;
-                    files_html.push_str(&format!(
-                        "<td>{:o}</td>",
-                        child_file_metadata.permissions().mode()
-                    ));
-                }
-
-                files_html.push_str(&format!("<td>{}</td>", child_file_metadata.len()));
-                let child_file_name = child_file_entry.file_name();
-                let child_file_name_str = child_file_name.to_str().unwrap();
-
-                let ref request_uri_ref = request.uri;
-
-                files_html.push_str(&format!(
-                    "<td><a href=\"javascript:void(0);\" onclick=\"window.location.href='{}';\">{}</a></td>",
-                    format!("{}/{}", match request_uri_ref.ends_with("/") {
-                        true => &request_uri_ref[0..request_uri_ref.rfind('/').unwrap()],
-                        _=> &request_uri_ref
-                    }, child_file_name_str), child_file_name_str
-                ));
-                files_html.push_str("</tr>");
+                file_infos.push(FileInfo {
+                    name: child_file_name_str.to_string(),
+                    last_modified: modified_time
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap()
+                        .as_millis(),
+                    size: child_file_metadata.len(),
+                    is_dir: child_file_metadata.is_dir(),
+                });
             }
 
-            // FIXME: Can't run on `i686-unknown-linux-musl`
-            //        May be OOM
-            dir_viewer_html = dir_viewer_html.replace("${files}", &files_html);
-
-            let dir_viewer_html_bytes = dir_viewer_html.as_bytes();
+            let dir_name = simple_request_uri;
+            let dir_view_html = gen_dir_view_html(&SERVER_NAME, dir_name, &file_infos);
+            let dir_view_html_bytes = dir_view_html.as_bytes();
 
             stream.write(b"Content-Length: ")?;
-            stream.write(dir_viewer_html_bytes.len().to_string().as_bytes())?;
+            stream.write(dir_view_html_bytes.len().to_string().as_bytes())?;
             stream.write(b"\r\n\r\n")?;
-            stream.write_all(dir_viewer_html_bytes)?;
+            stream.write_all(dir_view_html_bytes)?;
         } else {
-            let media_ty = match path_buf.extension() {
-                Some(extension) => MediaType::from_file_extension(extension.to_str().unwrap()),
-                _ => None,
-            };
-
             stream.write(
                 b"\
 HTTP/1.1 200 OK\r\n\
 Content-Type: ",
             )?;
-            match media_ty {
-                Some(mty) => {
-                    stream.write(mty.as_bytes())?;
-                }
-                _ => {
-                    stream.write(b"text/plain")?;
-                }
-            }
+            stream.write(&mime_bytes_from(&path_buf))?;
             stream.write(b"; charset=utf-8\r\n")?;
-            stream.write(b"Server: rfserv\r\n")?;
+            write_server_line(&mut stream)?;
             stream.write(b"Content-Length: ")?;
             stream.write(path_buf_metadata.len().to_string().as_bytes())?;
             stream.write(b"\r\n\r\n")?;
 
-            let mut file = OpenOptions::new().read(true).open(path_buf)?;
-
+            let mut file = OpenOptions::new().read(true).open(&path_buf)?;
             std::io::copy(&mut file, &mut stream)?;
         }
     } else {
         stream.write(
             b"\
 HTTP/1.1 404 Not Found\r\n\
-Content-Type: text/html;charset=utf-8\r\n\
-Server: Rust\r\n",
+Content-Type: text/html;charset=utf-8\r\n",
         )?;
+        write_server_line(&mut stream)?;
 
         let mut not_found_temp_html = NOT_FOUND_TEMP_HTML.to_string();
         not_found_temp_html = not_found_temp_html.replace("{}", &request.uri);
@@ -207,35 +173,4 @@ Server: Rust\r\n",
     // stream.shutdown(Shutdown::Write)?;
 
     Ok(())
-}
-
-fn read_request_lines(mut stream: &TcpStream) -> Result<Vec<u8>> {
-    let mut request_lines = Vec::<u8>::new();
-
-    let mut buf = [0u8];
-
-    fn write_and_flush<W>(w: &mut W, bytes: &[u8]) -> Result<()>
-    where
-        W: Write,
-    {
-        w.write(bytes)?;
-        w.flush()?;
-        Ok(())
-    }
-
-    loop {
-        stream.read(&mut buf)?;
-        write_and_flush(&mut request_lines, &buf)?;
-
-        if b'\n' == buf[0] {
-            let mut buf_tmp = [0u8];
-            stream.read(&mut buf_tmp)?;
-
-            if b'\r' == buf_tmp[0] || b'\n' == buf_tmp[0] {
-                return Ok(request_lines);
-            } else {
-                write_and_flush(&mut request_lines, &buf_tmp)?;
-            }
-        }
-    }
 }

@@ -5,6 +5,8 @@ a.out
 .DS_Store
 *.md
 *.html
+!dir_viewer*.html
+!not_found_temp*.html
 *.dylib
 *.dll
 *.so
