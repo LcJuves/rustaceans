@@ -5,8 +5,9 @@
  */
 
 pub(crate) fn remove_eol(r#str: &str) -> String {
-    let owned_str = r#str.to_owned();
-    (&owned_str
-        [..(owned_str.rfind("\r").unwrap_or(owned_str.rfind("\n").unwrap_or(owned_str.len())))])
+    let owned_string = r#str.to_owned();
+    (&owned_string[..(owned_string
+        .rfind("\r")
+        .unwrap_or(owned_string.rfind("\n").unwrap_or(owned_string.len())))])
         .to_string()
 }
