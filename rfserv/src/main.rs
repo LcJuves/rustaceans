@@ -9,7 +9,7 @@ use crate::model::*;
 use crate::request::{Request, RequestMethod};
 use crate::util::*;
 
-use std::fs::OpenOptions;
+use std::fs::File;
 
 use std::io::{Result, Write};
 // #[cfg(any(target_os = "linux", target_os = "l4re"))]
@@ -26,6 +26,7 @@ fn main() -> Result<()> {
 fn init_serv(addr: &str) -> Result<()> {
     let listener = TcpListener::bind(addr)?;
     println!("Listening on http://{}", addr);
+    println!();
 
     for stream in listener.incoming() {
         spawn(move || handle_conn(stream?));
@@ -39,11 +40,7 @@ fn handle_conn(mut stream: TcpStream) -> Result<()> {
     let request_lines_string = String::from_utf8(request_lines).unwrap();
     println!("{}", request_lines_string);
 
-    let first_line = request_lines_string
-        .split(&LF.to_string())
-        .collect::<Vec<_>>()[0];
-
-    println!("First line: {}", first_line);
+    let first_line = request_lines_string.split(&LF.to_string()).collect::<Vec<_>>()[0];
 
     let first_line_infos: Vec<_> = first_line.split(&SP.to_string()).collect();
     let request = Request::new(
@@ -101,20 +98,14 @@ Content-Type: text/html;charset=utf-8\r\n",
                 let child_file_entry = entry?;
                 let child_file_metadata = child_file_entry.metadata()?;
 
-                let child_file_name_str = child_file_entry
-                    .file_name()
-                    .to_str()
-                    .unwrap_or("Unknown")
-                    .to_owned();
+                let child_file_name_str =
+                    child_file_entry.file_name().to_str().unwrap_or("Unknown").to_owned();
 
                 let modified_time = child_file_metadata.modified()?;
 
                 file_infos.push(FileInfo {
                     name: child_file_name_str.to_string(),
-                    last_modified: modified_time
-                        .duration_since(UNIX_EPOCH)
-                        .unwrap()
-                        .as_millis(),
+                    last_modified: modified_time.duration_since(UNIX_EPOCH).unwrap().as_millis(),
                     size: child_file_metadata.len(),
                     is_dir: child_file_metadata.is_dir(),
                 });
@@ -128,6 +119,7 @@ Content-Type: text/html;charset=utf-8\r\n",
             stream.write(dir_view_html_bytes.len().to_string().as_bytes())?;
             stream.write(b"\r\n\r\n")?;
             stream.write_all(dir_view_html_bytes)?;
+            write_crlf(&mut stream)?;
         } else {
             stream.write(
                 b"\
@@ -141,8 +133,9 @@ Content-Type: ",
             stream.write(path_buf_metadata.len().to_string().as_bytes())?;
             stream.write(b"\r\n\r\n")?;
 
-            let mut file = OpenOptions::new().read(true).open(&path_buf)?;
-            std::io::copy(&mut file, &mut stream)?;
+            let mut file = File::open(&path_buf)?;
+            transform_stream(&mut file, &mut stream)?;
+            write_crlf(&mut stream)?;
         }
     } else {
         stream.write(
@@ -152,19 +145,19 @@ Content-Type: text/html;charset=utf-8\r\n",
         )?;
         write_server_line(&mut stream)?;
 
-        let mut not_found_temp_html = NOT_FOUND_TEMP_HTML.to_string();
-        not_found_temp_html = not_found_temp_html.replace("{}", &request.uri);
-
-        let not_found_temp_html_bytes = not_found_temp_html.as_bytes();
+        let not_found_html =
+            gen_not_found_html(&format!("{} [ 404 ]", &SERVER_NAME.to_owned()), &request.uri);
+        let not_found_html_bytes = not_found_html.as_bytes();
 
         stream.write(b"Content-Length: ")?;
-        stream.write(not_found_temp_html_bytes.len().to_string().as_bytes())?;
+        stream.write(not_found_html_bytes.len().to_string().as_bytes())?;
         stream.write(b"\r\n\r\n")?;
-        stream.write_all(not_found_temp_html_bytes)?;
+        stream.write_all(not_found_html_bytes)?;
+        write_crlf(&mut stream)?;
     }
 
-    println!();
     println!(">>>>>> Writed");
+    println!();
     println!();
 
     stream.flush()?;

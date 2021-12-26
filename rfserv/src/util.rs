@@ -1,22 +1,23 @@
 use crate::model::*;
 
-use std::io::{Read, Result, Write};
+use std::io::{ErrorKind, Read, Result, Write};
 use std::net::TcpStream;
 use std::path::PathBuf;
 
 use fmedia::MediaType;
 
-pub(crate) fn gen_dir_view_html(
-    serv_name: &str,
-    dir_name: &str,
-    file_infos: &Vec<FileInfo>,
-) -> String {
+// Bare metal platforms usually have very small amounts of RAM
+// (in the order of hundreds of KB)
+#[allow(dead_code)]
+pub const DEFAULT_BUF_SIZE: usize = if cfg!(target_os = "espidf") { 512 } else { 8 * 1024 };
+
+pub(crate) fn gen_dir_view_html(title: &str, dir_name: &str, file_infos: &Vec<FileInfo>) -> String {
     let mut html = String::new();
-    html.push_str(&DIR_VIEWER_HEML_PART1);
-    html.push_str(serv_name);
-    html.push_str(&DIR_VIEWER_HEML_PART2);
+    html.push_str(&HTML_TEMP_PART1);
+    html.push_str(title);
+    html.push_str(&HTML_TEMP_PART2);
     html.push_str(&COMMON_CSS);
-    html.push_str(&DIR_VIEWER_HEML_PART3);
+    html.push_str(&HTML_TEMP_PART3);
     html.push_str(&format!("let dirname='{}';", dir_name));
     let files = (|| {
         let mut json = String::new();
@@ -33,7 +34,21 @@ pub(crate) fn gen_dir_view_html(
     })();
     html.push_str(&format!("let files={};", files));
     html.push_str(&DIR_VIEWER_JS);
-    html.push_str(&DIR_VIEWER_HEML_PART4);
+    html.push_str(&HTML_TEMP_PART4);
+    html
+}
+
+pub(crate) fn gen_not_found_html(title: &str, not_found_path: &str) -> String {
+    let mut html = String::new();
+    html.push_str(&HTML_TEMP_PART1);
+    html.push_str(title);
+    html.push_str(&HTML_TEMP_PART2);
+    html.push_str(&COMMON_CSS);
+    html.push_str(&HTML_TEMP_PART3);
+    html.push_str(&format!("let rlogoSvg=`{}`;", &RLOGO_SVG.to_owned()));
+    html.push_str(&format!("let notFoundPath='{}';", not_found_path));
+    html.push_str(&NOT_FOUND_JS);
+    html.push_str(&HTML_TEMP_PART4);
     html
 }
 
@@ -84,7 +99,8 @@ pub(crate) fn write_crlf<W>(w: &mut W) -> Result<()>
 where
     W: Write,
 {
-    w.write(&CRLF.as_bytes())?;
+    w.write_all(&CRLF.as_bytes())?;
+    w.flush()?;
     Ok(())
 }
 
@@ -96,4 +112,21 @@ where
     w.write(&SERVER_NAME.as_bytes())?;
     write_crlf(w)?;
     Ok(())
+}
+
+pub(crate) fn transform_stream<R: Read + ?Sized, W: Write + ?Sized>(
+    r: &mut R,
+    w: &mut W,
+) -> Result<()> {
+    let mut buf = [0u8; DEFAULT_BUF_SIZE];
+    loop {
+        let len = match r.read(&mut buf) {
+            Ok(0) => return Ok(()),
+            Ok(len) => len,
+            Err(ref e) if e.kind() == ErrorKind::Interrupted => continue,
+            Err(e) => return Err(e),
+        };
+        w.write_all(&buf[..len])?;
+        w.flush()?;
+    }
 }

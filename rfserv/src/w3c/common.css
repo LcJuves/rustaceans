@@ -59,3 +59,19 @@ a:visited {
 #main table th {
   text-align: left;
 }
+
+#main div {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#main div span {
+  display: block;
+  text-align: center;
+  margin-top: 60%;
+  color: var(--color);
+  font-family: "Menlo", "Roboto", "Helvetica", "Arial", sans-serif;
+  font-size: 1.2rem;
+}

@@ -21,41 +21,31 @@
   })();
 
   if (currentDirPathName !== "/") {
-    (() => {
-      const tr = document.createElement("tr");
-      const parentDirPathName = currentDirPathName
-        .replace(/[^\/]*$/, "")
-        .replace(/(?<=.+)\/$/, "");
+    const tr = document.createElement("tr");
+    const parentDirPathName = currentDirPathName
+      .replace(/[^\/]*$/, "")
+      .replace(/(?<=.+)\/$/, "");
 
-      tr.innerHTML += `<th><a href=\"${parentDirPathName}\">Parent Directory</a></th>`;
-      tr.innerHTML += "<th></th>";
-      tr.innerHTML += "<th>-</th>";
-      table.appendChild(tr);
-    })();
+    tr.innerHTML = `<th><a href=\"${parentDirPathName}\">Parent Directory</a></th><th></th><th>-</th>`;
+    table.appendChild(tr);
   }
 
   if (fileInfos.length !== 0) {
+    const _fmtDateNum = (num) => {
+      let numStr = num.toString();
+      if (numStr.length === 1) {
+        numStr = `0${numStr}`;
+      }
+      return numStr;
+    };
     const formatDate = (date) => {
-      const year = date.getFullYear();
-      const fmtNum = (num) => {
-        let numStr = num.toString();
-        if (numStr.length === 1) {
-          numStr = `0${numStr}`;
-        }
-        return numStr;
-      };
-
-      let month = date.getMonth() + 1;
-      month = fmtNum(month);
-
-      let day = date.getDate();
-      day = fmtNum(day);
-
-      let hour = date.getHours();
-      hour = fmtNum(hour);
-
-      let minute = date.getMinutes();
-      minute = fmtNum(minute);
+      const [year, month, day, hour, minute] = [
+        date.getFullYear(),
+        date.getMonth() + 1,
+        date.getDate(),
+        date.getHours(),
+        date.getMinutes(),
+      ].map((num) => _fmtDateNum(num));
 
       return `${year}-${month}-${day} ${hour}:${minute}`;
     };

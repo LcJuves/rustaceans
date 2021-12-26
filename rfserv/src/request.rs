@@ -21,10 +21,6 @@ pub struct Request {
 
 impl Request {
     pub fn new(uri: String, method: RequestMethod, version: f32) -> Self {
-        Request {
-            uri,
-            method,
-            version,
-        }
+        Request { uri, method, version }
     }
 }
