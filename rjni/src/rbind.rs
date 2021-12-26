@@ -143,10 +143,7 @@ macro_rules! impl_jni_on_load {
     ($param_vm_name:tt, $param_reserved_name:tt, $code:block) => {
         jni_fn_def!(
             JNI_OnLoad,
-            (
-                $param_vm_name: *mut JavaVM,
-                $param_reserved_name: *mut c_void
-            ),
+            ($param_vm_name: *mut JavaVM, $param_reserved_name: *mut c_void),
             Jint,
             $code
         );
@@ -172,10 +169,7 @@ macro_rules! impl_jni_on_unload {
     ($param_vm_name:tt, $param_reserved_name:tt, $code:block) => {
         jni_fn_def!(
             JNI_OnUnload,
-            (
-                $param_vm_name: *mut JavaVM,
-                $param_reserved_name: *mut c_void
-            ),
+            ($param_vm_name: *mut JavaVM, $param_reserved_name: *mut c_void),
             (),
             $code
         );

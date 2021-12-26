@@ -5,10 +5,7 @@ pub use crate::base32::*;
 #[test]
 fn test_base32_encode() {
     let ret0 = base32::encode("Liangcheng Juves".as_bytes());
-    assert_eq!(
-        String::from_utf8_lossy(&ret0),
-        "JRUWC3THMNUGK3THEBFHK5TFOM======"
-    );
+    assert_eq!(String::from_utf8_lossy(&ret0), "JRUWC3THMNUGK3THEBFHK5TFOM======");
 
     let ret1 = base32::encode("Man".as_bytes());
     assert_eq!(String::from_utf8_lossy(&ret1), "JVQW4===");

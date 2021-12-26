@@ -1,10 +1,13 @@
 [package]
-name = "base64"
+name = "rb64"
 version = "0.1.0"
 authors = ["Liangcheng Juves <liangchengj@outlook.com>"]
 edition = "2021"
 exclude = [".gitignore", "src/test*", ".vscode", ".idea"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "rb64"
 
 [dependencies]

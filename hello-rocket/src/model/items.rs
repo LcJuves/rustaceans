@@ -20,14 +20,7 @@ impl<'a> Items<'a> {
         url: Option<String>,
         img_url: Option<String>,
     ) -> Self {
-        Items {
-            id,
-            title,
-            description,
-            url,
-            img_url,
-            lifetime: PhantomData,
-        }
+        Items { id, title, description, url, img_url, lifetime: PhantomData }
     }
 }
 

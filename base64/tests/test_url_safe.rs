@@ -1,5 +1,5 @@
-#[allow(unused_imports)]
-use crate::base64;
+include!("../src/lib.rs");
+
 #[allow(unused_imports)]
 use std::fs::File;
 #[allow(unused_imports)]

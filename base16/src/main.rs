@@ -8,17 +8,11 @@ fn main() {
 
     println!("Convert \"{}\" to base 16 is {}", my_name, ret_string);
 
-    assert_eq!(
-        "4c69616e676368656e67204a75766573",
-        ret_string.to_lowercase()
-    );
+    assert_eq!("4c69616e676368656e67204a75766573", ret_string.to_lowercase());
 
     let bytes = base16::decode(&ret);
     println!("Convert \"{}\" to bytes is {:?}", ret_string, bytes);
-    println!(
-        "Prased string is \"{}\"",
-        String::from_utf8_lossy(bytes.as_slice())
-    );
+    println!("Prased string is \"{}\"", String::from_utf8_lossy(bytes.as_slice()));
 }
 
 #[test]
@@ -28,10 +22,7 @@ fn test_base16_encode() {
 
     let ret_string = String::from_utf8_lossy(&ret);
 
-    assert_eq!(
-        "4c69616e676368656e67204a75766573",
-        ret_string.to_lowercase()
-    );
+    assert_eq!("4c69616e676368656e67204a75766573", ret_string.to_lowercase());
 }
 
 #[test]

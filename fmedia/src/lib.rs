@@ -1,9 +1,10 @@
 #![allow(dead_code)]
 
-use std::sync::Once;
+mod data;
 
-pub(crate) mod data;
-pub(crate) use data::MIME_MAPPING;
+pub use data::MIME_MAPPING;
+
+use std::sync::Once;
 
 pub struct MediaType;
 
@@ -12,6 +13,8 @@ impl MediaType {
     ///
     /// # Examples
     /// ```rust
+    /// use fmedia::MediaType;
+    ///
     /// assert_eq!("image/png", MediaType::from_file_extension("png").unwrap());
     /// assert_eq!(
     ///     "image/jpeg",
@@ -47,6 +50,8 @@ impl FileExtension {
     ///
     /// # Examples
     /// ```rust
+    /// use fmedia::FileExtension;
+    ///
     /// assert_eq!(
     ///     vec!["png"],
     ///     FileExtension::from_media_type("image/png").unwrap()

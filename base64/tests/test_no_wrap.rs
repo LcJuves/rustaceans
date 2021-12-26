@@ -1,5 +1,5 @@
-#[allow(unused_imports)]
-use crate::base64;
+include!("../src/lib.rs");
+
 #[allow(unused_imports)]
 use std::fs::File;
 #[allow(unused_imports)]
@@ -9,7 +9,7 @@ use std::io::Write;
 
 #[test]
 fn test_base64_encode_no_wrap() -> Result<()> {
-    let bytes = include_bytes!("test.html");
+    let bytes = include_bytes!("res/test.html");
     let ret_no_wrap = base64::encode(bytes, false, false, false);
 
     // let mut file = File::create("test_ret_no_wrap.txt")?;
@@ -26,12 +26,10 @@ fn test_base64_encode_no_wrap() -> Result<()> {
 
 #[test]
 fn test_base64_decode_no_wrap() -> Result<()> {
-    let str_bytes = include_bytes!("test_ret_no_wrap.txt");
+    let str_bytes = include_bytes!("res/test_ret_no_wrap.txt");
     let string = String::from_utf8_lossy(str_bytes);
 
-    let mut file = File::open("src/test.html")?;
-    let mut bytes = Vec::<u8>::new();
-    std::io::copy(&mut file, &mut bytes)?;
+    let bytes = include_bytes!("res/test.html");
 
     let ret = base64::decode(&string, false);
 

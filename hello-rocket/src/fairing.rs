@@ -21,10 +21,7 @@ impl CommomFairing {
 #[rocket::async_trait]
 impl Fairing for CommomFairing {
     fn info(&self) -> Info {
-        Info {
-            name: "CommomFairing",
-            kind: Kind::Request | Kind::Response,
-        }
+        Info { name: "CommomFairing", kind: Kind::Request | Kind::Response }
     }
 
     async fn on_response<'r>(&self, req: &'r Request<'_>, resp: &mut Response<'r>) {

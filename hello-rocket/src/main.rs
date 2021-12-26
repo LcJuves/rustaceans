@@ -31,7 +31,5 @@ fn items() -> Option<String> {
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build()
-        .mount("/", routes![index, items])
-        .attach(CommomFairing)
+    rocket::build().mount("/", routes![index, items]).attach(CommomFairing)
 }
