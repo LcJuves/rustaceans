@@ -1,3 +1,5 @@
+use crate::common_util::remove_eol;
+
 use std::collections::BTreeMap;
 use std::fs::OpenOptions;
 use std::io::{stdin, stdout, BufRead, Write};
@@ -798,8 +800,7 @@ pub fn read_stdin_sms_code() -> std::io::Result<u32> {
     stdout().flush()?;
     stdin().lock().read_line(&mut sms_code)?;
 
-    let sms_code =
-        sms_code[..(sms_code.rfind("\r").unwrap_or(sms_code.rfind("\n").unwrap()))].to_string();
+    let sms_code = remove_eol(&sms_code);
 
     use std::str::FromStr;
     Ok(u32::from_str(&sms_code).unwrap())

@@ -1,3 +1,4 @@
+mod common_util;
 mod reflection;
 mod robot_generator;
 mod util;

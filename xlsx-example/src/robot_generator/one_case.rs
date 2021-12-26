@@ -1,3 +1,4 @@
+use crate::common_util::remove_eol;
 use crate::reflection::Reflection;
 use crate::robot_generator::cli_parser::*;
 use crate::robot_generator::robot_util::*;
@@ -265,12 +266,5 @@ fn get_author_and_mod_tag() -> std::io::Result<(String, String)> {
         stdin().lock().read_line(&mut mod_tag)?;
     }
 
-    Ok((
-        author_tag[..(author_tag
-            .rfind("\r")
-            .unwrap_or(author_tag.rfind("\n").unwrap_or(author_tag.len())))]
-            .to_string(),
-        mod_tag[..(mod_tag.rfind("\r").unwrap_or(mod_tag.rfind("\n").unwrap_or(mod_tag.len())))]
-            .to_string(),
-    ))
+    Ok((remove_eol(&author_tag), remove_eol(&mod_tag)))
 }
