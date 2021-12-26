@@ -53,10 +53,7 @@ pub(crate) fn robot_generator_main() -> Result<(), Error> {
                 .open(&export_temp_path)?;
             let robot_template = &*ROBOT_TEMPLATE;
             std::io::copy(&mut robot_template.as_bytes(), &mut temp_file)?;
-            println!(
-                "Export template to `{}` successfully",
-                &export_temp_path.to_string_lossy()
-            );
+            println!("Export template to `{}` successfully", &export_temp_path.to_string_lossy());
             return Ok(());
         }
 

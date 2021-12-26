@@ -129,12 +129,8 @@ fn write_json(json: &mut String) -> std::io::Result<()> {
     let pwd = current_dir().unwrap();
     let path = pwd.join("tests").join("tmp.json");
 
-    let mut tmp_json = OpenOptions::new()
-        .create(true)
-        .truncate(true)
-        .read(true)
-        .write(true)
-        .open(&path)?;
+    let mut tmp_json =
+        OpenOptions::new().create(true).truncate(true).read(true).write(true).open(&path)?;
 
     tmp_json.write_all(&mut json.as_bytes())?;
     tmp_json.flush()?;

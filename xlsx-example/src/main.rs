@@ -19,14 +19,7 @@ fn main() -> Result<(), Error> {
 
     let (ep_jwt_token_current, sessionid, username, email, staff_code, token) =
         TOKIO_RT.block_on(sign_in_tp_by_scan_moa_arcode()).unwrap();
-    seeval!((
-        &ep_jwt_token_current,
-        &sessionid,
-        &username,
-        &email,
-        &staff_code,
-        &token
-    ));
+    seeval!((&ep_jwt_token_current, &sessionid, &username, &email, &staff_code, &token));
 
     Ok(())
 }

@@ -34,11 +34,7 @@ macro_rules! time_millis_string {
     () => {
         (|| {
             use std::time::{SystemTime, UNIX_EPOCH};
-            SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_millis()
-                .to_string()
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis().to_string()
         })()
     };
 }
@@ -132,10 +128,7 @@ pub(crate) async fn req_ss_users_sign_in(
     let client = Client::new();
     let req = Request::builder()
         .header("user-agent", UA.to_string())
-        .header(
-            "cookie",
-            format!("_sso_provider_session={}", sso_provider_session),
-        )
+        .header("cookie", format!("_sso_provider_session={}", sso_provider_session))
         .method(Method::GET)
         .uri(url)
         .version(Version::HTTP_11)
@@ -228,10 +221,7 @@ pub(crate) async fn req_vsms_ac_portal_login(
     let req = Request::builder()
         .header("user-agent", UA.to_string())
         .header("Cookie", format!("AUTHSESSID={}", authsessid))
-        .header(
-            "Content-Type",
-            "application/x-www-form-urlencoded; charset=UTF-8",
-        )
+        .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
         .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY).unwrap())
         .method(Method::POST)
         .uri("https://idtrust.sangfor.com:444/ac_portal/login.php")
@@ -292,10 +282,7 @@ pub(crate) async fn verify_sms_req_ac_portal_login(
     let req = Request::builder()
         .header("user-agent", UA.to_string())
         .header("Cookie", format!("AUTHSESSID={}", authsessid))
-        .header(
-            "Content-Type",
-            "application/x-www-form-urlencoded; charset=UTF-8",
-        )
+        .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
         .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY).unwrap())
         .method(Method::POST)
         .uri("https://idtrust.sangfor.com:444/ac_portal/login.php")
@@ -344,10 +331,7 @@ pub(crate) async fn req_vscan_moa_qrcode_ac_portal_login(
     let req = Request::builder()
         .header("user-agent", UA.to_string())
         .header("Cookie", format!("AUTHSESSID={}", authsessid))
-        .header(
-            "Content-Type",
-            "application/x-www-form-urlencoded; charset=UTF-8",
-        )
+        .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
         .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY).unwrap())
         .method(Method::POST)
         .uri("https://idtrust.sangfor.com:444/ac_portal/login.php")
@@ -414,10 +398,7 @@ pub(crate) async fn verify_scan_moa_qrcode_req_ac_portal_login(
     let req = Request::builder()
         .header("user-agent", UA.to_string())
         .header("Cookie", format!("AUTHSESSID={}", authsessid))
-        .header(
-            "Content-Type",
-            "application/x-www-form-urlencoded; charset=UTF-8",
-        )
+        .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
         .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY).unwrap())
         .method(Method::POST)
         .uri("https://idtrust.sangfor.com:444/ac_portal/login.php")
@@ -597,10 +578,7 @@ pub(crate) async fn req_ss_login(
     let client = Client::new();
     let req = Request::builder()
         .header("user-agent", UA.to_string())
-        .header(
-            "cookie",
-            format!("_sso_provider_session={}", sso_provider_session),
-        )
+        .header("cookie", format!("_sso_provider_session={}", sso_provider_session))
         .method(Method::GET)
         .uri(url)
         .version(Version::HTTP_11)
@@ -652,16 +630,10 @@ pub(crate) async fn req_api_v1_users_info(
         .header("user-agent", UA.to_string())
         .header(
             "cookie",
-            format!(
-                "sessionid={}; ep_jwt_token_current={}",
-                sessionid, ep_jwt_token_current
-            ),
+            format!("sessionid={}; ep_jwt_token_current={}", sessionid, ep_jwt_token_current),
         )
         .method(Method::GET)
-        .uri(format!(
-            "http://199.200.0.8/api/v1/users/info/?_t={}",
-            time_millis_string!()
-        ))
+        .uri(format!("http://199.200.0.8/api/v1/users/info/?_t={}", time_millis_string!()))
         .version(Version::HTTP_11)
         .body(Body::empty())
         .unwrap();
@@ -748,31 +720,11 @@ pub(crate) async fn sign_in_tp_by_sms(
 
     let (ep_jwt_token_current, username, email, staff_code, token) =
         req_api_v1_users_info(&ep_jwt_token_current, &sessionid).await?;
-    seeval!((
-        &ep_jwt_token_current,
-        &username,
-        &email,
-        &staff_code,
-        &token
-    ));
+    seeval!((&ep_jwt_token_current, &username, &email, &staff_code, &token));
 
-    save_user_info_json(
-        &ep_jwt_token_current,
-        &sessionid,
-        &username,
-        &email,
-        &staff_code,
-        &token,
-    )?;
+    save_user_info_json(&ep_jwt_token_current, &sessionid, &username, &email, &staff_code, &token)?;
 
-    Ok((
-        ep_jwt_token_current,
-        sessionid,
-        user_name,
-        email,
-        staff_code,
-        token,
-    ))
+    Ok((ep_jwt_token_current, sessionid, user_name, email, staff_code, token))
 }
 
 pub(crate) async fn sign_in_tp_by_scan_moa_arcode(
@@ -828,31 +780,11 @@ pub(crate) async fn sign_in_tp_by_scan_moa_arcode(
 
     let (ep_jwt_token_current, username, email, staff_code, token) =
         req_api_v1_users_info(&ep_jwt_token_current, &sessionid).await?;
-    seeval!((
-        &ep_jwt_token_current,
-        &username,
-        &email,
-        &staff_code,
-        &token
-    ));
+    seeval!((&ep_jwt_token_current, &username, &email, &staff_code, &token));
 
-    save_user_info_json(
-        &ep_jwt_token_current,
-        &sessionid,
-        &username,
-        &email,
-        &staff_code,
-        &token,
-    )?;
+    save_user_info_json(&ep_jwt_token_current, &sessionid, &username, &email, &staff_code, &token)?;
 
-    Ok((
-        ep_jwt_token_current,
-        sessionid,
-        user_name,
-        email,
-        staff_code,
-        token,
-    ))
+    Ok((ep_jwt_token_current, sessionid, user_name, email, staff_code, token))
 }
 
 ////////////////////////////////////////////////////////
@@ -866,10 +798,8 @@ pub fn read_stdin_sms_code() -> std::io::Result<u32> {
     stdout().flush()?;
     stdin().lock().read_line(&mut sms_code)?;
 
-    let sms_code = sms_code[..(sms_code
-        .rfind("\r")
-        .unwrap_or(sms_code.rfind("\n").unwrap()))]
-        .to_string();
+    let sms_code =
+        sms_code[..(sms_code.rfind("\r").unwrap_or(sms_code.rfind("\n").unwrap()))].to_string();
 
     use std::str::FromStr;
     Ok(u32::from_str(&sms_code).unwrap())
