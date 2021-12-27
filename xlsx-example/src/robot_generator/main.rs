@@ -3,13 +3,14 @@ use crate::robot_generator::one_case::{OneCase, ROBOT_TEMPLATE};
 use crate::util::calamine_util::*;
 
 use std::env::{args_os, current_dir};
+use std::error::Error;
 use std::ffi::OsString;
 use std::fs::OpenOptions;
 use std::path::Path;
 
-use calamine::{open_workbook_auto, Error, Sheets};
+use calamine::{open_workbook_auto, Sheets};
 
-pub(crate) fn robot_generator_main() -> Result<(), Error> {
+pub(crate) fn robot_generator_main() -> Result<(), Box<dyn Error>> {
     let args_vec = args_os().collect::<Vec<OsString>>();
     if args_vec.len() < 2 {
         println!(
@@ -40,6 +41,13 @@ pub(crate) fn robot_generator_main() -> Result<(), Error> {
 
         if let Some(export_temp_path_os_string) = option_value_of("--export-def-temp") {
             let export_temp_path = Path::new(&export_temp_path_os_string);
+            if !export_temp_path.exists() {
+                if let None = export_temp_path.extension() {
+                    if let Err(e) = std::fs::create_dir_all(&export_temp_path) {
+                        eprintln!("{}", e);
+                    }
+                }
+            }
             let export_temp_path = if export_temp_path.is_dir() {
                 export_temp_path.join("case.temp")
             } else {
@@ -75,7 +83,7 @@ pub(crate) fn robot_generator_main() -> Result<(), Error> {
         let save_robot_dir = if let Some(option_out_dir_os_string) = option_value_of("--out-dir") {
             Path::new(&option_out_dir_os_string).to_path_buf()
         } else {
-            current_dir().unwrap()
+            current_dir()?
         };
         if let Ok(cases) = sheet_reflect::<OneCase>(&default_sheet) {
             for mut one_case in cases {

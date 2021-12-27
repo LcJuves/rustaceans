@@ -5,8 +5,9 @@ use crate::robot_generator::robot_util::*;
 
 use core::char::REPLACEMENT_CHARACTER;
 use std::fs::{create_dir_all, File, OpenOptions};
-use std::io::{stdin, stdout, BufRead, Write};
+use std::io::{stdin, stdout, BufRead, Result, Write};
 use std::path::{Path, MAIN_SEPARATOR};
+use std::sync::Once;
 
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
@@ -16,7 +17,7 @@ lazy_static! {
         get_author_and_mod_tag().unwrap_or(("".to_string(), "".to_string()));
     pub static ref ROBOT_TEMPLATE: String = String::from(include_str!("case.robot"));
     static ref USER_ROBOT_TEMPLATE: String = {
-        let read_user_robot_template = || -> std::io::Result<String> {
+        let read_user_robot_template = || -> Result<String> {
             if let Some(temp_path) = option_value_of("--use-temp") {
                 let mut temp_file = File::open(Path::new(&temp_path))?;
                 let mut ret_vec = Vec::<u8>::new();
@@ -79,80 +80,103 @@ pub struct OneCase {
 impl Reflection for OneCase {
     fn field_names() -> Vec<String> {
         vec![
-            "feature_name".to_string(),
-            "case_id".to_string(),
-            "case_title".to_string(),
-            "preconditions".to_string(),
-            "steps".to_string(),
-            "postcondition".to_string(),
-            "desired_result".to_string(),
-            "test_methods".to_string(),
-            "use_case_type".to_string(),
-            "can_be_automated".to_string(),
-            "tag".to_string(),
-            "author".to_string(),
-            "product_requirement_id".to_string(),
-            "online_question_id".to_string(),
-            "test_experience_id".to_string(),
-            "use_case_level".to_string(),
-            "notes".to_string(),
+            "feature_name",
+            "case_id",
+            "case_title",
+            "preconditions",
+            "steps",
+            "postcondition",
+            "desired_result",
+            "test_methods",
+            "use_case_type",
+            "can_be_automated",
+            "tag",
+            "author",
+            "product_requirement_id",
+            "online_question_id",
+            "test_experience_id",
+            "use_case_level",
+            "notes",
         ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect()
     }
 }
 
 impl OneCase {
-    pub fn save_robot_to(&mut self, dir: &Path) -> std::io::Result<()> {
+    const ONCE_INIT: Once = Once::new();
+
+    fn replace_unsupport_char(&mut self) {
+        let r#fn = |string: &str| -> String {
+            string
+                .replace(":", &REPLACEMENT_CHARACTER.to_string())
+                .replace("*", &REPLACEMENT_CHARACTER.to_string())
+                .replace("?", &REPLACEMENT_CHARACTER.to_string())
+                .replace(r#"""#, &REPLACEMENT_CHARACTER.to_string())
+                .replace("<", &REPLACEMENT_CHARACTER.to_string())
+                .replace(">", &REPLACEMENT_CHARACTER.to_string())
+                .replace("|", &REPLACEMENT_CHARACTER.to_string())
+        };
+
+        self.feature_name = r#fn(&self.feature_name);
+        self.case_title = r#fn(&self.case_title);
+    }
+
+    fn overwritten_and_confirm_by_user(robot_path: &Path) -> Result<bool> {
+        if !args_os_has_flag("--overwritten") {
+            return Ok(false);
+        }
+
+        stdout().write_all(
+            format!("Overwritten '{}' ? [y/N] ", robot_path.to_string_lossy()).as_bytes(),
+        )?;
+        stdout().flush()?;
+        let mut confirmation = String::new();
+        stdin().lock().read_line(&mut confirmation)?;
+
+        if confirmation.starts_with("y") || confirmation.starts_with("Y") {
+            return Ok(true);
+        }
+
+        Ok(false)
+    }
+
+    pub fn save_robot_to(&mut self, dir: &Path) -> Result<()> {
         let (ref author_tag, mod_tag) = &*AUTHOR_AND_MOD_TAG;
         let user_robot_template = &*USER_ROBOT_TEMPLATE;
+
+        Self::ONCE_INIT.call_once(|| {
+            if !dir.exists() {
+                if let None = dir.extension() {
+                    if let Err(e) = create_dir_all(&dir) {
+                        eprintln!("{}", e);
+                    }
+                }
+            }
+
+            if !dir.is_dir() {
+                println!("Error option with --out-dir, is not a valid dir path");
+                std::process::exit(-1);
+            }
+        });
 
         if
         /* self.test_methods.starts_with("自动化") && */
         self.can_be_automated.starts_with("否") {
-            self.feature_name = self
-                .feature_name
-                .replace('/', &MAIN_SEPARATOR.to_string())
-                .replace(":", &REPLACEMENT_CHARACTER.to_string())
-                .replace("*", &REPLACEMENT_CHARACTER.to_string())
-                .replace("?", &REPLACEMENT_CHARACTER.to_string())
-                .replace(r#"""#, &REPLACEMENT_CHARACTER.to_string())
-                .replace("<", &REPLACEMENT_CHARACTER.to_string())
-                .replace(">", &REPLACEMENT_CHARACTER.to_string())
-                .replace("|", &REPLACEMENT_CHARACTER.to_string());
+            self.feature_name = self.feature_name.replace('/', &MAIN_SEPARATOR.to_string());
+            self.case_title = self
+                .case_title
+                .replace(r"\", &REPLACEMENT_CHARACTER.to_string())
+                .replace("/", &REPLACEMENT_CHARACTER.to_string());
+            self.replace_unsupport_char();
+
             let case_dir = &dir.join(&self.feature_name);
             if !case_dir.exists() {
                 create_dir_all(&case_dir)?;
             }
-            self.case_title = self
-                .case_title
-                .replace(r"\", &REPLACEMENT_CHARACTER.to_string())
-                .replace("/", &REPLACEMENT_CHARACTER.to_string())
-                .replace(":", &REPLACEMENT_CHARACTER.to_string())
-                .replace("*", &REPLACEMENT_CHARACTER.to_string())
-                .replace("?", &REPLACEMENT_CHARACTER.to_string())
-                .replace(r#"""#, &REPLACEMENT_CHARACTER.to_string())
-                .replace("<", &REPLACEMENT_CHARACTER.to_string())
-                .replace(">", &REPLACEMENT_CHARACTER.to_string())
-                .replace("|", &REPLACEMENT_CHARACTER.to_string());
             let robot_path = case_dir.join(format!("{}{}", &self.case_title, ".robot"));
-            let overwritten_and_confirm_by_user = || -> std::io::Result<bool> {
-                if !args_os_has_flag("--overwritten") {
-                    return Ok(false);
-                }
-
-                stdout().write_all(
-                    format!("Overwritten '{}' ? [y/N] ", &robot_path.to_string_lossy()).as_bytes(),
-                )?;
-                stdout().flush()?;
-                let mut confirmation = String::new();
-                stdin().lock().read_line(&mut confirmation)?;
-
-                if confirmation.starts_with("y") || confirmation.starts_with("Y") {
-                    return Ok(true);
-                }
-
-                Ok(false)
-            };
-            if overwritten_and_confirm_by_user().unwrap_or(false)
+            if Self::overwritten_and_confirm_by_user(&robot_path)?
                 || args_os_has_flag("--overwritten-slient")
                 || !robot_path.exists()
             {
@@ -246,7 +270,7 @@ impl OneCase {
     }
 }
 
-fn get_author_and_mod_tag() -> std::io::Result<(String, String)> {
+fn get_author_and_mod_tag() -> Result<(String, String)> {
     let mut author_tag = String::new();
     let mut mod_tag = String::new();
 
