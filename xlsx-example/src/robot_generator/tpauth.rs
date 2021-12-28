@@ -1,5 +1,6 @@
 use crate::robot_generator::tputil::*;
 
+use std::error::Error;
 use std::fs::File;
 
 use lazy_static::lazy_static;
@@ -52,22 +53,22 @@ impl<'a> LoginedAuthInfo<'a> {
     }
 }
 
-// lazy_static! {
-//     pub static ref AUTH_CONF_JSON: Result<&'static str, Box<dyn std::error::Error>> = {
-//         if user_info_json_exist() {
-//             let user_info_json_path = USER_INFO_JSON_PATH.as_ref()?;
-//             let mut user_info_json = File::open(&user_info_json_path)?;
-//             let mut user_info_json_bytes = Vec::<u8>::new();
-//             std::io::copy(&mut user_info_json, &mut user_info_json_bytes)?;
-//             let mut ret_string = (&String::from_utf8_lossy(&user_info_json_bytes)).to_string();
-//             return Ok(Box::leak(ret_string.into_boxed_str()));
-//         } else {
-//             println!("\u{1b}[91m{}\u{1b}[0m", "Please login first!");
-//             println!(
-//                 "For more information try \u{1b}[92m{}\u{1b}[0m or \u{1b}[92m{}\u{1b}[0m",
-//                 "--help", "-h"
-//             );
-//             std::process::exit(-1);
-//         }
-//     };
-// }
+lazy_static! {
+    pub static ref AUTH_CONF_JSON: std::io::Result<&'static str> = {
+        if user_info_json_exist() {
+            let user_info_json_path = USER_INFO_JSON_PATH.as_ref().unwrap();
+            let mut user_info_json = File::open(&user_info_json_path)?;
+            let mut user_info_json_bytes = Vec::<u8>::new();
+            std::io::copy(&mut user_info_json, &mut user_info_json_bytes)?;
+            let ret_string = (&String::from_utf8_lossy(&user_info_json_bytes)).to_string();
+            return Ok(Box::leak(ret_string.into_boxed_str()));
+        } else {
+            println!("\u{1b}[91m{}\u{1b}[0m", "Please login first!");
+            println!(
+                "For more information try \u{1b}[92m{}\u{1b}[0m or \u{1b}[92m{}\u{1b}[0m",
+                "--help", "-h"
+            );
+            std::process::exit(-1);
+        }
+    };
+}

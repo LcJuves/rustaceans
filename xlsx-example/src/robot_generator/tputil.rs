@@ -1,13 +1,14 @@
 use crate::common_util::remove_eol;
 
 use std::collections::BTreeMap;
+use std::error::Error;
 use std::fs::OpenOptions;
 use std::io::{stdin, stdout, BufRead, Write};
 use std::path::PathBuf;
 
 use guid_create::GUID;
 use hmac::{Hmac, NewMac};
-use jwt::{Error, SignWithKey};
+use jwt::SignWithKey;
 use sha2::Sha256;
 
 use hyper::body::Buf;
@@ -70,7 +71,7 @@ lazy_static! {
     };
 }
 
-pub(crate) async fn req_api_v1_login() -> Result<(String, String), Box<dyn std::error::Error>> {
+pub(crate) async fn req_api_v1_login() -> Result<(String, String), Box<dyn Error>> {
     let client = Client::new();
 
     let req = Request::builder()
@@ -78,8 +79,7 @@ pub(crate) async fn req_api_v1_login() -> Result<(String, String), Box<dyn std::
         .method(Method::GET)
         .uri("http://199.200.0.8/api/v1/login/")
         .version(Version::HTTP_11)
-        .body(Body::empty())
-        .unwrap();
+        .body(Body::empty())?;
 
     let resp = client.request(req).await?;
     seeval!(resp.headers());
@@ -97,7 +97,7 @@ pub(crate) async fn req_api_v1_login() -> Result<(String, String), Box<dyn std::
 pub(crate) async fn req_ss_auth_att_oauth2_authorize(
     url: &str,
     sessionid: &str,
-) -> Result<(String, String), Box<dyn std::error::Error>> {
+) -> Result<(String, String), Box<dyn Error>> {
     let client = Client::new();
 
     let req = Request::builder()
@@ -106,8 +106,7 @@ pub(crate) async fn req_ss_auth_att_oauth2_authorize(
         .method(Method::GET)
         .uri(url)
         .version(Version::HTTP_11)
-        .body(Body::empty())
-        .unwrap();
+        .body(Body::empty())?;
 
     let resp = client.request(req).await?;
     seeval!(resp.headers());
@@ -126,7 +125,7 @@ pub(crate) async fn req_ss_auth_att_oauth2_authorize(
 pub(crate) async fn req_ss_users_sign_in(
     url: &str,
     sso_provider_session: &str,
-) -> Result<(String, String, String), Box<dyn std::error::Error>> {
+) -> Result<(String, String, String), Box<dyn Error>> {
     let client = Client::new();
     let req = Request::builder()
         .header("user-agent", UA.to_string())
@@ -134,8 +133,7 @@ pub(crate) async fn req_ss_users_sign_in(
         .method(Method::GET)
         .uri(url)
         .version(Version::HTTP_11)
-        .body(Body::empty())
-        .unwrap();
+        .body(Body::empty())?;
 
     let resp = client.request(req).await?;
     seeval!(resp.headers());
@@ -159,7 +157,7 @@ pub(crate) async fn req_ss_users_sign_in(
 pub(crate) async fn req_ac_portal_userauth(
     client_id: &str,
     response_type: &str,
-) -> Result<(String, String, String), Box<dyn std::error::Error>> {
+) -> Result<(String, String, String), Box<dyn Error>> {
     let mut url = String::from(
         "https://idtrust.sangfor.com:444/ac_portal/userauth.html?template=default&client_id=",
     );
@@ -175,8 +173,7 @@ pub(crate) async fn req_ac_portal_userauth(
         .method(Method::GET)
         .uri(url)
         .version(Version::HTTP_11)
-        .body(Body::empty())
-        .unwrap();
+        .body(Body::empty())?;
 
     let resp = client.request(req).await?;
     seeval!(resp.headers());
@@ -208,7 +205,7 @@ pub(crate) async fn req_vsms_ac_portal_login(
     app_token: &str,
     authsessid: &str,
     phone_num: &str,
-) -> Result<String, Box<dyn std::error::Error>> {
+) -> Result<String, Box<dyn Error>> {
     let mut body = String::from("authToken=");
     body.push_str(auth_token);
     body.push_str("&appToken=");
@@ -224,12 +221,11 @@ pub(crate) async fn req_vsms_ac_portal_login(
         .header("user-agent", UA.to_string())
         .header("Cookie", format!("AUTHSESSID={}", authsessid))
         .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-        .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY).unwrap())
+        .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY)?)
         .method(Method::POST)
         .uri("https://idtrust.sangfor.com:444/ac_portal/login.php")
         .version(Version::HTTP_11)
-        .body(Body::from(body))
-        .unwrap();
+        .body(Body::from(body))?;
 
     let resp = client.request(req).await?;
     seeval!(resp.headers());
@@ -265,7 +261,7 @@ pub(crate) async fn verify_sms_req_ac_portal_login(
     phone_num: &str,
     user_name: &str,
     sms_code: &u32,
-) -> Result<String, Box<dyn std::error::Error>> {
+) -> Result<String, Box<dyn Error>> {
     let mut body = String::from("authToken=");
     body.push_str(auth_token);
     body.push_str("&appToken=");
@@ -285,12 +281,11 @@ pub(crate) async fn verify_sms_req_ac_portal_login(
         .header("user-agent", UA.to_string())
         .header("Cookie", format!("AUTHSESSID={}", authsessid))
         .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-        .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY).unwrap())
+        .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY)?)
         .method(Method::POST)
         .uri("https://idtrust.sangfor.com:444/ac_portal/login.php")
         .version(Version::HTTP_11)
-        .body(Body::from(body))
-        .unwrap();
+        .body(Body::from(body))?;
 
     let resp = client.request(req).await?;
     seeval!(resp.headers());
@@ -319,7 +314,7 @@ pub(crate) async fn req_vscan_moa_qrcode_ac_portal_login(
     auth_token: &str,
     app_token: &str,
     authsessid: &str,
-) -> Result<(String, String, String, String), Box<dyn std::error::Error>> {
+) -> Result<(String, String, String, String), Box<dyn Error>> {
     let mut body = String::from("authToken=");
     body.push_str(auth_token);
     body.push_str("&appToken=");
@@ -334,12 +329,11 @@ pub(crate) async fn req_vscan_moa_qrcode_ac_portal_login(
         .header("user-agent", UA.to_string())
         .header("Cookie", format!("AUTHSESSID={}", authsessid))
         .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-        .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY).unwrap())
+        .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY)?)
         .method(Method::POST)
         .uri("https://idtrust.sangfor.com:444/ac_portal/login.php")
         .version(Version::HTTP_11)
-        .body(Body::from(body))
-        .unwrap();
+        .body(Body::from(body))?;
 
     let resp = client.request(req).await?;
     seeval!(resp.headers());
@@ -381,7 +375,7 @@ pub(crate) async fn verify_scan_moa_qrcode_req_ac_portal_login(
     moa_state: &str,
     user_name: &str,
     nonce: &str,
-) -> Result<String, Box<dyn std::error::Error>> {
+) -> Result<String, Box<dyn Error>> {
     let mut body = String::from("authToken=");
     body.push_str(auth_token);
     body.push_str("&appToken=");
@@ -401,12 +395,11 @@ pub(crate) async fn verify_scan_moa_qrcode_req_ac_portal_login(
         .header("user-agent", UA.to_string())
         .header("Cookie", format!("AUTHSESSID={}", authsessid))
         .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-        .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY).unwrap())
+        .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY)?)
         .method(Method::POST)
         .uri("https://idtrust.sangfor.com:444/ac_portal/login.php")
         .version(Version::HTTP_11)
-        .body(Body::from(body))
-        .unwrap();
+        .body(Body::from(body))?;
 
     let resp = client.request(req).await?;
     seeval!(resp.headers());
@@ -435,7 +428,7 @@ pub(crate) async fn req_cgi_bin_tdc_get(
     did: &str,
     session: &str,
     authsessid: &str,
-) -> Result<(String, u64), Box<dyn std::error::Error>> {
+) -> Result<(String, u64), Box<dyn Error>> {
     let mut url = String::from("https://idtrust.sangfor.com:444/cgi-bin/tdc/get?did=");
     url.push_str(did);
     url.push_str("&session=");
@@ -448,12 +441,11 @@ pub(crate) async fn req_cgi_bin_tdc_get(
     let req = Request::builder()
         .header("user-agent", UA.to_string())
         .header("Cookie", format!("AUTHSESSID={}", authsessid))
-        .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY).unwrap())
+        .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY)?)
         .method(Method::GET)
         .uri(url)
         .version(Version::HTTP_11)
-        .body(Body::empty())
-        .unwrap();
+        .body(Body::empty())?;
 
     let resp = client.request(req).await?;
     seeval!(resp.headers());
@@ -484,7 +476,7 @@ pub(crate) async fn req_cgi_bin_tdc_wait(
     did: &str,
     session: &str,
     authsessid: &str,
-) -> Result<String, Box<dyn std::error::Error>> {
+) -> Result<String, Box<dyn Error>> {
     let mut url = String::from("https://idtrust.sangfor.com:444/cgi-bin/tdc/wait?did=");
     url.push_str(did);
     url.push_str("&session=");
@@ -498,12 +490,11 @@ pub(crate) async fn req_cgi_bin_tdc_wait(
         .header("user-agent", UA.to_string())
         .header("Cookie", format!("AUTHSESSID={}", authsessid))
         .header("Connection", "keep-alive")
-        .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY).unwrap())
+        .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY)?)
         .method(Method::GET)
         .uri(url)
         .version(Version::HTTP_11)
-        .body(Body::empty())
-        .unwrap();
+        .body(Body::empty())?;
 
     let resp = client.request(req).await?;
     seeval!(resp.headers());
@@ -532,7 +523,7 @@ pub(crate) async fn req_cgi_bin_tdc_wait(
 pub(crate) async fn req_ac_portal_auth_moa(
     authsessid: &str,
     search_params: &str,
-) -> Result<(String, String), Box<dyn std::error::Error>> {
+) -> Result<(String, String), Box<dyn Error>> {
     let mut url = String::from("https://idtrust.sangfor.com:444/ac_portal/auth/moa.php");
     url.push_str(search_params);
 
@@ -542,12 +533,11 @@ pub(crate) async fn req_ac_portal_auth_moa(
         .header("user-agent", UA.to_string())
         .header("Cookie", format!("AUTHSESSID={}", authsessid))
         .header("Connection", "keep-alive")
-        .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY).unwrap())
+        .header("Zxy", jwt_sign_with_guid(&gen_guid(), &JWT_KEY)?)
         .method(Method::GET)
         .uri(url)
         .version(Version::HTTP_11)
-        .body(Body::empty())
-        .unwrap();
+        .body(Body::empty())?;
 
     let resp = client.request(req).await?;
     seeval!(resp.headers());
@@ -576,7 +566,7 @@ pub(crate) async fn req_ac_portal_auth_moa(
 pub(crate) async fn req_ss_login(
     url: &str,
     sso_provider_session: &str,
-) -> Result<String, Box<dyn std::error::Error>> {
+) -> Result<String, Box<dyn Error>> {
     let client = Client::new();
     let req = Request::builder()
         .header("user-agent", UA.to_string())
@@ -584,8 +574,7 @@ pub(crate) async fn req_ss_login(
         .method(Method::GET)
         .uri(url)
         .version(Version::HTTP_11)
-        .body(Body::empty())
-        .unwrap();
+        .body(Body::empty())?;
 
     let resp = client.request(req).await?;
     seeval!(resp.headers());
@@ -598,7 +587,7 @@ pub(crate) async fn req_ss_login(
 pub(crate) async fn req_api_v1_login_callback(
     url: &str,
     sessionid: &str,
-) -> Result<String, Box<dyn std::error::Error>> {
+) -> Result<String, Box<dyn Error>> {
     let client = Client::new();
 
     let req = Request::builder()
@@ -607,8 +596,7 @@ pub(crate) async fn req_api_v1_login_callback(
         .method(Method::GET)
         .uri(url)
         .version(Version::HTTP_11)
-        .body(Body::empty())
-        .unwrap();
+        .body(Body::empty())?;
 
     let resp = client.request(req).await?;
     seeval!(resp.headers());
@@ -625,7 +613,7 @@ pub(crate) async fn req_api_v1_login_callback(
 pub(crate) async fn req_api_v1_users_info(
     ep_jwt_token_current: &str,
     sessionid: &str,
-) -> Result<(String, String, String, String, String), Box<dyn std::error::Error>> {
+) -> Result<(String, String, String, String, String), Box<dyn Error>> {
     let client = Client::new();
 
     let req = Request::builder()
@@ -637,8 +625,7 @@ pub(crate) async fn req_api_v1_users_info(
         .method(Method::GET)
         .uri(format!("http://199.200.0.8/api/v1/users/info/?_t={}", time_millis_string!()))
         .version(Version::HTTP_11)
-        .body(Body::empty())
-        .unwrap();
+        .body(Body::empty())?;
 
     let resp = client.request(req).await?;
     seeval!(resp.headers());
@@ -691,7 +678,7 @@ pub(crate) async fn req_api_v1_users_info(
 
 pub(crate) async fn sign_in_tp_by_sms(
     phone_num: &str,
-) -> Result<(String, String, String, String, String, String), Box<dyn std::error::Error>> {
+) -> Result<(String, String, String, String, String, String), Box<dyn Error>> {
     let (redirect_url, sessionid) = req_api_v1_login().await?;
 
     let (redirect_url, sso_provider_session) =
@@ -730,7 +717,7 @@ pub(crate) async fn sign_in_tp_by_sms(
 }
 
 pub(crate) async fn sign_in_tp_by_scan_moa_arcode(
-) -> Result<(String, String, String, String, String, String), Box<dyn std::error::Error>> {
+) -> Result<(String, String, String, String, String, String), Box<dyn Error>> {
     let (redirect_url, sessionid) = req_api_v1_login().await?;
     // seeval!((&redirect_url, &sessionid));
 
@@ -806,7 +793,7 @@ pub fn read_stdin_sms_code() -> std::io::Result<u32> {
     Ok(u32::from_str(&sms_code).unwrap())
 }
 
-pub(crate) fn jwt_sign_with_guid(guid: &str, key: &str) -> Result<String, Error> {
+pub(crate) fn jwt_sign_with_guid(guid: &str, key: &str) -> Result<String, jwt::Error> {
     let key: Hmac<Sha256> = Hmac::new_from_slice(key.as_bytes())?;
     let mut claims = BTreeMap::new();
     claims.insert("alg", "HS256");
@@ -836,7 +823,7 @@ pub fn save_user_info_json(
     email: &str,
     staff_code: &str,
     token: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<(), Box<dyn Error>> {
     if !user_info_json_exist() {
         use serde_json::json;
         let user_info_json_path = USER_INFO_JSON_PATH.as_ref()?;
@@ -862,7 +849,7 @@ pub fn save_user_info_json(
 }
 
 #[test]
-fn test_jwt_sign_with_guid() -> Result<(), Error> {
+fn test_jwt_sign_with_guid() -> Result<(), Box<dyn Error>> {
     let jwt = jwt_sign_with_guid("06294495-2134-6603-e716-97ef9c0089a2", &JWT_KEY)?;
     assert_eq!(jwt,"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA2Mjk0NDk1LTIxMzQtNjYwMy1lNzE2LTk3ZWY5YzAwODlhMiJ9.mb5eymv3yZtyGutvt9qeRkLVlHzA2pRrIJ-3m4QWLH4");
     let jwt = jwt_sign_with_guid("69b20cdd-6d77-0b32-1fd9-86fea6742863", &JWT_KEY)?;

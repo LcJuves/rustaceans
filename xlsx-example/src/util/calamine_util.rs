@@ -1,11 +1,12 @@
 use crate::reflection::Reflection;
 
 use std::env::{current_dir, temp_dir};
+use std::error::Error;
 use std::fs::{remove_file, File};
 use std::io::{BufReader, Write};
 
 use bytes::{Buf, Bytes};
-use calamine::{open_workbook_auto, DataType, Error, Range, Reader, Sheets};
+use calamine::{open_workbook_auto, DataType, Range, Reader, Sheets};
 use lazy_static::lazy_static;
 use serde::Deserialize;
 use tokio::runtime::Runtime;
@@ -44,7 +45,7 @@ pub(crate) fn read_row(sheet: &Range<DataType>, idx: usize) -> Vec<&DataType> {
     ret
 }
 
-async fn dl_excel(url: &str) -> Result<Bytes, Box<dyn std::error::Error>> {
+async fn dl_excel(url: &str) -> Result<Bytes, Box<dyn Error>> {
     let resp_bytes = reqwest::get(url).await?.bytes().await?;
     Ok(resp_bytes)
 }
@@ -57,7 +58,7 @@ fn sync_dl_excel(url: &str) -> Option<BufReader<bytes::buf::Reader<Bytes>>> {
     None
 }
 
-pub(crate) fn open_workbook_by_url(url: &str) -> Result<Sheets, Error> {
+pub(crate) fn open_workbook_by_url(url: &str) -> Result<Sheets, Box<dyn Error>> {
     let tmp_dir = temp_dir();
     let default_path = tmp_dir.join(format!("{}{}", ".excel", &url[(url.rfind(".").unwrap())..]));
     let mut tmp_xlsx = File::create(&default_path)?;
