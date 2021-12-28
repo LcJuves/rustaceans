@@ -1,6 +1,8 @@
 use crate::common_util::remove_eol;
+use crate::robot_generator::hyper::*;
 
 use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::error::Error;
 use std::fs::OpenOptions;
 use std::io::{stdin, stdout, BufRead, Write};
@@ -21,6 +23,7 @@ use qrcode::QrCode;
 use lazy_static::lazy_static;
 
 #[allow(unused_macros)]
+#[macro_export]
 macro_rules! print_resp_body {
     ($resp:ident) => {
         use hyper::body::HttpBody as _;
@@ -72,16 +75,10 @@ lazy_static! {
 }
 
 pub(crate) async fn req_api_v1_login() -> Result<(String, String), Box<dyn Error>> {
-    let client = Client::new();
+    let mut headers = HashMap::new();
+    headers.insert("user-agent".to_owned(), UA.to_string());
 
-    let req = Request::builder()
-        .header("user-agent", UA.to_string())
-        .method(Method::GET)
-        .uri("http://199.200.0.8/api/v1/login/")
-        .version(Version::HTTP_11)
-        .body(Body::empty())?;
-
-    let resp = client.request(req).await?;
+    let resp = get("http://199.200.0.8/api/v1/login/", &headers).await?;
     seeval!(resp.headers());
 
     let redirect_url = String::from_utf8_lossy(resp.headers()["location"].as_bytes()).to_string();
@@ -98,17 +95,13 @@ pub(crate) async fn req_ss_auth_att_oauth2_authorize(
     url: &str,
     sessionid: &str,
 ) -> Result<(String, String), Box<dyn Error>> {
-    let client = Client::new();
+    let mut headers = HashMap::new();
+    headers.insert("user-agent".to_owned(), UA.to_string());
+    headers.insert("cookie".to_owned(), format!("sessionid={}", sessionid));
 
-    let req = Request::builder()
-        .header("user-agent", UA.to_string())
-        .header("cookie", format!("sessionid={}", sessionid))
-        .method(Method::GET)
-        .uri(url)
-        .version(Version::HTTP_11)
-        .body(Body::empty())?;
+    let resp = get(url, &headers).await?;
+    seeval!(resp.headers());
 
-    let resp = client.request(req).await?;
     seeval!(resp.headers());
 
     let redirect_url = String::from_utf8_lossy(resp.headers()["location"].as_bytes()).to_string();
@@ -126,16 +119,11 @@ pub(crate) async fn req_ss_users_sign_in(
     url: &str,
     sso_provider_session: &str,
 ) -> Result<(String, String, String), Box<dyn Error>> {
-    let client = Client::new();
-    let req = Request::builder()
-        .header("user-agent", UA.to_string())
-        .header("cookie", format!("_sso_provider_session={}", sso_provider_session))
-        .method(Method::GET)
-        .uri(url)
-        .version(Version::HTTP_11)
-        .body(Body::empty())?;
+    let mut headers = HashMap::new();
+    headers.insert("user-agent".to_owned(), UA.to_string());
+    headers.insert("cookie".to_owned(), format!("_sso_provider_session={}", sso_provider_session));
 
-    let resp = client.request(req).await?;
+    let resp = get(url, &headers).await?;
     seeval!(resp.headers());
 
     let location = String::from_utf8_lossy(resp.headers()["location"].as_bytes()).to_string();
@@ -166,16 +154,10 @@ pub(crate) async fn req_ac_portal_userauth(
     url.push_str(response_type);
     url.push_str("&auth=oauth");
 
-    let https = HttpsConnector::new();
-    let client = Client::builder().build::<_, hyper::Body>(https);
-    let req = Request::builder()
-        .header("user-agent", UA.to_string())
-        .method(Method::GET)
-        .uri(url)
-        .version(Version::HTTP_11)
-        .body(Body::empty())?;
+    let mut headers = HashMap::new();
+    headers.insert("user-agent".to_owned(), UA.to_string());
 
-    let resp = client.request(req).await?;
+    let resp = get(&url, &headers).await?;
     seeval!(resp.headers());
 
     let location = String::from_utf8_lossy(resp.headers()["location"].as_bytes()).to_string();
