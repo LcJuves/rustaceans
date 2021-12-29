@@ -1,6 +1,5 @@
 use crate::robot_generator::tputil::*;
 
-use std::error::Error;
 use std::fs::File;
 
 use lazy_static::lazy_static;

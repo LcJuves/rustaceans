@@ -7,7 +7,7 @@ use lazy_static::lazy_static;
 lazy_static! {
     pub static ref CLI_MATCHES: ArgMatches<'static> = {
         App::new("RF TestCase Generator")
-        .version("1.0.1")
+        .version("1.0.2")
         .author("Liangcheng Juves <liangchengj@outlook.com>")
         .usage("genrobot [FLAGS] [OPTIONS]")
         .arg(

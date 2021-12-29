@@ -1,3 +1,4 @@
+use crate::hyper::*;
 use crate::reflection::Reflection;
 
 use std::env::{current_dir, temp_dir};
@@ -5,8 +6,8 @@ use std::error::Error;
 use std::fs::{remove_file, File};
 use std::io::{BufReader, Write};
 
-use bytes::{Buf, Bytes};
 use calamine::{open_workbook_auto, DataType, Range, Reader, Sheets};
+use hyper::body::Buf;
 use lazy_static::lazy_static;
 use serde::Deserialize;
 use tokio::runtime::Runtime;
@@ -45,12 +46,12 @@ pub(crate) fn read_row(sheet: &Range<DataType>, idx: usize) -> Vec<&DataType> {
     ret
 }
 
-async fn dl_excel(url: &str) -> Result<Bytes, Box<dyn Error>> {
-    let resp_bytes = reqwest::get(url).await?.bytes().await?;
-    Ok(resp_bytes)
+async fn dl_excel(url: &str) -> Result<impl Buf, Box<dyn Error>> {
+    let resp = get_without_headers(url).await?;
+    Ok(hyper::body::aggregate(resp).await?)
 }
 
-fn sync_dl_excel(url: &str) -> Option<BufReader<bytes::buf::Reader<Bytes>>> {
+fn sync_dl_excel(url: &str) -> Option<BufReader<bytes::buf::Reader<impl Buf>>> {
     let ret_bytes = TOKIO_RT.block_on(dl_excel(url));
     if let Ok(bytes) = ret_bytes {
         return Some(BufReader::new(bytes.reader()));
