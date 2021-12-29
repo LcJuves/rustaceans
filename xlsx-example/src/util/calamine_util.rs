@@ -14,7 +14,7 @@ use serde::Deserialize;
 use tokio::runtime::Runtime;
 
 lazy_static! {
-    pub static ref TOKIO_RT: Result<Runtime, std::io::Error> = Runtime::new();
+    pub(crate) static ref TOKIO_RT: Result<Runtime, std::io::Error> = Runtime::new();
 }
 
 pub(crate) fn default_sheet_of_wb(wb: &mut impl calamine::Reader) -> Option<Range<DataType>> {

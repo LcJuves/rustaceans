@@ -63,7 +63,7 @@ lazy_static! {
     static ref UA: &'static str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36";
     static ref JWT_KEY: &'static str = "32293231323532373241325132713273328533033339335733613403343934413469350335713605364136513735376937813863393139494017409141594161";
     static ref BR_UUID: &'static str = "014a6560486429cada00afc53fe1017c";
-    pub static ref USER_INFO_JSON_PATH: std::io::Result<PathBuf> = {
+    pub(crate) static ref USER_INFO_JSON_PATH: std::io::Result<PathBuf> = {
         #[allow(deprecated)]
         if let Some(home_dir) = std::env::home_dir() {
             return Ok(home_dir.join(".user_info.json"));

@@ -3,8 +3,8 @@ use crate::robot_generator::cli_parser::*;
 use lazy_static::lazy_static;
 
 lazy_static! {
-    pub static ref ROBOT_COMMENT_EOL: &'static str = "\n    ";
-    pub static ref ONE_LINE_COMMENT_PREFIX: &'static str = {
+    pub(crate) static ref ROBOT_COMMENT_EOL: &'static str = "\n    ";
+    pub(crate) static ref ONE_LINE_COMMENT_PREFIX: &'static str = {
         if args_os_has_flag("--log-comments") {
             "Log    "
         } else {
