@@ -6,17 +6,18 @@ use std::error::Error;
 use std::fs::{remove_file, File};
 use std::io::{BufReader, Write};
 
-use calamine::{open_workbook_auto, DataType, Range, Reader, Sheets};
+use bytes::buf::Reader;
+use calamine::{open_workbook_auto, DataType, Range, Sheets};
 use hyper::body::Buf;
 use lazy_static::lazy_static;
 use serde::Deserialize;
 use tokio::runtime::Runtime;
 
 lazy_static! {
-    pub static ref TOKIO_RT: Runtime = Runtime::new().unwrap();
+    pub static ref TOKIO_RT: Result<Runtime, std::io::Error> = Runtime::new();
 }
 
-pub(crate) fn default_sheet_of_wb(wb: &mut impl Reader) -> Option<Range<DataType>> {
+pub(crate) fn default_sheet_of_wb(wb: &mut impl calamine::Reader) -> Option<Range<DataType>> {
     if let Some(range_ret) = wb.worksheet_range_at(0) {
         if let Ok(default_sheet) = range_ret {
             return Some(default_sheet);
@@ -47,23 +48,18 @@ pub(crate) fn read_row(sheet: &Range<DataType>, idx: usize) -> Vec<&DataType> {
 }
 
 async fn dl_excel(url: &str) -> Result<impl Buf, Box<dyn Error>> {
-    let resp = get_without_headers(url).await?;
-    Ok(hyper::body::aggregate(resp).await?)
+    Ok(hyper::body::aggregate(get_without_headers(url).await?).await?)
 }
 
-fn sync_dl_excel(url: &str) -> Option<BufReader<bytes::buf::Reader<impl Buf>>> {
-    let ret_bytes = TOKIO_RT.block_on(dl_excel(url));
-    if let Ok(bytes) = ret_bytes {
-        return Some(BufReader::new(bytes.reader()));
-    }
-    None
+fn sync_dl_excel(url: &str) -> Result<BufReader<Reader<impl Buf>>, Box<dyn Error>> {
+    Ok(BufReader::new(((TOKIO_RT.as_ref()?).block_on(dl_excel(url))?).reader()))
 }
 
 pub(crate) fn open_workbook_by_url(url: &str) -> Result<Sheets, Box<dyn Error>> {
     let tmp_dir = temp_dir();
     let default_path = tmp_dir.join(format!("{}{}", ".excel", &url[(url.rfind(".").unwrap())..]));
     let mut tmp_xlsx = File::create(&default_path)?;
-    let mut xlsx_reader = sync_dl_excel(url).unwrap();
+    let mut xlsx_reader = sync_dl_excel(url)?;
     std::io::copy(&mut xlsx_reader, &mut tmp_xlsx)?;
     let result = open_workbook_auto(&default_path)?;
     remove_file(&default_path)?;
@@ -118,18 +114,16 @@ pub(crate) fn sheet_to_json<'a, R: Reflection>(sheet: &'a Range<DataType>) -> &'
 
 pub(crate) fn sheet_reflect<'a, RD: Reflection + Deserialize<'a>>(
     sheet: &'a Range<DataType>,
-) -> serde_json::error::Result<Vec<RD>> {
-    let sheet_json = sheet_to_json::<RD>(sheet);
-    let ret_vec: Vec<RD> = serde_json::from_str(&sheet_json)?;
-    Ok(ret_vec)
+) -> Result<Vec<RD>, serde_json::error::Error> {
+    Ok(serde_json::from_str(&sheet_to_json::<RD>(sheet))?)
 }
 
 #[allow(dead_code)]
-fn write_json(json: &mut String) -> std::io::Result<()> {
+fn write_json(json: &mut String) -> Result<(), std::io::Error> {
     use std::fs::OpenOptions;
 
-    let pwd = current_dir().unwrap();
-    let path = pwd.join("tests").join("tmp.json");
+    let cwd = current_dir()?;
+    let path = cwd.join("tests").join("tmp.json");
 
     let mut tmp_json =
         OpenOptions::new().create(true).truncate(true).read(true).write(true).open(&path)?;

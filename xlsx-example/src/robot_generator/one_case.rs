@@ -4,8 +4,9 @@ use crate::robot_generator::cli_parser::*;
 use crate::robot_generator::robot_util::*;
 
 use core::char::REPLACEMENT_CHARACTER;
+use std::error::Error;
 use std::fs::{create_dir_all, File, OpenOptions};
-use std::io::{stdin, stdout, BufRead, Result, Write};
+use std::io::{stdin, stdout, BufRead, Write};
 use std::path::{Path, MAIN_SEPARATOR};
 use std::sync::Once;
 
@@ -13,51 +14,14 @@ use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 
 lazy_static! {
-    static ref AUTHOR_AND_MOD_TAG: (String, String) =
-        get_author_and_mod_tag().unwrap_or(("".to_string(), "".to_string()));
-    pub static ref ROBOT_TEMPLATE: String = String::from(include_str!("case.robot"));
-    static ref USER_ROBOT_TEMPLATE: String = {
-        let read_user_robot_template = || -> Result<String> {
-            if let Some(temp_path) = option_value_of("--use-temp") {
-                let mut temp_file = File::open(Path::new(&temp_path))?;
-                let mut ret_vec = Vec::<u8>::new();
-                std::io::copy(&mut temp_file, &mut ret_vec)?;
-                let temp_file_text = String::from_utf8_lossy(&ret_vec);
-                for interpolation_expression in vec![
-                    "{{case_title}}",
-                    "{{case_id}}",
-                    "{{use_case_level}}",
-                    "{{preconditions}}",
-                    "{{steps}}",
-                    "{{desired_result}}",
-                    "{{notes}}",
-                    "{{postcondition}}",
-                    "{{author_tag}}",
-                    "{{mod_tag}}",
-                ] {
-                    if !temp_file_text.contains(interpolation_expression) {
-                        println!(
-                            "There is no interpolation expression in your template: {}",
-                            interpolation_expression
-                        );
-                        std::process::exit(-1);
-                    }
-                }
-                Ok(temp_file_text.to_string())
-            } else {
-                Ok(String::new())
-            }
-        };
-        if let Ok(ret_string) = read_user_robot_template() {
-            ret_string
-        } else {
-            String::new()
-        }
-    };
+    static ref AUTHOR_AND_MOD_TAG: Result<(String, String), std::io::Error> =
+        get_author_and_mod_tag();
+    pub(crate) static ref ROBOT_TEMPLATE: String = String::from(include_str!("case.robot"));
+    static ref USER_ROBOT_TEMPLATE: Result<String, std::io::Error> = read_user_robot_template();
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct OneCase {
+pub(crate) struct OneCase {
     feature_name: String,
     case_id: String,
     case_title: String,
@@ -123,7 +87,7 @@ impl OneCase {
         self.case_title = r#fn(&self.case_title);
     }
 
-    fn overwritten_and_confirm_by_user(robot_path: &Path) -> Result<bool> {
+    fn overwritten_and_confirm_by_user(robot_path: &Path) -> Result<bool, std::io::Error> {
         if !args_os_has_flag("--overwritten") {
             return Ok(false);
         }
@@ -142,10 +106,7 @@ impl OneCase {
         Ok(false)
     }
 
-    pub fn save_robot_to(&mut self, dir: &Path) -> Result<()> {
-        let (ref author_tag, mod_tag) = &*AUTHOR_AND_MOD_TAG;
-        let user_robot_template = &*USER_ROBOT_TEMPLATE;
-
+    pub(crate) fn save_robot_to(&mut self, dir: &Path) -> Result<(), Box<dyn Error>> {
         Self::ONCE_INIT.call_once(|| {
             if !dir.exists() {
                 if let None = dir.extension() {
@@ -161,9 +122,7 @@ impl OneCase {
             }
         });
 
-        if
-        /* self.test_methods.starts_with("自动化") && */
-        self.can_be_automated.starts_with("否") {
+        if self.can_be_automated.starts_with("否") {
             self.feature_name = self.feature_name.replace('/', &MAIN_SEPARATOR.to_string());
             self.case_title = self
                 .case_title
@@ -190,6 +149,7 @@ impl OneCase {
                     .truncate(true)
                     .open(&robot_path)?;
 
+                let user_robot_template = USER_ROBOT_TEMPLATE.as_ref()?;
                 let mut robot_template = if !user_robot_template.is_empty() {
                     user_robot_template.clone()
                 } else {
@@ -242,6 +202,8 @@ impl OneCase {
                     robot_template = robot_template.replace("{{postcondition}}", "");
                 }
 
+                let (author_tag, mod_tag) = AUTHOR_AND_MOD_TAG.as_ref()?;
+
                 if !&author_tag.trim().is_empty() {
                     robot_template = robot_template.replace("{{author_tag}}", &author_tag);
                 } else {
@@ -270,7 +232,7 @@ impl OneCase {
     }
 }
 
-fn get_author_and_mod_tag() -> Result<(String, String)> {
+fn get_author_and_mod_tag() -> Result<(String, String), std::io::Error> {
     let mut author_tag = String::new();
     let mut mod_tag = String::new();
 
@@ -291,4 +253,34 @@ fn get_author_and_mod_tag() -> Result<(String, String)> {
     }
 
     Ok((remove_eol(&author_tag), remove_eol(&mod_tag)))
+}
+
+fn read_user_robot_template() -> Result<String, std::io::Error> {
+    let temp_path =
+        option_value_of("--use-temp").expect("Error option with --use-temp, is not a valid path");
+    let mut temp_file = File::open(Path::new(&temp_path))?;
+    let mut ret_vec = Vec::<u8>::new();
+    std::io::copy(&mut temp_file, &mut ret_vec)?;
+    let temp_file_text = String::from_utf8_lossy(&ret_vec);
+    for interpolation_expression in vec![
+        "{{case_title}}",
+        "{{case_id}}",
+        "{{use_case_level}}",
+        "{{preconditions}}",
+        "{{steps}}",
+        "{{desired_result}}",
+        "{{notes}}",
+        "{{postcondition}}",
+        "{{author_tag}}",
+        "{{mod_tag}}",
+    ] {
+        if !temp_file_text.contains(interpolation_expression) {
+            println!(
+                "There is no interpolation expression in your template: {}",
+                interpolation_expression
+            );
+            std::process::exit(-1);
+        }
+    }
+    Ok(temp_file_text.to_string())
 }

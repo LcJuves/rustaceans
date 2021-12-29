@@ -37,8 +37,6 @@ pub(crate) fn robot_generator_main() -> Result<(), Box<dyn Error>> {
             open_workbook_auto(Path::new(wb_path))?
         };
     } else {
-        let ref cli_matches = CLI_MATCHES;
-
         if let Some(export_temp_path_os_string) = option_value_of("--export-def-temp") {
             let export_temp_path = Path::new(&export_temp_path_os_string);
             if !export_temp_path.exists() {
@@ -65,6 +63,7 @@ pub(crate) fn robot_generator_main() -> Result<(), Box<dyn Error>> {
             return Ok(());
         }
 
+        let ref cli_matches = CLI_MATCHES;
         let xlsx_url = cli_matches.value_of("xlsx-url").unwrap_or("");
         let xlsx_path = cli_matches.value_of("xlsx-path").unwrap_or("");
 

@@ -36,10 +36,10 @@ macro_rules! print_resp_body {
 
 macro_rules! time_millis_string {
     () => {
-        (|| {
+        (|| -> Result<String, std::time::SystemTimeError> {
             use std::time::{SystemTime, UNIX_EPOCH};
-            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis().to_string()
-        })()
+            Ok((SystemTime::now().duration_since(UNIX_EPOCH)?).as_millis().to_string())
+        })()?
     };
 }
 
@@ -682,7 +682,7 @@ pub(crate) async fn sign_in_tp_by_scan_moa_arcode(
 ////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////
 
-pub fn read_stdin_sms_code() -> std::io::Result<u32> {
+pub(crate) fn read_stdin_sms_code() -> Result<u32, Box<dyn Error>> {
     let mut sms_code = String::new();
 
     stdout().write(b"Please enter the SMS verification code you received: ")?;
@@ -692,7 +692,7 @@ pub fn read_stdin_sms_code() -> std::io::Result<u32> {
     let sms_code = remove_eol(&sms_code);
 
     use std::str::FromStr;
-    Ok(u32::from_str(&sms_code).unwrap())
+    Ok(u32::from_str(&sms_code)?)
 }
 
 pub(crate) fn jwt_sign_with_guid(guid: &str, key: &str) -> Result<String, jwt::Error> {
@@ -709,7 +709,7 @@ fn gen_guid() -> String {
     GUID::rand().to_string().to_lowercase()
 }
 
-pub fn user_info_json_exist() -> bool {
+pub(crate) fn user_info_json_exist() -> bool {
     if let Ok(user_info_json_path) = USER_INFO_JSON_PATH.as_ref() {
         if user_info_json_path.exists() {
             return true;
@@ -718,7 +718,7 @@ pub fn user_info_json_exist() -> bool {
     false
 }
 
-pub fn save_user_info_json(
+pub(crate) fn save_user_info_json(
     ep_jwt_token_current: &str,
     sessionid: &str,
     user_name: &str,

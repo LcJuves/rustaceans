@@ -6,7 +6,7 @@ use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct LoginedAuthInfo<'a> {
+pub(crate) struct LoginedAuthInfo<'a> {
     ep_jwt_token_current: &'a str,
     sessionid: &'a str,
     user_name: &'a str,
@@ -16,7 +16,7 @@ pub struct LoginedAuthInfo<'a> {
 }
 
 impl<'a> LoginedAuthInfo<'a> {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         LoginedAuthInfo {
             ep_jwt_token_current: "",
             sessionid: "",
@@ -27,33 +27,33 @@ impl<'a> LoginedAuthInfo<'a> {
         }
     }
 
-    pub fn ep_jwt_token_current(&self) -> String {
+    pub(crate) fn ep_jwt_token_current(&self) -> String {
         self.ep_jwt_token_current.to_owned()
     }
 
-    pub fn sessionid(&self) -> String {
+    pub(crate) fn sessionid(&self) -> String {
         self.sessionid.to_owned()
     }
 
-    pub fn user_name(&self) -> String {
+    pub(crate) fn user_name(&self) -> String {
         self.user_name.to_owned()
     }
 
-    pub fn email(&self) -> String {
+    pub(crate) fn email(&self) -> String {
         self.email.to_owned()
     }
 
-    pub fn staff_code(&self) -> String {
+    pub(crate) fn staff_code(&self) -> String {
         self.staff_code.to_owned()
     }
 
-    pub fn token(&self) -> String {
+    pub(crate) fn token(&self) -> String {
         self.token.to_owned()
     }
 }
 
 lazy_static! {
-    pub static ref AUTH_CONF_JSON: std::io::Result<&'static str> = {
+    pub(crate) static ref AUTH_CONF_JSON: std::io::Result<&'static str> = {
         if user_info_json_exist() {
             let user_info_json_path = USER_INFO_JSON_PATH.as_ref().unwrap();
             let mut user_info_json = File::open(&user_info_json_path)?;

@@ -5,7 +5,7 @@ use clap::{App, Arg, ArgMatches};
 use lazy_static::lazy_static;
 
 lazy_static! {
-    pub static ref CLI_MATCHES: ArgMatches<'static> = {
+    pub(crate) static ref CLI_MATCHES: ArgMatches<'static> = {
         App::new("RF TestCase Generator")
         .version("1.0.2")
         .author("Liangcheng Juves <liangchengj@outlook.com>")
@@ -113,15 +113,12 @@ pub(crate) fn option_value_of(name: &str) -> Option<OsString> {
     let args_vec = args_os().collect::<Vec<OsString>>();
     for idx in 0..(args_vec.len() - 1) {
         if args_vec[idx] == name {
-            if let Some(os_string) = args_vec.get(idx + 1usize) {
-                return if !os_string.to_string_lossy().trim().is_empty() {
-                    Some(os_string.clone())
-                } else {
-                    None
-                };
+            let os_string = args_vec.get(idx + 1usize).unwrap();
+            return if !os_string.to_string_lossy().trim().is_empty() {
+                Some(os_string.clone())
             } else {
-                return None;
-            }
+                None
+            };
         }
     }
     None

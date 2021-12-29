@@ -20,10 +20,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     {
         // let phone_num = "15211467428";
         // let (ep_jwt_token_current, sessionid, username, email, staff_code, token) =
-        //     TOKIO_RT.block_on(sign_in_tp_by_sms(&phone_num))?;
+        //     (TOKIO_RT.as_ref()?).block_on(sign_in_tp_by_sms(&phone_num))?;
 
         let (ep_jwt_token_current, sessionid, username, email, staff_code, token) =
-            TOKIO_RT.block_on(sign_in_tp_by_scan_moa_arcode())?;
+            (TOKIO_RT.as_ref()?).block_on(sign_in_tp_by_scan_moa_arcode())?;
         seeval!((&ep_jwt_token_current, &sessionid, &username, &email, &staff_code, &token));
     }
 
