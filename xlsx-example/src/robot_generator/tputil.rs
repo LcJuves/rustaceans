@@ -1,5 +1,5 @@
-use crate::common_util::remove_eol;
-use crate::hyper::*;
+use crate::util::common::remove_eol;
+use crate::util::hyper::*;
 
 use std::collections::BTreeMap;
 use std::collections::HashMap;

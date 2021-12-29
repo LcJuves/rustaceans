@@ -1,7 +1,7 @@
-use crate::common_util::remove_eol;
 use crate::reflection::Reflection;
 use crate::robot_generator::cli_parser::*;
-use crate::robot_generator::robot_util::*;
+use crate::robot_generator::util::*;
+use crate::util::common::remove_eol;
 
 use core::char::REPLACEMENT_CHARACTER;
 use std::error::Error;

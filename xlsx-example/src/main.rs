@@ -1,5 +1,3 @@
-mod common_util;
-mod hyper;
 mod reflection;
 mod robot_generator;
 mod util;
@@ -8,7 +6,7 @@ mod util;
 use crate::robot_generator::main::*;
 use crate::robot_generator::tputil::*;
 
-use crate::util::calamine_util::*;
+use crate::util::calamine::*;
 
 use std::error::Error;
 

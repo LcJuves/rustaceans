@@ -1,6 +1,6 @@
 use crate::robot_generator::cli_parser::*;
 use crate::robot_generator::one_case::{OneCase, ROBOT_TEMPLATE};
-use crate::util::calamine_util::*;
+use crate::util::calamine::*;
 
 use std::env::{args_os, current_dir};
 use std::error::Error;
