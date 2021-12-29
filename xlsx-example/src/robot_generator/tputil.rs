@@ -4,7 +4,7 @@ use crate::hyper::*;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::error::Error;
-use std::fs::File;
+use std::fs::OpenOptions;
 use std::io::{stdin, stdout, BufRead, Write};
 use std::path::PathBuf;
 
@@ -726,22 +726,26 @@ pub fn save_user_info_json(
     staff_code: &str,
     token: &str,
 ) -> Result<(), Box<dyn Error>> {
-    if !user_info_json_exist() {
-        use serde_json::json;
-        let user_info_json_path = USER_INFO_JSON_PATH.as_ref()?;
-        let mut user_info_json = File::create(&user_info_json_path)?;
-        let json = json!({
-            "ep_jwt_token_current": ep_jwt_token_current,
-            "sessionid": sessionid,
-            "user_name": user_name,
-            "email": email,
-            "staff_code": staff_code,
-            "token": token
-        })
-        .to_string();
-        user_info_json.write_all(&json.as_bytes())?;
-        user_info_json.flush()?;
-    }
+    use serde_json::json;
+    let user_info_json_path = USER_INFO_JSON_PATH.as_ref()?;
+    let mut user_info_json = OpenOptions::new()
+        .create(true)
+        .read(true)
+        .write(true)
+        .truncate(true)
+        .open(&user_info_json_path)?;
+    let json = json!({
+        "ep_jwt_token_current": ep_jwt_token_current,
+        "sessionid": sessionid,
+        "user_name": user_name,
+        "email": email,
+        "staff_code": staff_code,
+        "token": token
+    })
+    .to_string();
+    user_info_json.write_all(&json.as_bytes())?;
+    user_info_json.flush()?;
+
     Ok(())
 }
 
