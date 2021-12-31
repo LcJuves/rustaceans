@@ -95,6 +95,12 @@ lazy_static! {
                 .help("Use the `BuiltIn.Log` keyword to output comments in the robot file to be generated")
                 .required_unless_one(&vec!["xlsx-url","xlsx-path"])
         )
+        .arg(
+            Arg::with_name("login")
+                .long("login")
+                .multiple(true)
+                .help("Log in to the use case management platform")
+        )
         .get_matches()
     };
 }

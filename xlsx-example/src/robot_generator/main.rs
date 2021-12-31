@@ -1,5 +1,6 @@
 use crate::robot_generator::cli_parser::*;
 use crate::robot_generator::one_case::{OneCase, ROBOT_TEMPLATE};
+use crate::robot_generator::tputil::*;
 use crate::util::calamine::*;
 
 use std::env::{args_os, current_dir};
@@ -23,6 +24,15 @@ pub(crate) fn robot_generator_main() -> Result<(), Box<dyn Error>> {
         );
         std::process::exit(-1);
     }
+
+    if args_os_has_flag("--login") {
+        (TOKIO_RT.as_ref()?).block_on(sign_in_tp_by_scan_moa_arcode())?;
+        if args_vec.len() == 2 {
+            println!("Login successful!");
+            return Ok(());
+        }
+    }
+
     let arg_1 = &args_vec[1];
     let arg_1_string = &arg_1.clone().into_string().unwrap();
 

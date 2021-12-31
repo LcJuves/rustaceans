@@ -576,8 +576,10 @@ pub(crate) async fn req_api_v1_users_info(
 ////////////////////////////////////////////////////////
 
 pub(crate) async fn sign_in_tp_by_sms(
-    phone_num: &str,
 ) -> Result<(String, String, String, String, String, String), Box<dyn Error>> {
+    clearscreen::clear()?;
+    let phone_num = read_stdin_phone_num()?;
+
     let (redirect_url, sessionid) = req_api_v1_login().await?;
 
     let (redirect_url, sso_provider_session) =
@@ -590,14 +592,14 @@ pub(crate) async fn sign_in_tp_by_sms(
         req_ac_portal_userauth(&client_id, &response_type).await?;
 
     let user_name =
-        req_vsms_ac_portal_login(&auth_token, &app_token, &authsessid, phone_num).await?;
+        req_vsms_ac_portal_login(&auth_token, &app_token, &authsessid, &phone_num).await?;
 
     let sms_code = read_stdin_sms_code()?;
     let redirect_url = verify_sms_req_ac_portal_login(
         &auth_token,
         &app_token,
         &authsessid,
-        phone_num,
+        &phone_num,
         &user_name,
         &sms_code,
     )
@@ -617,6 +619,7 @@ pub(crate) async fn sign_in_tp_by_sms(
 
 pub(crate) async fn sign_in_tp_by_scan_moa_arcode(
 ) -> Result<(String, String, String, String, String, String), Box<dyn Error>> {
+    clearscreen::clear()?;
     let (redirect_url, sessionid) = req_api_v1_login().await?;
     // seeval!((&redirect_url, &sessionid));
 
@@ -682,7 +685,16 @@ pub(crate) async fn sign_in_tp_by_scan_moa_arcode(
 ////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////
 
-pub(crate) fn read_stdin_sms_code() -> Result<u32, Box<dyn Error>> {
+fn read_stdin_phone_num() -> Result<String, Box<dyn Error>> {
+    let mut phone_num = String::new();
+
+    stdout().write(b"Please enter your phone number: ")?;
+    stdout().flush()?;
+    stdin().lock().read_line(&mut phone_num)?;
+    Ok(remove_eol(&phone_num))
+}
+
+fn read_stdin_sms_code() -> Result<u32, Box<dyn Error>> {
     let mut sms_code = String::new();
 
     stdout().write(b"Please enter the SMS verification code you received: ")?;
@@ -695,7 +707,7 @@ pub(crate) fn read_stdin_sms_code() -> Result<u32, Box<dyn Error>> {
     Ok(u32::from_str(&sms_code)?)
 }
 
-pub(crate) fn jwt_sign_with_guid(guid: &str, key: &str) -> Result<String, jwt::Error> {
+fn jwt_sign_with_guid(guid: &str, key: &str) -> Result<String, jwt::Error> {
     let key: Hmac<Sha256> = Hmac::new_from_slice(key.as_bytes())?;
     let mut claims = BTreeMap::new();
     claims.insert("alg", "HS256");
@@ -718,7 +730,7 @@ pub(crate) fn user_info_json_exist() -> bool {
     false
 }
 
-pub(crate) fn save_user_info_json(
+fn save_user_info_json(
     ep_jwt_token_current: &str,
     sessionid: &str,
     user_name: &str,

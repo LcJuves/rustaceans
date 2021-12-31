@@ -62,7 +62,7 @@ lazy_static! {
             let ret_string = (&String::from_utf8_lossy(&user_info_json_bytes)).to_string();
             return Ok(Box::leak(ret_string.into_boxed_str()));
         } else {
-            println!("\u{1b}[91m{}\u{1b}[0m", "Please login first!");
+            println!("\u{1b}[91m{}\u{1b}[0m", "Please login first with option `--login`!");
             println!(
                 "For more information try \u{1b}[92m{}\u{1b}[0m or \u{1b}[92m{}\u{1b}[0m",
                 "--help", "-h"
