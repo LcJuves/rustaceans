@@ -4,7 +4,7 @@ use crate::reflection::Reflection;
 use std::env::{current_dir, temp_dir};
 use std::error::Error;
 use std::fs::{remove_file, File};
-use std::io::{BufReader, Write};
+use std::io::Write;
 
 use bytes::buf::Reader;
 use calamine::{open_workbook_auto, DataType, Range, Sheets};
@@ -51,8 +51,8 @@ async fn dl_excel(url: &str) -> Result<impl Buf, Box<dyn Error>> {
     Ok(hyper::body::aggregate(get_without_headers(url).await?).await?)
 }
 
-fn sync_dl_excel(url: &str) -> Result<BufReader<Reader<impl Buf>>, Box<dyn Error>> {
-    Ok(BufReader::new(((TOKIO_RT.as_ref()?).block_on(dl_excel(url))?).reader()))
+fn sync_dl_excel(url: &str) -> Result<Reader<impl Buf>, Box<dyn Error>> {
+    Ok(((TOKIO_RT.as_ref()?).block_on(dl_excel(url))?).reader())
 }
 
 pub(crate) fn open_workbook_by_url(url: &str) -> Result<Sheets, Box<dyn Error>> {

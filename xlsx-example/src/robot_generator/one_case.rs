@@ -256,31 +256,32 @@ fn get_author_and_mod_tag() -> Result<(String, String), std::io::Error> {
 }
 
 fn read_user_robot_template() -> Result<String, std::io::Error> {
-    let temp_path =
-        option_value_of("--use-temp").expect("Error option with --use-temp, is not a valid path");
-    let mut temp_file = File::open(Path::new(&temp_path))?;
-    let mut ret_vec = Vec::<u8>::new();
-    std::io::copy(&mut temp_file, &mut ret_vec)?;
-    let temp_file_text = String::from_utf8_lossy(&ret_vec);
-    for interpolation_expression in vec![
-        "{{case_title}}",
-        "{{case_id}}",
-        "{{use_case_level}}",
-        "{{preconditions}}",
-        "{{steps}}",
-        "{{desired_result}}",
-        "{{notes}}",
-        "{{postcondition}}",
-        "{{author_tag}}",
-        "{{mod_tag}}",
-    ] {
-        if !temp_file_text.contains(interpolation_expression) {
-            println!(
-                "There is no interpolation expression in your template: {}",
-                interpolation_expression
-            );
-            std::process::exit(-1);
+    if let Some(temp_path) = option_value_of("--use-temp") {
+        let mut temp_file = File::open(Path::new(&temp_path))?;
+        let mut ret_vec = Vec::<u8>::new();
+        std::io::copy(&mut temp_file, &mut ret_vec)?;
+        let temp_file_text = String::from_utf8_lossy(&ret_vec);
+        for interpolation_expression in vec![
+            "{{case_title}}",
+            "{{case_id}}",
+            "{{use_case_level}}",
+            "{{preconditions}}",
+            "{{steps}}",
+            "{{desired_result}}",
+            "{{notes}}",
+            "{{postcondition}}",
+            "{{author_tag}}",
+            "{{mod_tag}}",
+        ] {
+            if !temp_file_text.contains(interpolation_expression) {
+                println!(
+                    "There is no interpolation expression in your template: {}",
+                    interpolation_expression
+                );
+                std::process::exit(-1);
+            }
         }
+        return Ok(temp_file_text.to_string());
     }
-    Ok(temp_file_text.to_string())
+    Ok(String::new())
 }
