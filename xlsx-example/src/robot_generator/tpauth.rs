@@ -1,6 +1,7 @@
 use crate::robot_generator::tputil::*;
 
 use std::fs::File;
+use std::io::Error;
 
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
@@ -15,6 +16,7 @@ pub(crate) struct LoginedAuthInfo<'a> {
     token: &'a str,
 }
 
+#[allow(dead_code)]
 impl<'a> LoginedAuthInfo<'a> {
     pub(crate) fn new() -> Self {
         LoginedAuthInfo {
@@ -53,7 +55,7 @@ impl<'a> LoginedAuthInfo<'a> {
 }
 
 lazy_static! {
-    pub(crate) static ref AUTH_CONF_JSON: std::io::Result<&'static str> = {
+    pub(crate) static ref AUTH_CONF_JSON: Result<&'static str, Error> = {
         if user_info_json_exist() {
             let user_info_json_path = USER_INFO_JSON_PATH.as_ref().unwrap();
             let mut user_info_json = File::open(&user_info_json_path)?;
@@ -69,5 +71,9 @@ lazy_static! {
             );
             std::process::exit(-1);
         }
+    };
+    pub(crate) static ref AUTH_CONF: Result<LoginedAuthInfo<'static>, Error> = {
+        let auth_conf_json = AUTH_CONF_JSON.as_ref().unwrap();
+        Ok(serde_json::from_str(auth_conf_json)?)
     };
 }
