@@ -27,11 +27,20 @@ pub(crate) fn robot_generator_main() -> Result<(), Box<dyn Error>> {
     }
 
     if args_os_has_flag("--login") {
-        (TOKIO_RT.as_ref()?).block_on(sign_in_tp_by_scan_moa_arcode())?;
+        let (ep_jwt_token_current, sessionid, username, email, staff_code, token) =
+            (TOKIO_RT.as_ref()?).block_on(sign_in_tp_by_scan_moa_arcode())?;
         if args_vec.len() == 2 {
             let auth_conf = AUTH_CONF.as_ref()?;
-            println!("{:#?}", auth_conf);
-            println!("Login successful!");
+            if !ep_jwt_token_current.is_empty()
+                && !sessionid.is_empty()
+                && !username.is_empty()
+                && !email.is_empty()
+                && !staff_code.is_empty()
+                && !token.is_empty()
+            {
+                println!("{:#?}", auth_conf);
+                println!("Login successful!");
+            }
             return Ok(());
         }
     }
