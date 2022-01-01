@@ -43,19 +43,19 @@ macro_rules! time_millis_string {
     };
 }
 
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! seeval {
     ($val:expr) => {
         #[cfg(debug_assertions)]
-        println!("{} >>> {:?}", stringify!($val), $val);
+        std::println!("{} >>> {:?}", core::stringify!($val), $val);
     };
 }
 
 #[allow(unused_macros)]
+#[macro_export(local_inner_macros)]
 macro_rules! pass {
     () => {
-        #[cfg(debug_assertions)]
-        println!("\u{1b}[91m{}\u{1b}[0m", ">>> PASS");
+        std::println!("\u{1b}[91m{}\u{1b}[0m", ">>> PASS");
     };
 }
 

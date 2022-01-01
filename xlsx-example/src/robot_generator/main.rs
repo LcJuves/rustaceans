@@ -2,6 +2,7 @@ use crate::robot_generator::cli_parser::*;
 use crate::robot_generator::one_case::{OneCase, ROBOT_TEMPLATE};
 use crate::robot_generator::tpauth::*;
 use crate::robot_generator::tputil::*;
+use crate::robot_generator::upgrade::self_upgrade;
 use crate::util::calamine::*;
 
 use std::env::{args_os, current_dir};
@@ -24,6 +25,11 @@ pub(crate) fn robot_generator_main() -> Result<(), Box<dyn Error>> {
             "--help", "-h"
         );
         std::process::exit(-1);
+    }
+
+    if args_os_has_flag("--upgrade") {
+        self_upgrade()?;
+        return Ok(());
     }
 
     if args_os_has_flag("--login") {

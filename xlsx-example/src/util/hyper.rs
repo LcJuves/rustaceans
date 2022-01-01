@@ -44,11 +44,20 @@ pub(crate) async fn post(
     Ok(request(url, &Method::POST, body, headers).await?)
 }
 
-pub(crate) async fn resp_json_from(resp: Response<Body>) -> Result<Value, Box<dyn Error>> {
+pub(crate) async fn resp_body_bytes_from(resp: Response<Body>) -> Result<Vec<u8>, Box<dyn Error>> {
     let resp_body = hyper::body::aggregate(resp).await?;
     let mut resp_json_bytes = Vec::new();
     std::io::copy(&mut resp_body.reader(), &mut resp_json_bytes)?;
-    let resp_json_string = String::from_utf8_lossy(&resp_json_bytes);
+    Ok(resp_json_bytes)
+}
+
+pub(crate) async fn resp_json_string_from(resp: Response<Body>) -> Result<String, Box<dyn Error>> {
+    let resp_body_bytes = resp_body_bytes_from(resp).await?;
+    let resp_json_string = String::from_utf8_lossy(&resp_body_bytes);
     let resp_json_string = resp_json_string.replace("'", r#"""#);
-    Ok(serde_json::from_str(&resp_json_string)?)
+    Ok(resp_json_string)
+}
+
+pub(crate) async fn resp_json_from(resp: Response<Body>) -> Result<Value, Box<dyn Error>> {
+    Ok(serde_json::from_str(&(resp_json_string_from(resp).await?))?)
 }

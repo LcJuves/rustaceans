@@ -101,6 +101,19 @@ lazy_static! {
                 .multiple(true)
                 .help("Log in to the use case management platform")
         )
+        .arg(
+            Arg::with_name("upgrade")
+                .long("upgrade")
+                .multiple(true)
+                .help("Upgrade executable to given version")
+        )
+        .arg(
+            Arg::with_name("upgrade-host")
+                .long("upgrade-host")
+                .help("Upgrade from a server in the specified host (for example: `rexe-upgrade.io:9934`)")
+                .value_name("DOMAIN")
+                .takes_value(true)
+        )
         .get_matches()
     };
 }
