@@ -1,24 +1,20 @@
 use crate::util::common::remove_eol;
 use crate::util::hyper::*;
 
-use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::OpenOptions;
 use std::io::{stdin, stdout, BufRead, Write};
 use std::path::PathBuf;
 
+use biscuit::jws::{RegisteredHeader, Secret};
+use biscuit::{ClaimsSet, RegisteredClaims, JWT};
 use guid_create::GUID;
-use hmac::{Hmac, NewMac};
-use jwt::SignWithKey;
-use sha2::Sha256;
-
 use hyper::{Body, Client, Method, Request, Response, Version};
-
+use lazy_static::lazy_static;
 use qrcode::render::unicode;
 use qrcode::QrCode;
-
-use lazy_static::lazy_static;
+use serde_json::json;
 
 #[allow(unused_macros)]
 #[macro_export]
@@ -707,14 +703,20 @@ fn read_stdin_sms_code() -> Result<u32, Box<dyn Error>> {
     Ok(u32::from_str(&sms_code)?)
 }
 
-fn jwt_sign_with_guid(guid: &str, key: &str) -> Result<String, jwt::Error> {
-    let key: Hmac<Sha256> = Hmac::new_from_slice(key.as_bytes())?;
-    let mut claims = BTreeMap::new();
-    claims.insert("alg", "HS256");
-    claims.insert("typ", "JWT");
-    claims.insert("id", guid);
+fn jwt_sign_with_guid(guid: &str, key: &str) -> Result<String, biscuit::errors::Error> {
+    let mut private_claims = HashMap::new();
+    private_claims.insert("id".to_owned(), guid.to_owned());
 
-    Ok(claims.sign_with_key(&key)?)
+    let claims = ClaimsSet::<HashMap<String, String>> {
+        registered: RegisteredClaims::default(),
+        private: private_claims,
+    };
+
+    let jwt = JWT::new_decoded(RegisteredHeader::default().into(), claims);
+    let jwt = jwt.into_encoded(&Secret::Bytes(key.as_bytes().to_vec()))?;
+    let jwt = jwt.unwrap_encoded().to_string();
+
+    Ok(jwt)
 }
 
 fn gen_guid() -> String {
@@ -738,7 +740,6 @@ fn save_user_info_json(
     staff_code: &str,
     token: &str,
 ) -> Result<(), Box<dyn Error>> {
-    use serde_json::json;
     let user_info_json_path = USER_INFO_JSON_PATH.as_ref()?;
     let mut user_info_json = OpenOptions::new()
         .create(true)
@@ -759,6 +760,13 @@ fn save_user_info_json(
     user_info_json.flush()?;
 
     Ok(())
+}
+
+#[test]
+fn test_gen_guid() {
+    for _ in 0..100 {
+        assert_eq!(gen_guid().len(), 36);
+    }
 }
 
 #[test]

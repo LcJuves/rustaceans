@@ -121,3 +121,13 @@ pub(crate) fn robot_generator_main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+/* pub(crate) fn add_me_to_path_var() -> Result<(), Box<dyn Error>> {
+
+    let curr_exe_path = get_curr_exe_path()?;
+    seeval!(curr_exe_path);
+
+    // std::env::set_var("REXE_HOME", curr_exe_path)
+
+    Ok(())
+} */

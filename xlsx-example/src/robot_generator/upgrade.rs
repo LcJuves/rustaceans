@@ -127,7 +127,10 @@ pub(crate) fn get_curr_exe_path() -> Result<PathBuf, std::io::Error> {
     let curr_exe_path = if cfg!(test) {
         let cargo_manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         seeval!(cargo_manifest_dir);
-        cargo_manifest_dir.join("target").join("debug").join(env!("CARGO_PKG_NAME"))
+        let full_exe_name = env!("CARGO_PKG_NAME");
+        #[cfg(windows)]
+        let full_exe_name = full_exe_name.to_owned() + ".exe";
+        cargo_manifest_dir.join("target").join("debug").join(full_exe_name)
     } else {
         use std::env::current_exe;
         current_exe()?
