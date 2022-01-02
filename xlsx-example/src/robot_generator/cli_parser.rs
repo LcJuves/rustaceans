@@ -114,6 +114,12 @@ lazy_static! {
                 .value_name("DOMAIN")
                 .takes_value(true)
         )
+        .arg(
+            Arg::with_name("amtpv")
+                .long("amtpv")
+                .multiple(true)
+                .help("Add the current execution file to the PATH environment variable")
+        )
         .get_matches()
     };
 }

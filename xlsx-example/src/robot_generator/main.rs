@@ -2,14 +2,18 @@ use crate::robot_generator::cli_parser::*;
 use crate::robot_generator::one_case::{OneCase, ROBOT_TEMPLATE};
 use crate::robot_generator::tpauth::*;
 use crate::robot_generator::tputil::*;
+use crate::robot_generator::upgrade::get_curr_exe_path;
 use crate::robot_generator::upgrade::self_upgrade;
+use crate::seeval;
 use crate::util::calamine::*;
+use crate::util::common::remove_eol;
 
 use std::env::{args_os, current_dir};
 use std::error::Error;
 use std::ffi::OsString;
 use std::fs::OpenOptions;
 use std::path::Path;
+use std::process::{Command, Stdio};
 
 use calamine::{open_workbook_auto, Sheets};
 
@@ -29,6 +33,11 @@ pub(crate) fn robot_generator_main() -> Result<(), Box<dyn Error>> {
 
     if args_os_has_flag("--upgrade") {
         self_upgrade()?;
+        return Ok(());
+    }
+
+    if args_os_has_flag("--amtpv") {
+        add_me_to_path_var()?;
         return Ok(());
     }
 
@@ -122,12 +131,62 @@ pub(crate) fn robot_generator_main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-/* pub(crate) fn add_me_to_path_var() -> Result<(), Box<dyn Error>> {
-
+pub(crate) fn add_me_to_path_var() -> Result<(), Box<dyn Error>> {
     let curr_exe_path = get_curr_exe_path()?;
     seeval!(curr_exe_path);
 
-    // std::env::set_var("REXE_HOME", curr_exe_path)
+    let rexe_home = curr_exe_path.as_path().parent().unwrap();
+    seeval!(rexe_home);
+
+    #[cfg(windows)]
+    let path = (|| -> Result<String, Box<dyn Error>> {
+        let cmd_stdout = Command::new("cmd")
+            .arg("/c")
+            .arg("REG QUERY HKCU\\Environment /v PATH | findstr PATH")
+            .output()?
+            .stdout;
+        let cmd_stdout = remove_eol(std::str::from_utf8(&cmd_stdout)?);
+        let cmd_stdout = cmd_stdout[(cmd_stdout.rfind("_SZ ").unwrap_or(0) + 4)..].trim();
+        let mut cmd_stdout = cmd_stdout.to_owned();
+        assert!(!cmd_stdout.is_empty());
+        if !cmd_stdout.ends_with(";") {
+            cmd_stdout = cmd_stdout + ";";
+        }
+
+        Ok(cmd_stdout)
+    })()?;
+
+    seeval!(path);
+
+    #[cfg(windows)]
+    {
+        let cmd_status = Command::new("setx")
+            .arg("REXE_HOME")
+            .arg(rexe_home.to_str().unwrap())
+            .stdout(Stdio::null())
+            .status()?;
+        assert!(cmd_status.success());
+        if !path.contains("REXE_HOME") {
+            let cmd_status = Command::new("REG")
+                .arg("ADD")
+                .arg("HKCU\\Environment")
+                .arg("/v")
+                .arg("PATH")
+                .arg("/t")
+                .arg(if path.contains(";%") { "REG_EXPAND_SZ" } else { "REG_SZ" })
+                .arg("/d")
+                .arg(format!("{}%REXE_HOME%;", path))
+                .arg("/f")
+                .stdout(Stdio::null())
+                .status()?;
+            assert!(cmd_status.success());
+        }
+    }
+
+    println!(
+        "Add '{}' to the PATH environment variable successfully!",
+        curr_exe_path.to_str().unwrap()
+    );
 
     Ok(())
-} */
+}

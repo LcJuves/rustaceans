@@ -33,7 +33,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             return Ok(());
         }
 
-        self_upgrade()?;
+        // self_upgrade()?;
+        add_me_to_path_var()?;
     }
 
     Ok(())
