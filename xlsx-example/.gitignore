@@ -12,3 +12,4 @@ tests/tmp.json
 *.exe
 *.dll
 test*.*
+config.toml
