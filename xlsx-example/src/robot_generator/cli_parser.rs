@@ -120,6 +120,13 @@ lazy_static! {
                 .multiple(true)
                 .help("Add the current execution file to the PATH environment variable")
         )
+        .arg(
+            Arg::with_name("set-alias")
+                .long("set-alias")
+                .help("Set an alias for the current executable file")
+                .value_name("ALIAS_NAME")
+                .takes_value(true)
+        )
         .get_matches()
     };
 }

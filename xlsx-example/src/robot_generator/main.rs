@@ -17,18 +17,19 @@ use std::process::{Command, Stdio};
 
 use calamine::{open_workbook_auto, Sheets};
 
+fn exit_with_info(info: &str) {
+    println!("\u{1b}[91m{}\u{1b}[0m", info);
+    println!(
+        "For more information try \u{1b}[92m{}\u{1b}[0m or \u{1b}[92m{}\u{1b}[0m",
+        "--help", "-h"
+    );
+    std::process::exit(-1);
+}
+
 pub(crate) fn robot_generator_main() -> Result<(), Box<dyn Error>> {
     let args_vec = args_os().collect::<Vec<OsString>>();
     if args_vec.len() < 2 {
-        println!(
-            "\u{1b}[91m{}\u{1b}[0m",
-            "At least one command line parameter needs to be passed!"
-        );
-        println!(
-            "For more information try \u{1b}[92m{}\u{1b}[0m or \u{1b}[92m{}\u{1b}[0m",
-            "--help", "-h"
-        );
-        std::process::exit(-1);
+        exit_with_info("At least one command line parameter needs to be passed!");
     }
 
     if args_os_has_flag("--upgrade") {
@@ -39,6 +40,15 @@ pub(crate) fn robot_generator_main() -> Result<(), Box<dyn Error>> {
     if args_os_has_flag("--amtpv") {
         add_me_to_path_var()?;
         return Ok(());
+    }
+
+    if args_os_has_flag("--set-alias") {
+        if let Some(alias_name) = option_value_of("--set-alias") {
+            set_alias(alias_name.to_str().unwrap())?;
+            return Ok(());
+        } else {
+            exit_with_info("Option `--set-alias` needs to be followed by a value!");
+        }
     }
 
     if args_os_has_flag("--login") {
@@ -193,6 +203,53 @@ pub(crate) fn add_me_to_path_var() -> Result<(), Box<dyn Error>> {
         "Add '{}' to the PATH environment variable successfully!",
         curr_exe_path.to_str().unwrap()
     );
+
+    Ok(())
+}
+
+pub(crate) fn set_alias(alias_name: &str) -> Result<(), Box<dyn Error>> {
+    let curr_exe_path = get_curr_exe_path()?;
+    seeval!(curr_exe_path);
+
+    let rexe_home = curr_exe_path.as_path().parent().unwrap();
+    seeval!(rexe_home);
+
+    let curr_exe_name = curr_exe_path.as_path().file_name().unwrap();
+    seeval!(curr_exe_name);
+
+    let curr_dir = current_dir()?;
+
+    let mut _alias_name = alias_name.to_string();
+    #[cfg(windows)]
+    if !_alias_name.ends_with(".exe") {
+        _alias_name.push_str(".exe");
+    };
+
+    if !rexe_home.join(&_alias_name).exists() {
+        std::env::set_current_dir(Path::new(rexe_home))?;
+        #[cfg(windows)]
+        let symlink_ret = {
+            use std::os::windows::fs;
+            fs::symlink_file(curr_exe_name, &_alias_name)
+        };
+
+        #[cfg(any(unix, target_os = "hermit"))]
+        let symlink_ret = {
+            use std::os::unix::fs;
+            fs::symlink(curr_exe_name, &_alias_name)
+        };
+
+        if let Ok(_) = symlink_ret {
+            println!(
+                "Set the alias '{}' successfully.",
+                &_alias_name[..(_alias_name.rfind(".").unwrap_or(_alias_name.len()))]
+            );
+        } else {
+            eprintln!("Sorry, you don't have enough permissions to do this.");
+            eprintln!("You can try again as an administrator or super user.");
+        }
+        std::env::set_current_dir(curr_dir)?;
+    }
 
     Ok(())
 }

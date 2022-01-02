@@ -13,3 +13,4 @@ tests/tmp.json
 *.dll
 test*.*
 .cargo/config.toml
+.idea

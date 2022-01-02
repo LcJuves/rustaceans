@@ -34,7 +34,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
 
         // self_upgrade()?;
-        add_me_to_path_var()?;
+        // add_me_to_path_var()?;
+        set_alias("rman")?;
     }
 
     Ok(())
