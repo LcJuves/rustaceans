@@ -132,6 +132,12 @@ pub(crate) fn robot_generator_main() -> Result<(), Box<dyn Error>> {
 }
 
 pub(crate) fn add_me_to_path_var() -> Result<(), Box<dyn Error>> {
+    #[cfg(any(unix, target_os = "hermit"))]
+    {
+        eprintln!("Not currently supported!");
+        return Ok(());
+    }
+
     let curr_exe_path = get_curr_exe_path()?;
     seeval!(curr_exe_path);
 

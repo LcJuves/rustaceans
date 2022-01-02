@@ -7,7 +7,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let target = env::var("TARGET")?;
     println!("cargo:rustc-env=TARGET={}", target);
 
-    let profile = env::var("PROFILE")?;
+    // let profile = env::var("PROFILE")?;
     // println!("cargo:rustc-env=PROFILE={}", profile);
 
     // let cargo_encoded_rustflags = env::var("CARGO_ENCODED_RUSTFLAGS")?;

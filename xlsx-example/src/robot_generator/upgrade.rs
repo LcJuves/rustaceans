@@ -59,12 +59,12 @@ pub(crate) async fn dl_and_check_latest_exef(
     } else {
         panic!("Unsupported platform")
     };
-    let mut exef_url = format!(
+    let exef_url = format!(
         "http://{}/{}/{}-{}",
         &*UPGRADE_HOST, patf_name, latest_info.name, latest_info.version
     );
     #[cfg(windows)]
-    exef_url.push_str(".exe");
+    let exef_url = exef_url + ".exe";
     let exef_resp = get_without_headers(&exef_url).await?;
     if exef_resp.status() != StatusCode::OK {
         println!("GET {} \n{:#?}", exef_url, exef_resp);

@@ -12,4 +12,4 @@ tests/tmp.json
 *.exe
 *.dll
 test*.*
-config.toml
+.cargo/config.toml
