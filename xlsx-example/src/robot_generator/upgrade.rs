@@ -59,10 +59,12 @@ pub(crate) async fn dl_and_check_latest_exef(
     } else {
         panic!("Unsupported platform")
     };
-    let exef_url = format!(
+    let mut exef_url = format!(
         "http://{}/{}/{}-{}",
         &*UPGRADE_HOST, patf_name, latest_info.name, latest_info.version
     );
+    #[cfg(windows)]
+    exef_url.push_str(".exe");
     let exef_resp = get_without_headers(&exef_url).await?;
     if exef_resp.status() != StatusCode::OK {
         println!("GET {} \n{:#?}", exef_url, exef_resp);
@@ -124,10 +126,12 @@ pub(crate) fn self_upgrade() -> Result<(), Box<dyn Error>> {
 }
 
 pub(crate) fn get_curr_exe_path() -> Result<PathBuf, std::io::Error> {
+    #[cfg(debug_assertions)]
+    println!("TARGET >>> {}", env!("TARGET"));
     let curr_exe_path = if cfg!(test) {
         let cargo_manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         seeval!(cargo_manifest_dir);
-        let full_exe_name = env!("CARGO_PKG_NAME");
+        let full_exe_name = env!("CARGO_BIN_NAME");
         #[cfg(windows)]
         let full_exe_name = full_exe_name.to_owned() + ".exe";
         cargo_manifest_dir.join("target").join("debug").join(full_exe_name)
