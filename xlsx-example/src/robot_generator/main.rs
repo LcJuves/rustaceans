@@ -155,24 +155,26 @@ pub(crate) fn add_me_to_path_var() -> Result<(), Box<dyn Error>> {
     seeval!(rexe_home);
 
     #[cfg(windows)]
-    let path = (|| -> Result<String, Box<dyn Error>> {
-        let cmd_stdout = Command::new("cmd")
-            .arg("/c")
-            .arg("REG QUERY HKCU\\Environment /v PATH | findstr PATH")
-            .output()?
-            .stdout;
-        let cmd_stdout = remove_eol(std::str::from_utf8(&cmd_stdout)?);
-        let cmd_stdout = cmd_stdout[(cmd_stdout.rfind("_SZ ").unwrap_or(0) + 4)..].trim();
-        let mut cmd_stdout = cmd_stdout.to_owned();
-        assert!(!cmd_stdout.is_empty());
-        if !cmd_stdout.ends_with(";") {
-            cmd_stdout = cmd_stdout + ";";
-        }
+    {
+        let path = (|| -> Result<String, Box<dyn Error>> {
+            let cmd_stdout = Command::new("cmd")
+                .arg("/c")
+                .arg("REG QUERY HKCU\\Environment /v PATH | findstr PATH")
+                .output()?
+                .stdout;
+            let cmd_stdout = remove_eol(std::str::from_utf8(&cmd_stdout)?);
+            let cmd_stdout = cmd_stdout[(cmd_stdout.rfind("_SZ ").unwrap_or(0) + 4)..].trim();
+            let mut cmd_stdout = cmd_stdout.to_owned();
+            assert!(!cmd_stdout.is_empty());
+            if !cmd_stdout.ends_with(";") {
+                cmd_stdout = cmd_stdout + ";";
+            }
 
-        Ok(cmd_stdout)
-    })()?;
+            Ok(cmd_stdout)
+        })()?;
 
-    seeval!(path);
+        seeval!(path);
+    }
 
     #[cfg(windows)]
     {
