@@ -172,12 +172,8 @@ pub(crate) fn add_me_to_path_var() -> Result<(), Box<dyn Error>> {
 
             Ok(cmd_stdout)
         })()?;
-
         seeval!(path);
-    }
 
-    #[cfg(windows)]
-    {
         let cmd_status = Command::new("setx")
             .arg("REXE_HOME")
             .arg(rexe_home.to_str().unwrap())
