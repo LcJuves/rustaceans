@@ -127,6 +127,13 @@ lazy_static! {
                 .value_name("ALIAS_NAME")
                 .takes_value(true)
         )
+        .arg(
+            Arg::with_name("cond-js")
+                .long("cond-js")
+                .help("Use JavaScript to provide generation conditions (declared variables: `featureName`, `caseId`, `caseTitle`, `testMethods`, `useCaseType`, `canBeAutomated`, `tag`, `author`, `useCaseLevel`)")
+                .value_name("JS_CONTENT")
+                .takes_value(true)
+        )
         .get_matches()
     };
 }

@@ -107,6 +107,34 @@ impl OneCase {
         Ok(false)
     }
 
+    fn expect_cond_js_return_true(&self) -> Result<bool, boa::JsValue> {
+        if !args_os_has_flag("--cond-js") {
+            return Ok(true);
+        }
+
+        if let Some(cond_js) = option_value_of("--cond-js") {
+            let cond_js = cond_js.to_str().unwrap().to_owned();
+
+            let mut jsctx = boa::Context::new();
+            jsctx.eval(format!("let featureName='{}';", self.feature_name))?;
+            jsctx.eval(format!("let caseId='{}';", self.case_id))?;
+            jsctx.eval(format!("let caseTitle='{}';", self.case_title))?;
+            jsctx.eval(format!("let testMethods='{}';", self.test_methods))?;
+            jsctx.eval(format!("let useCaseType='{}';", self.use_case_type))?;
+            jsctx.eval(format!("let canBeAutomated='{}';", self.can_be_automated))?;
+            jsctx.eval(format!("let tag='{}';", self.tag))?;
+            jsctx.eval(format!("let author='{}';", self.author))?;
+            jsctx.eval(format!("let useCaseLevel='{}';", self.use_case_level))?;
+
+            let cond_js_val = jsctx.eval(cond_js)?;
+            if let boa::JsValue::Boolean(jsbool) = cond_js_val {
+                return Ok(jsbool);
+            }
+        }
+
+        Ok(true)
+    }
+
     pub(crate) fn save_robot_to(&mut self, dir: &Path) -> Result<(), Box<dyn Error>> {
         Self::ONCE_INIT.call_once(|| {
             if !dir.exists() {
@@ -123,7 +151,9 @@ impl OneCase {
             }
         });
 
-        if self.can_be_automated.starts_with("否") {
+        if self.can_be_automated.starts_with("否")
+            && self.expect_cond_js_return_true().unwrap_or(true)
+        {
             self.feature_name = self.feature_name.replace('/', &MAIN_SEPARATOR.to_string());
             self.case_title = self
                 .case_title
