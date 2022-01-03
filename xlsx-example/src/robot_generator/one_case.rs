@@ -17,7 +17,7 @@ lazy_static! {
     static ref AUTHOR_AND_MOD_TAG: Result<(String, String), std::io::Error> =
         get_author_and_mod_tag();
     pub(crate) static ref ROBOT_TEMPLATE: String =
-        String::from(include_str!("case.robot")).replace("\r\n", "\n");
+        String::from(include_str!("res/case.robot")).replace("\r\n", "\n");
     static ref USER_ROBOT_TEMPLATE: Result<String, std::io::Error> = read_user_robot_template();
 }
 

@@ -27,6 +27,9 @@ ssri = "7.0.0"
 toml = "0.5.8"
 Boa = "0.13.0"
 
+[build-dependencies]
+embed-resource = "1.6.5"
+
 [profile.release]
 opt-level = "s"
 debug = false
