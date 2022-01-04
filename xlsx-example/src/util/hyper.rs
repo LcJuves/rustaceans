@@ -54,7 +54,11 @@ pub(crate) async fn resp_body_bytes_from(resp: Response<Body>) -> Result<Vec<u8>
 pub(crate) async fn resp_json_string_from(resp: Response<Body>) -> Result<String, Box<dyn Error>> {
     let resp_body_bytes = resp_body_bytes_from(resp).await?;
     let resp_json_string = String::from_utf8_lossy(&resp_body_bytes);
-    let resp_json_string = resp_json_string.replace("'", r#"""#);
+    let resp_json_string = if resp_json_string.contains("':") || resp_json_string.contains("' :") {
+        resp_json_string.replace("'", r#"""#)
+    } else {
+        resp_json_string.to_string()
+    };
     Ok(resp_json_string)
 }
 

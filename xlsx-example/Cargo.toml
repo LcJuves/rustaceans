@@ -26,6 +26,7 @@ clearscreen = "1.0.9"
 ssri = "7.0.0"
 toml = "0.5.8"
 Boa = "0.13.0"
+regex = "1.5.4"
 
 [build-dependencies]
 embed-resource = "1.6.5"

@@ -21,25 +21,25 @@ lazy_static! {
     static ref USER_ROBOT_TEMPLATE: Result<String, std::io::Error> = read_user_robot_template();
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub(crate) struct OneCase {
-    feature_name: String,
-    case_id: String,
-    case_title: String,
-    preconditions: String,
-    steps: String,
-    postcondition: String,
-    desired_result: String,
-    test_methods: String,
-    use_case_type: String,
-    can_be_automated: String,
-    tag: String,
-    author: String,
-    product_requirement_id: String,
-    online_question_id: String,
-    test_experience_id: String,
-    use_case_level: String,
-    notes: String,
+    pub(crate) feature_name: String,
+    pub(crate) case_id: String,
+    pub(crate) case_title: String,
+    pub(crate) preconditions: String,
+    pub(crate) steps: String,
+    pub(crate) postcondition: String,
+    pub(crate) desired_result: String,
+    pub(crate) test_methods: String,
+    pub(crate) use_case_type: String,
+    pub(crate) can_be_automated: String,
+    pub(crate) tag: String,
+    pub(crate) author: String,
+    pub(crate) product_requirement_id: String,
+    pub(crate) online_question_id: String,
+    pub(crate) test_experience_id: String,
+    pub(crate) use_case_level: String,
+    pub(crate) notes: String,
 }
 
 impl Reflection for OneCase {

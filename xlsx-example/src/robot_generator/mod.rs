@@ -4,5 +4,6 @@ pub(crate) mod one_case;
 pub(crate) mod tpauth;
 #[macro_use]
 pub(crate) mod tputil;
+pub(crate) mod tpmodel;
 pub(crate) mod upgrade;
 pub(crate) mod util;
