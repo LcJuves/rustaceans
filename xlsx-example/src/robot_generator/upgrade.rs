@@ -154,6 +154,7 @@ pub(crate) fn get_curr_exe_version() -> Result<String, Box<dyn Error>> {
     Ok(version.to_owned())
 }
 
+#[allow(dead_code)]
 #[cfg(any(debug_assertions, test))]
 pub(crate) fn get_cargo_toml_version() -> Result<String, Box<dyn Error>> {
     use toml::Value;

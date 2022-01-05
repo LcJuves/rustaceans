@@ -1,20 +1,16 @@
 use crate::robot_generator::cli_parser::*;
 use crate::robot_generator::one_case::{OneCase, ROBOT_TEMPLATE};
-use crate::robot_generator::tpauth::*;
 use crate::robot_generator::tpmodel::query_cases;
-use crate::robot_generator::tputil::*;
 use crate::robot_generator::upgrade::get_curr_exe_path;
 use crate::robot_generator::upgrade::self_upgrade;
 use crate::seeval;
 use crate::util::calamine::*;
-use crate::util::common::remove_eol;
 
 use std::env::{args_os, current_dir};
 use std::error::Error;
 use std::ffi::OsString;
 use std::fs::OpenOptions;
 use std::path::Path;
-use std::process::{Command, Stdio};
 
 use calamine::{open_workbook_auto, Sheets};
 use lazy_static::lazy_static;
@@ -50,22 +46,8 @@ macro_rules! option_check_after_cli_matches {
         }
 
         if args_os_has_flag("--login") {
-            let (ep_jwt_token_current, sessionid, username, email, staff_code, token) =
-                (TOKIO_RT.as_ref()?).block_on(sign_in_tp_by_scan_moa_arcode())?;
-            if $args_vec.len() == 2 {
-                let auth_conf = AUTH_CONF.as_ref()?;
-                if !ep_jwt_token_current.is_empty()
-                    && !sessionid.is_empty()
-                    && !username.is_empty()
-                    && !email.is_empty()
-                    && !staff_code.is_empty()
-                    && !token.is_empty()
-                {
-                    println!("{:#?}", auth_conf);
-                    println!("Login successful!");
-                }
-                return Ok(());
-            }
+            (TOKIO_RT.as_ref()?).block_on(main_tp_login())?;
+            return Ok(());
         }
 
         if let Some(export_temp_path_os_string) = option_value_of("--export-def-temp") {
@@ -94,6 +76,22 @@ macro_rules! option_check_after_cli_matches {
             return Ok(());
         }
     };
+}
+
+pub(crate) async fn main_tp_login() -> Result<(), Box<dyn Error>> {
+    let (ep_jwt_token_current, sessionid, username, email, staff_code, token) =
+        crate::robot_generator::tputil::tp_login().await?;
+    if !ep_jwt_token_current.is_empty()
+        && !sessionid.is_empty()
+        && !username.is_empty()
+        && !email.is_empty()
+        && !staff_code.is_empty()
+        && !token.is_empty()
+    {
+        std::println!("{}", email);
+        std::println!("Login successful!");
+    }
+    Ok(())
 }
 
 fn exit_with_info(info: &str) {
@@ -192,6 +190,8 @@ pub(crate) fn add_me_to_path_var() -> Result<(), Box<dyn Error>> {
 
     #[cfg(windows)]
     {
+        use std::process::{Command, Stdio};
+
         let curr_exe_path = get_curr_exe_path()?;
         seeval!(curr_exe_path);
 
@@ -204,7 +204,7 @@ pub(crate) fn add_me_to_path_var() -> Result<(), Box<dyn Error>> {
                 .arg("REG QUERY HKCU\\Environment /v PATH | findstr PATH")
                 .output()?
                 .stdout;
-            let cmd_stdout = remove_eol(std::str::from_utf8(&cmd_stdout)?);
+            let cmd_stdout = crate::util::common::remove_eol(std::str::from_utf8(&cmd_stdout)?);
             let cmd_stdout = cmd_stdout[(cmd_stdout.rfind("_SZ ").unwrap_or(0) + 4)..].trim();
             let mut cmd_stdout = cmd_stdout.to_owned();
             assert!(!cmd_stdout.is_empty());

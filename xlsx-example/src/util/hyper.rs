@@ -7,6 +7,20 @@ use hyper_tls::HttpsConnector;
 
 use serde_json::Value;
 
+#[allow(unused_macros)]
+#[macro_export(local_inner_macros)]
+macro_rules! print_resp_body {
+    ($resp:ident) => {
+        use hyper::body::HttpBody as _;
+        use tokio::io::{stdout, AsyncWriteExt as _};
+        let mut $resp = $resp;
+        while let Some(chunk) = $resp.body_mut().data().await {
+            stdout().write_all(&chunk?).await?;
+        }
+        stdout().write_all(b"\n").await?;
+    };
+}
+
 pub(crate) async fn request(
     url: &str,
     method: &Method,

@@ -1,3 +1,5 @@
+use crate::seeval;
+use crate::time_millis_string;
 use crate::util::common::remove_eol;
 use crate::util::hyper::*;
 
@@ -15,46 +17,6 @@ use lazy_static::lazy_static;
 use qrcode::render::unicode;
 use qrcode::QrCode;
 use serde_json::json;
-
-#[allow(unused_macros)]
-#[macro_export]
-macro_rules! print_resp_body {
-    ($resp:ident) => {
-        use hyper::body::HttpBody as _;
-        use tokio::io::{stdout, AsyncWriteExt as _};
-        let mut $resp = $resp;
-        while let Some(chunk) = $resp.body_mut().data().await {
-            stdout().write_all(&chunk?).await?;
-        }
-        stdout().write_all(b"\n").await?;
-    };
-}
-
-#[macro_export(local_inner_macros)]
-macro_rules! time_millis_string {
-    () => {
-        (|| -> Result<String, std::time::SystemTimeError> {
-            use std::time::{SystemTime, UNIX_EPOCH};
-            Ok((SystemTime::now().duration_since(UNIX_EPOCH)?).as_millis().to_string())
-        })()?
-    };
-}
-
-#[macro_export(local_inner_macros)]
-macro_rules! seeval {
-    ($val:expr) => {
-        #[cfg(debug_assertions)]
-        std::println!("{} >>> {:?}", core::stringify!($val), $val);
-    };
-}
-
-#[allow(unused_macros)]
-#[macro_export(local_inner_macros)]
-macro_rules! pass {
-    () => {
-        std::println!("\u{1b}[91m{}\u{1b}[0m", ">>> PASS");
-    };
-}
 
 lazy_static! {
     pub(crate) static ref UA: &'static str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36";
@@ -572,6 +534,16 @@ pub(crate) async fn req_api_v1_users_info(
 ////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////
 
+pub(crate) async fn tp_login(
+) -> Result<(String, String, String, String, String, String), Box<dyn Error>> {
+    // unused code
+    if false {
+        return Ok(sign_in_tp_by_sms().await?);
+    }
+    // end unused code
+    Ok(sign_in_tp_by_scan_moa_arcode().await?)
+}
+
 pub(crate) async fn sign_in_tp_by_sms(
 ) -> Result<(String, String, String, String, String, String), Box<dyn Error>> {
     clearscreen::clear()?;
@@ -704,26 +676,6 @@ fn read_stdin_sms_code() -> Result<u32, Box<dyn Error>> {
     Ok(u32::from_str(&sms_code)?)
 }
 
-fn jwt_sign_with_guid(guid: &str, key: &str) -> Result<String, biscuit::errors::Error> {
-    let mut private_claims = HashMap::new();
-    private_claims.insert("id".to_owned(), guid.to_owned());
-
-    let claims = ClaimsSet::<HashMap<String, String>> {
-        registered: RegisteredClaims::default(),
-        private: private_claims,
-    };
-
-    let jwt = JWT::new_decoded(RegisteredHeader::default().into(), claims);
-    let jwt = jwt.into_encoded(&Secret::Bytes(key.as_bytes().to_vec()))?;
-    let jwt = jwt.unwrap_encoded().to_string();
-
-    Ok(jwt)
-}
-
-fn gen_guid() -> String {
-    GUID::rand().to_string().to_lowercase()
-}
-
 pub(crate) fn user_info_json_exist() -> bool {
     if let Ok(user_info_json_path) = USER_INFO_JSON_PATH.as_ref() {
         if user_info_json_path.exists() {
@@ -761,6 +713,26 @@ fn save_user_info_json(
     user_info_json.flush()?;
 
     Ok(())
+}
+
+fn jwt_sign_with_guid(guid: &str, key: &str) -> Result<String, biscuit::errors::Error> {
+    let mut private_claims = HashMap::new();
+    private_claims.insert("id".to_owned(), guid.to_owned());
+
+    let claims = ClaimsSet::<HashMap<String, String>> {
+        registered: RegisteredClaims::default(),
+        private: private_claims,
+    };
+
+    let jwt = JWT::new_decoded(RegisteredHeader::default().into(), claims);
+    let jwt = jwt.into_encoded(&Secret::Bytes(key.as_bytes().to_vec()))?;
+    let jwt = jwt.unwrap_encoded().to_string();
+
+    Ok(jwt)
+}
+
+fn gen_guid() -> String {
+    GUID::rand().to_string().to_lowercase()
 }
 
 #[test]
