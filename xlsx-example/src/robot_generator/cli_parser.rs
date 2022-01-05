@@ -7,7 +7,7 @@ use lazy_static::lazy_static;
 lazy_static! {
     pub(crate) static ref CLI_MATCHES: ArgMatches<'static> = {
         App::new("RF TestCase Generator")
-        .version("1.0.3")
+        .version("1.0.4")
         .author("Liangcheng Juves <liangchengj@outlook.com>")
         .usage("genrobot [FLAGS] [OPTIONS]")
         .arg(
@@ -101,19 +101,20 @@ lazy_static! {
                 .multiple(true)
                 .help("Log in to the use case management platform")
         )
-        .arg(
-            Arg::with_name("upgrade")
-                .long("upgrade")
-                .multiple(true)
-                .help("Upgrade executable to given version")
-        )
-        .arg(
-            Arg::with_name("upgrade-host")
-                .long("upgrade-host")
-                .help("Upgrade from a server in the specified host (for example: `rexe-upgrade.io:9934`)")
-                .value_name("DOMAIN")
-                .takes_value(true)
-        )
+        // FIXME
+        // .arg(
+        //     Arg::with_name("upgrade")
+        //         .long("upgrade")
+        //         .multiple(true)
+        //         .help("Upgrade executable to given version")
+        // )
+        // .arg(
+        //     Arg::with_name("upgrade-host")
+        //         .long("upgrade-host")
+        //         .help("Upgrade from a server in the specified host (for example: `rexe-upgrade.io:9934`)")
+        //         .value_name("DOMAIN")
+        //         .takes_value(true)
+        // )
         .arg(
             Arg::with_name("amtpv")
                 .long("amtpv")

@@ -24,7 +24,12 @@ lazy_static! {
         if let Some(upgrade_host) = option_value_of("--upgrade-host") {
             upgrade_host.to_str().unwrap().to_owned()
         } else {
-            "rexe-upgrade.io:9934".to_owned()
+            #[cfg(debug_assertions)]
+            let default_upgrade_host = "rexe-upgrade.io:9934";
+            #[cfg(not(debug_assertions))]
+            let default_upgrade_host = "172.22.228.187:9934";
+
+            default_upgrade_host.to_owned()
         }
     };
 }
