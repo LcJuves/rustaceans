@@ -95,7 +95,7 @@ pub(crate) async fn query_remote_root_path_id_by_name(
     Ok(0u8)
 }
 
-fn remove_doc_tag(doc: &str) -> String {
+fn replace_special_content(doc: &str) -> String {
     let ret = doc.to_owned();
     let ref doc_rep_regex1 = DOC_REP_REGEX1;
     let ref doc_rep_regex2 = DOC_REP_REGEX2;
@@ -125,6 +125,18 @@ fn remove_doc_tag(doc: &str) -> String {
     let ret = ret.replace("&darr;", "↓");
     let ret = ret.replace("&ensp;", " ");
     let ret = ret.replace("&emsp;", " ");
+    let ret = ret.replace("&real;", "ℜ");
+    let ret = ret.replace("&congdot;", "⩭");
+    let ret = ret.replace("&cong;", "≅");
+    let ret = ret.replace("&empty;", "∅");
+    let ret = ret.replace("&lambda;", "λ");
+    let ret = ret.replace("&lang;", "⟨");
+    let ret = ret.replace("&image;", "ℑ");
+    let ret = ret.replace("&alpha;", "α");
+    let ret = ret.replace("&beta;", "β");
+    let ret = ret.replace("&and;", "∧");
+    let ret = ret.replace("&or;", "∨");
+    let ret = ret.replace("&not;", "¬");
     seeval!(ret);
     ret
 }
@@ -199,15 +211,16 @@ pub(crate) async fn query_cases_by_remote_path(
                             (&case_req_resp_json["case_code"]).as_str().unwrap_or("").to_owned();
                         case.case_title =
                             (&case_req_resp_json["name"]).as_str().unwrap_or("").to_owned();
-                        case.preconditions =
-                            remove_doc_tag((&case_req_resp_json["doc_pre"]).as_str().unwrap_or(""));
-                        case.steps = remove_doc_tag(
+                        case.preconditions = replace_special_content(
+                            (&case_req_resp_json["doc_pre"]).as_str().unwrap_or(""),
+                        );
+                        case.steps = replace_special_content(
                             (&case_req_resp_json["doc_step"]).as_str().unwrap_or(""),
                         );
-                        case.postcondition = remove_doc_tag(
+                        case.postcondition = replace_special_content(
                             (&case_req_resp_json["doc_post"]).as_str().unwrap_or(""),
                         );
-                        case.desired_result = remove_doc_tag(
+                        case.desired_result = replace_special_content(
                             (&case_req_resp_json["doc_except"]).as_str().unwrap_or(""),
                         );
                         case.test_methods =
@@ -236,8 +249,9 @@ pub(crate) async fn query_cases_by_remote_path(
                             (&case_req_resp_json["priority"]).as_str().unwrap_or("").to_owned();
                         case.online_question_id =
                             (&case_req_resp_json["bug_id"]).as_str().unwrap_or("").to_owned();
-                        case.notes =
-                            remove_doc_tag((&case_req_resp_json["doc"]).as_str().unwrap_or(""));
+                        case.notes = replace_special_content(
+                            (&case_req_resp_json["doc"]).as_str().unwrap_or(""),
+                        );
 
                         cases.push(case);
                     } else {
