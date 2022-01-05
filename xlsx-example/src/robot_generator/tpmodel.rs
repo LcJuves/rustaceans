@@ -24,6 +24,7 @@ async fn _this_common_req_get(
     sessionid: &str,
     ep_jwt_token_current: &str,
     project_id: Option<&u8>,
+    version_id: Option<&u8>,
 ) -> Result<Response<Body>, Box<dyn Error>> {
     let mut headers = HashMap::new();
     headers.insert("user-agent".to_owned(), UA.to_string());
@@ -36,7 +37,71 @@ async fn _this_common_req_get(
         headers.insert("project-id".to_owned(), pid.to_string());
     }
 
+    if let Some(vid) = version_id {
+        headers.insert("version-id".to_owned(), vid.to_string());
+    }
+
     Ok(get(url, &headers).await?)
+}
+
+async fn _this_common_req_post(
+    url: &str,
+    sessionid: &str,
+    ep_jwt_token_current: &str,
+    project_id: Option<&u8>,
+    version_id: Option<&u8>,
+    body: Body,
+) -> Result<Response<Body>, Box<dyn Error>> {
+    let mut headers = HashMap::new();
+    headers.insert("user-agent".to_owned(), UA.to_string());
+    headers.insert(
+        "Cookie".to_owned(),
+        format!("sessionid={};ep_jwt_token_current={}", sessionid, ep_jwt_token_current),
+    );
+    headers.insert("Connection".to_owned(), "keep-alive".to_owned());
+    headers.insert("Content-Type".to_owned(), "application/json".to_owned());
+    if let Some(pid) = project_id {
+        headers.insert("project-id".to_owned(), pid.to_string());
+    }
+
+    if let Some(vid) = version_id {
+        headers.insert("version-id".to_owned(), vid.to_string());
+    }
+
+    Ok(post(url, Body::from(body), &headers).await?)
+}
+
+async fn query_path_by_parent_code(
+    sessionid: &str,
+    ep_jwt_token_current: &str,
+    project_id: &u8,
+    remote_root_path_id: &u8,
+    parent_code: &str,
+) -> Result<String, Box<dyn Error>> {
+    let version_id = remote_root_path_id;
+
+    let url = format!(
+        "http://199.200.0.8/api/v1/versions/{}/directorys/_detail/?dir_code={}&_t={}",
+        version_id,
+        parent_code,
+        time_millis_string!()
+    );
+
+    let resp = _this_common_req_get(
+        &url,
+        sessionid,
+        ep_jwt_token_current,
+        Some(project_id),
+        Some(version_id),
+    )
+    .await?;
+
+    let resp_json = resp_json_from(resp).await?;
+    seeval!(&resp_json);
+
+    let path = resp_json["path"].as_str().unwrap();
+
+    Ok(path.to_owned())
 }
 
 pub(crate) async fn query_project_id_by_name(
@@ -45,7 +110,7 @@ pub(crate) async fn query_project_id_by_name(
     project_name: &str,
 ) -> Result<u8, Box<dyn Error>> {
     let url = format!("http://199.200.0.8/api/v1/projects/set/?_t={}", time_millis_string!());
-    let resp = _this_common_req_get(&url, sessionid, ep_jwt_token_current, None).await?;
+    let resp = _this_common_req_get(&url, sessionid, ep_jwt_token_current, None, None).await?;
     let resp_json_string = resp_json_string_from(resp).await?;
     seeval!(&resp_json_string);
     #[derive(Serialize, Deserialize, Debug)]
@@ -75,7 +140,7 @@ pub(crate) async fn query_remote_root_path_id_by_name(
         time_millis_string!()
     );
     let resp =
-        _this_common_req_get(&url, sessionid, ep_jwt_token_current, Some(project_id)).await?;
+        _this_common_req_get(&url, sessionid, ep_jwt_token_current, Some(project_id), None).await?;
     let resp_json_string = resp_json_string_from(resp).await?;
     seeval!(&resp_json_string);
     #[derive(Serialize, Deserialize, Debug)]
@@ -152,21 +217,27 @@ pub(crate) async fn query_cases_by_remote_path(
     remote_path_spilt_arr.push("");
 
     let mut node_id = "-1";
+    let version_id = remote_root_path_id;
 
-    let mut case_feature_name = "";
     let mut cases = Vec::<OneCase>::new();
 
-    for path in remote_path_spilt_arr {
+    for path in remote_path_spilt_arr.iter() {
         let url = format!(
             "http://199.200.0.8/api/v1/versions/{}/case_tree/?node_id={}&version_id={}&{{}}&_={}",
-            remote_root_path_id,
+            version_id,
             node_id,
-            remote_root_path_id,
+            version_id,
             time_millis_string!()
         );
 
-        let resp =
-            _this_common_req_get(&url, sessionid, ep_jwt_token_current, Some(project_id)).await?;
+        let resp = _this_common_req_get(
+            &url,
+            sessionid,
+            ep_jwt_token_current,
+            Some(project_id),
+            Some(version_id),
+        )
+        .await?;
         let resp_json = resp_json_from(resp).await?;
         seeval!(&resp_json);
 
@@ -175,87 +246,96 @@ pub(crate) async fn query_cases_by_remote_path(
                 if let serde_json::Value::String(icon_skin) = &item["iconSkin"] {
                     if icon_skin == "folder" {
                         let name = (&item["name"]).as_str().unwrap();
-                        if name == path {
+                        if name == *path {
                             node_id = Box::leak(
                                 (&item["dir_code"]).as_str().unwrap().to_string().into_boxed_str(),
                             );
-                            case_feature_name = Box::leak(
-                                (&item["path"]).as_str().unwrap_or("").to_string().into_boxed_str(),
-                            );
                             continue;
                         }
-                    } else if !icon_skin.is_empty()
-                        && !(&item["case_code"]).as_str().unwrap().is_empty()
-                    {
-                        let remote_case_id = (&item["id"]).as_u64().unwrap();
+                    }
+
+                    if !icon_skin.is_empty() && path.is_empty() {
                         let case_req_url = format!(
-                            "http://199.200.0.8/api/v1/versions/{}/cases/{}/?project_id={}&_t={}",
-                            remote_root_path_id,
-                            remote_case_id,
-                            project_id,
+                            "http://199.200.0.8/api/v1/versions/{}/cases/search/?_t={}",
+                            version_id,
                             time_millis_string!()
                         );
-                        let case_req_resp = _this_common_req_get(
+                        let body = format!(
+                            r#"{{"path_list":["{}"],"sortBy":"create_at","order":false,"page_size":100000,"page":1,"last_run_at":"","create_at":"","node_id":-1}}"#,
+                            node_id
+                        );
+                        let case_req_resp = _this_common_req_post(
                             &case_req_url,
                             sessionid,
                             ep_jwt_token_current,
                             Some(project_id),
+                            Some(version_id),
+                            Body::from(body),
                         )
                         .await?;
                         let case_req_resp_json = resp_json_from(case_req_resp).await?;
                         seeval!(&case_req_resp_json);
 
-                        let mut case = OneCase::default();
-                        case.feature_name = case_feature_name.to_owned();
-                        case.case_id =
-                            (&case_req_resp_json["case_code"]).as_str().unwrap_or("").to_owned();
-                        case.case_title =
-                            (&case_req_resp_json["name"]).as_str().unwrap_or("").to_owned();
-                        case.preconditions = replace_special_content(
-                            (&case_req_resp_json["doc_pre"]).as_str().unwrap_or(""),
-                        );
-                        case.steps = replace_special_content(
-                            (&case_req_resp_json["doc_step"]).as_str().unwrap_or(""),
-                        );
-                        case.postcondition = replace_special_content(
-                            (&case_req_resp_json["doc_post"]).as_str().unwrap_or(""),
-                        );
-                        case.desired_result = replace_special_content(
-                            (&case_req_resp_json["doc_except"]).as_str().unwrap_or(""),
-                        );
-                        case.test_methods =
-                            (&case_req_resp_json["test_method"]).as_str().unwrap_or("").to_owned();
-                        case.use_case_type =
-                            (&case_req_resp_json["case_type"]).as_str().unwrap_or("").to_owned();
-                        case.can_be_automated =
-                            (if (&case_req_resp_json["isautomated"]).as_u64().unwrap_or(0) == 1 {
-                                "是"
-                            } else {
-                                "否"
-                            })
-                            .to_owned();
-                        let mut case_tags = String::new();
-                        for item in (&case_req_resp_json["tags"]).as_array().unwrap() {
-                            case_tags.push_str(item.as_str().unwrap_or(""));
-                            case_tags.push_str("    ");
-                        }
-                        case.tag = case_tags[..(case_tags.rfind(" ").unwrap_or(case_tags.len()))]
-                            .to_string();
-                        case.author = (&case_req_resp_json["author_username"])
-                            .as_str()
-                            .unwrap_or("")
-                            .to_owned();
-                        case.use_case_level =
-                            (&case_req_resp_json["priority"]).as_str().unwrap_or("").to_owned();
-                        case.online_question_id =
-                            (&case_req_resp_json["bug_id"]).as_str().unwrap_or("").to_owned();
-                        case.notes = replace_special_content(
-                            (&case_req_resp_json["doc"]).as_str().unwrap_or(""),
-                        );
+                        let remote_cases = case_req_resp_json["results"].as_array().unwrap();
+                        for remote_case in remote_cases {
+                            let mut case = OneCase::default();
+                            let parent_code = (&remote_case["parent_code"]).as_str().unwrap();
+                            let case_feature_name = query_path_by_parent_code(
+                                sessionid,
+                                ep_jwt_token_current,
+                                project_id,
+                                remote_root_path_id,
+                                parent_code,
+                            )
+                            .await?;
+                            case.feature_name = case_feature_name;
+                            case.case_id =
+                                (&remote_case["case_code"]).as_str().unwrap_or("").to_owned();
+                            case.case_title =
+                                (&remote_case["name"]).as_str().unwrap_or("").to_owned();
+                            case.preconditions = replace_special_content(
+                                (&remote_case["doc_pre"]).as_str().unwrap_or(""),
+                            );
+                            case.steps = replace_special_content(
+                                (&remote_case["doc_step"]).as_str().unwrap_or(""),
+                            );
+                            case.postcondition = replace_special_content(
+                                (&remote_case["doc_post"]).as_str().unwrap_or(""),
+                            );
+                            case.desired_result = replace_special_content(
+                                (&remote_case["doc_except"]).as_str().unwrap_or(""),
+                            );
+                            case.test_methods =
+                                (&remote_case["test_method"]).as_str().unwrap_or("").to_owned();
+                            case.use_case_type =
+                                (&remote_case["case_type"]).as_str().unwrap_or("").to_owned();
+                            case.can_be_automated =
+                                (if (&remote_case["isautomated"]).as_u64().unwrap_or(0) == 1 {
+                                    "是"
+                                } else {
+                                    "否"
+                                })
+                                .to_owned();
+                            let mut case_tags = String::new();
+                            for item in (&remote_case["tags"]).as_array().unwrap() {
+                                case_tags.push_str(item.as_str().unwrap_or(""));
+                                case_tags.push_str("    ");
+                            }
+                            case.tag = case_tags
+                                [..(case_tags.rfind(" ").unwrap_or(case_tags.len()))]
+                                .to_string();
+                            case.author =
+                                (&remote_case["author_username"]).as_str().unwrap_or("").to_owned();
+                            case.use_case_level =
+                                (&remote_case["priority"]).as_str().unwrap_or("").to_owned();
+                            case.online_question_id =
+                                (&remote_case["bug_id"]).as_str().unwrap_or("").to_owned();
+                            case.notes = replace_special_content(
+                                (&remote_case["doc"]).as_str().unwrap_or(""),
+                            );
 
-                        cases.push(case);
-                    } else {
-                        panic!();
+                            cases.push(case);
+                        }
                     }
                 } else if let serde_json::Value::String(json) = &resp_json {
                     eprintln!("{} >>> {}:{}", file!(), line!(), column!());

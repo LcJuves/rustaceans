@@ -88,7 +88,7 @@ pub(crate) async fn main_tp_login() -> Result<(), Box<dyn Error>> {
         && !staff_code.is_empty()
         && !token.is_empty()
     {
-        std::println!("{}", email);
+        std::println!("{}", staff_code);
         std::println!("Login successful!");
     }
     Ok(())
