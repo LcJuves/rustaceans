@@ -136,6 +136,13 @@ lazy_static! {
                 .takes_value(true)
         )
         .arg(
+            Arg::with_name("custom-js")
+                .long("custom-js")
+                .help("Use JavaScript to modify use case related information (declared variables: `featureName`, `caseId`, `caseTitle`, `testMethods`, `useCaseType`, `canBeAutomated`, `tag`, `author`, `useCaseLevel`)")
+                .value_name("JS_CONTENT")
+                .takes_value(true)
+        )
+        .arg(
             Arg::with_name("tp-proj-name")
                 .long("tp-proj-name")
                 .help("Project name on the use case management platform")

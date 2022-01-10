@@ -135,6 +135,74 @@ impl OneCase {
         Ok(true)
     }
 
+    fn eval_custom_js(&mut self) -> Result<(), boa::JsValue> {
+        if !args_os_has_flag("--custom-js") {
+            return Ok(());
+        }
+
+        if let Some(custom_js) = option_value_of("--custom-js") {
+            let custom_js = custom_js.to_str().unwrap().to_owned();
+
+            let mut jsctx = boa::Context::new();
+            jsctx.eval(format!("let featureName='{}';", &self.feature_name))?;
+            jsctx.eval(format!("let caseId='{}';", &self.case_id))?;
+            jsctx.eval(format!("let caseTitle='{}';", &self.case_title))?;
+            jsctx.eval(format!("let testMethods='{}';", &self.test_methods))?;
+            jsctx.eval(format!("let useCaseType='{}';", &self.use_case_type))?;
+            jsctx.eval(format!("let canBeAutomated='{}';", &self.can_be_automated))?;
+            jsctx.eval(format!("let tag='{}';", &self.tag))?;
+            jsctx.eval(format!("let author='{}';", &self.author))?;
+            jsctx.eval(format!("let useCaseLevel='{}';", &self.use_case_level))?;
+            jsctx.eval(custom_js)?;
+
+            let custom_js_val = jsctx.eval("featureName")?;
+            if let boa::JsValue::String(js_string) = &custom_js_val {
+                self.feature_name = js_string.to_string();
+            }
+
+            let custom_js_val = jsctx.eval("caseId")?;
+            if let boa::JsValue::String(js_string) = &custom_js_val {
+                self.case_id = js_string.to_string();
+            }
+
+            let custom_js_val = jsctx.eval("caseTitle")?;
+            if let boa::JsValue::String(js_string) = &custom_js_val {
+                self.case_title = js_string.to_string();
+            }
+
+            let custom_js_val = jsctx.eval("testMethods")?;
+            if let boa::JsValue::String(js_string) = &custom_js_val {
+                self.test_methods = js_string.to_string();
+            }
+
+            let custom_js_val = jsctx.eval("useCaseType")?;
+            if let boa::JsValue::String(js_string) = &custom_js_val {
+                self.use_case_type = js_string.to_string();
+            }
+
+            let custom_js_val = jsctx.eval("canBeAutomated")?;
+            if let boa::JsValue::String(js_string) = &custom_js_val {
+                self.can_be_automated = js_string.to_string();
+            }
+
+            let custom_js_val = jsctx.eval("tag")?;
+            if let boa::JsValue::String(js_string) = &custom_js_val {
+                self.tag = js_string.to_string();
+            }
+
+            let custom_js_val = jsctx.eval("author")?;
+            if let boa::JsValue::String(js_string) = &custom_js_val {
+                self.author = js_string.to_string();
+            }
+
+            let custom_js_val = jsctx.eval("useCaseLevel")?;
+            if let boa::JsValue::String(js_string) = &custom_js_val {
+                self.use_case_level = js_string.to_string();
+            }
+        }
+        Ok(())
+    }
+
     pub(crate) fn save_robot_to(&mut self, dir: &Path) -> Result<(), Box<dyn Error>> {
         Self::ONCE_INIT.call_once(|| {
             if !dir.exists() {
@@ -154,6 +222,7 @@ impl OneCase {
         if self.can_be_automated.starts_with("否")
             && self.expect_cond_js_return_true().unwrap_or(true)
         {
+            self.eval_custom_js().unwrap();
             self.feature_name = self.feature_name.replace('/', &MAIN_SEPARATOR.to_string());
             self.case_title = self
                 .case_title
