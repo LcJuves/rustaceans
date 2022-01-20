@@ -1,4 +1,5 @@
 mod comb_sum;
+mod gh_qrcode;
 mod process_bar;
 mod stream;
 
