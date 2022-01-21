@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # Created at 2021/7/28 21:48
 # @author Liangcheng Juves
 
