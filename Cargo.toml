@@ -20,4 +20,5 @@ workspace.members = [
     "tcp-server",
     "wasm-game-of-life",
     "xlsx-example",
+    "wkrobot",
 ]
