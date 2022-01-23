@@ -1,10 +1,14 @@
 include!("../src/lib.rs");
 
+#[macro_use]
+mod kbd_mod;
+
+use crate::kbd_mod::*;
+
 use core::time::Duration;
 
 use std::error::Error;
 use std::io::{stdout, ErrorKind, Read, Write};
-use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::thread;
 
@@ -12,58 +16,6 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
     VK_0, VK_1, VK_2, VK_3, VK_4, VK_5, VK_6, VK_7, VK_8, VK_9, VK_A, VK_C, VK_E, VK_G, VK_H, VK_I,
     VK_J, VK_L, VK_N, VK_RETURN, VK_S, VK_SHIFT, VK_SPACE, VK_U, VK_V,
 };
-
-macro_rules! _read_child_output_string {
-    ($child:ident) => {
-        (|| -> Result<String, Box<dyn Error>> {
-            let mut child_stdout = $child.stdout.take().unwrap();
-            let mut output_string = String::new();
-            let mut first_space = false;
-            let mut buf = [0u8; 1];
-            (|| -> Result<(), std::io::Error> {
-                loop {
-                    let _ = match child_stdout.read(&mut buf) {
-                        Ok(0) => return Ok(()),
-                        Ok(len) => len,
-                        Err(ref e) if e.kind() == ErrorKind::Interrupted => continue,
-                        Err(e) => return Err(e),
-                    };
-                    let buf_str = std::str::from_utf8(&buf).unwrap_or("");
-                    if buf_str == ">" || (buf_str == " " && !first_space) {
-                        if buf_str == " " {
-                            first_space = true;
-                        }
-                        stdout().write_all(&buf)?;
-                        stdout().flush()?;
-                    } else {
-                        output_string.push_str(buf_str);
-                    }
-                }
-            })()?;
-            Ok(output_string)
-        })()?
-    };
-}
-
-fn _compile_kbd_exe() -> Result<PathBuf, std::io::Error> {
-    let cargo_manifest_dir_path = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let kbdbin_path = cargo_manifest_dir_path.join("tests").join("kbdbin.rs");
-    let mut kbd_archive_path = cargo_manifest_dir_path.join("tests");
-
-    if cfg!(windows) {
-        kbd_archive_path.push("kbdbin.exe");
-    } else {
-        kbd_archive_path.push("kbdbin");
-    }
-
-    let rustc_kbdbin_cmd_status = Command::new("rustc")
-        .arg(kbdbin_path)
-        .arg("-o")
-        .arg(&kbd_archive_path)
-        .status()?;
-    assert!(rustc_kbdbin_cmd_status.success());
-    Ok(kbd_archive_path)
-}
 
 #[test]
 fn test_kbd() -> Result<(), Box<dyn Error>> {
@@ -74,7 +26,7 @@ fn test_kbd() -> Result<(), Box<dyn Error>> {
         .spawn()?;
 
     thread::spawn(|| {
-        thread::sleep(Duration::from_millis(500));
+        thread::sleep(Duration::from_millis(300));
         key_press(VK_L).unwrap();
         key_press(VK_L).unwrap();
         key_press(VK_L).unwrap();

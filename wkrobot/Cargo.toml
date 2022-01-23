@@ -9,6 +9,9 @@ edition = "2021"
 hyper = { version = "0.14", features = ["full"] }
 tokio = { version = "1", features = ["full"] }
 
+[dev-dependencies]
+lazy_static = "1.4.0"
+
 [[bin]]
 name = "wkrobot"
 path = "src/bin/main.rs"
