@@ -11,6 +11,7 @@ workspace.members = [
     "hex-string",
     "io",
     "rcallc",
+    "rconio",
     "regexp",
     "rfserv",
     "rgrep",
@@ -19,6 +20,6 @@ workspace.members = [
     "tcp-client",
     "tcp-server",
     "wasm-game-of-life",
-    "xlsx-example",
     "wkrobot",
+    "xlsx-example",
 ]
