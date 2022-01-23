@@ -8,7 +8,7 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
 pub fn key_input(ki: KEYBDINPUT) -> Result<()> {
     let mut pinputs = INPUT::default();
     pinputs.r#type = INPUT_KEYBOARD;
-    pinputs.Anonymous = INPUT_0 { ki: ki };
+    pinputs.Anonymous = INPUT_0 { ki };
     unsafe {
         let ret = SendInput(1, &pinputs, size_of::<INPUT>() as i32);
         if ret != 1 {
