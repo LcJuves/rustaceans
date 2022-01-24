@@ -49,9 +49,7 @@ fn set_con_text_attr(wattributes: u16) {
         ONCE_INIT.call_once(|| {
             let _ = *DEFAULT_WATTRIBUTES;
         });
-        SetConsoleTextAttribute(stdout_handle, wattributes)
-            .ok()
-            .unwrap_or(());
+        SetConsoleTextAttribute(stdout_handle, wattributes).ok().unwrap_or(());
     }
 }
 
