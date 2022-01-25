@@ -5,14 +5,19 @@
 use crate::vtesc_seq;
 
 use core::ffi::c_void;
+use core::mem::size_of;
+use core::slice;
 
-use std::env::var;
 use std::ptr::{null, null_mut};
 use std::sync::Once;
 
 use lazy_static::lazy_static;
 use windows::core::{Error, Result};
 use windows::Win32::Foundation::HANDLE;
+use windows::Win32::Foundation::MAX_PATH;
+use windows::Win32::Storage::FileSystem::FileNameInfo;
+use windows::Win32::Storage::FileSystem::GetFileInformationByHandleEx;
+use windows::Win32::Storage::FileSystem::FILE_NAME_INFO;
 use windows::Win32::System::Console::GetConsoleMode;
 use windows::Win32::System::Console::GetConsoleScreenBufferInfo;
 use windows::Win32::System::Console::GetStdHandle;
@@ -43,12 +48,7 @@ lazy_static! {
         }
         buf_info.wAttributes
     };
-    static ref IS_XTERM: bool = {
-        if let Ok(term) = var("TERM") {
-            return term == "xterm";
-        }
-        false
-    };
+    static ref IS_MINTTY: bool = check_is_mintty();
     pub(crate) static ref STDOUT_HANDLE: HANDLE = unsafe { GetStdHandle(STD_OUTPUT_HANDLE) };
 }
 
@@ -60,6 +60,39 @@ pub(crate) fn get_stdout_handle() -> HANDLE {
         let _ = *DEFAULT_WATTRIBUTES;
     });
     stdout_handle
+}
+
+// https://github.com/softprops/atty/blob/master/src/lib.rs
+fn check_is_mintty() -> bool {
+    let stdout_handle = *STDOUT_HANDLE;
+    let size = size_of::<FILE_NAME_INFO>();
+    type WCHAR = u16;
+    let mut name_info_bytes = vec![0u8; size + (MAX_PATH as usize) * size_of::<WCHAR>()];
+    let res = unsafe {
+        GetFileInformationByHandleEx(
+            stdout_handle,
+            FileNameInfo,
+            name_info_bytes.as_mut_ptr() as *mut c_void,
+            name_info_bytes.len() as u32,
+        )
+    };
+
+    if !res.as_bool() {
+        return false;
+    }
+    let name_info: &FILE_NAME_INFO =
+        unsafe { &*(name_info_bytes.as_ptr() as *const FILE_NAME_INFO) };
+    let s = unsafe {
+        slice::from_raw_parts(name_info.FileName.as_ptr(), name_info.FileNameLength as usize / 2)
+    };
+    let name = String::from_utf16_lossy(s);
+    // This checks whether 'pty' exists in the file name, which indicates that
+    // a pseudo-terminal is attached. To mitigate against false positives
+    // (e.g., an actual file name that contains 'pty'), we also require that
+    // either the strings 'msys-' or 'cygwin-' are in the file name as well.)
+    let is_msys = name.contains("msys-") || name.contains("cygwin-");
+    let is_pty = name.contains("-pty");
+    is_msys && is_pty
 }
 
 fn set_con_text_attr(wattributes: u16) {
@@ -108,7 +141,7 @@ fn write_conw(ansi_str: &str) -> Result<()> {
 }
 
 pub(crate) fn reset() {
-    if *IS_XTERM {
+    if *IS_MINTTY {
         print!("{}", vtesc_seq::NONE);
     } else {
         let wattributes = *DEFAULT_WATTRIBUTES;
@@ -117,70 +150,70 @@ pub(crate) fn reset() {
 }
 
 pub(crate) fn set_red() {
-    if let Err(_) = write_conw(vtesc_seq::RED) {
-        if *IS_XTERM {
-            print!("{}", vtesc_seq::RED);
-        } else {
-            set_con_text_attr(0x4);
+    if *IS_MINTTY {
+        print!("{}", vtesc_seq::RED);
+    } else {
+        if let Err(_) = write_conw(vtesc_seq::RED) {
+            set_con_text_attr(0x4 /* RED */);
         }
     }
 }
 
 pub(crate) fn set_green() {
-    if let Err(_) = write_conw(vtesc_seq::GREEN) {
-        if *IS_XTERM {
-            print!("{}", vtesc_seq::GREEN);
-        } else {
-            set_con_text_attr(0x2);
+    if *IS_MINTTY {
+        print!("{}", vtesc_seq::GREEN);
+    } else {
+        if let Err(_) = write_conw(vtesc_seq::GREEN) {
+            set_con_text_attr(0x2 /* GREEN */);
         }
     }
 }
 
 pub(crate) fn set_blue() {
-    if let Err(_) = write_conw(vtesc_seq::BLUE) {
-        if *IS_XTERM {
-            print!("{}", vtesc_seq::BLUE);
-        } else {
-            set_con_text_attr(0x1);
+    if *IS_MINTTY {
+        print!("{}", vtesc_seq::BLUE);
+    } else {
+        if let Err(_) = write_conw(vtesc_seq::BLUE) {
+            set_con_text_attr(0x1 /* BLUE */);
         }
     }
 }
 
 pub(crate) fn set_white() {
-    if let Err(_) = write_conw(vtesc_seq::WHITE) {
-        if *IS_XTERM {
-            print!("{}", vtesc_seq::WHITE);
-        } else {
-            set_con_text_attr(0x7);
+    if *IS_MINTTY {
+        print!("{}", vtesc_seq::WHITE);
+    } else {
+        if let Err(_) = write_conw(vtesc_seq::WHITE) {
+            set_con_text_attr(0x7 /* WHITE */);
         }
     }
 }
 
 pub(crate) fn set_high_light() {
-    if let Err(_) = write_conw(vtesc_seq::HIGH_LIGHT) {
-        if *IS_XTERM {
-            print!("{}", vtesc_seq::HIGH_LIGHT);
-        } else {
+    if *IS_MINTTY {
+        print!("{}", vtesc_seq::HIGH_LIGHT);
+    } else {
+        if let Err(_) = write_conw(vtesc_seq::HIGH_LIGHT) {
             todo!();
         }
     }
 }
 
 pub(crate) fn set_under_line() {
-    if let Err(_) = write_conw(vtesc_seq::UNDER_LINE) {
-        if *IS_XTERM {
-            print!("{}", vtesc_seq::UNDER_LINE);
-        } else {
+    if *IS_MINTTY {
+        print!("{}", vtesc_seq::UNDER_LINE);
+    } else {
+        if let Err(_) = write_conw(vtesc_seq::UNDER_LINE) {
             todo!();
         }
     }
 }
 
 pub(crate) fn cls() {
-    if let Err(_) = write_conw(vtesc_seq::CLEAR_SCREEN) {
-        if *IS_XTERM {
-            print!("{}", vtesc_seq::CLEAR_SCREEN);
-        } else {
+    if *IS_MINTTY {
+        print!("{}", vtesc_seq::CLEAR_SCREEN);
+    } else {
+        if let Err(_) = write_conw(vtesc_seq::CLEAR_SCREEN) {
             let stdout_handle = get_stdout_handle();
             let mut csbi = CONSOLE_SCREEN_BUFFER_INFO::default();
             let mut scroll_rect = SMALL_RECT::default();
@@ -232,10 +265,10 @@ pub(crate) fn cls() {
 }
 
 pub(crate) fn print(r#str: &str) {
-    if let Err(_) = write_conw(r#str) {
-        if *IS_XTERM {
-            print!("{}", r#str);
-        } else {
+    if *IS_MINTTY {
+        print!("{}", r#str);
+    } else {
+        if let Err(_) = write_conw(r#str) {
             todo!();
         }
     }
