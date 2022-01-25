@@ -28,6 +28,7 @@ use windows::Win32::System::Console::SetConsoleMode;
 use windows::Win32::System::Console::SetConsoleTextAttribute;
 use windows::Win32::System::Console::WriteConsoleW;
 use windows::Win32::System::Console::CHAR_INFO;
+use windows::Win32::System::Console::COMMON_LVB_UNDERSCORE;
 use windows::Win32::System::Console::CONSOLE_MODE;
 use windows::Win32::System::Console::CONSOLE_SCREEN_BUFFER_INFO;
 use windows::Win32::System::Console::COORD;
@@ -241,7 +242,8 @@ pub(crate) fn set_under_line() {
         print!("{}", cvtseq::SGR_UNDER_LINE);
     } else {
         if let Err(_) = write_conw(cvtseq::SGR_UNDER_LINE) {
-            todo!();
+            let wattributes = get_curr_wattributes();
+            set_con_text_attr(COMMON_LVB_UNDERSCORE as u16 | wattributes);
         }
     }
 }

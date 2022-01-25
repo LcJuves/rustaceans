@@ -20,8 +20,8 @@ fn main() {
     set_blue();
     set_high_light();
     println!("BLUE");
-    // set_under_line();
-    // println!("UNDER_LINE");
+    set_under_line();
+    println!("UNDER_LINE");
 
     reset();
 
