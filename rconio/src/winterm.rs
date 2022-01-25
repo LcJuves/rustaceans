@@ -2,9 +2,11 @@
 
 #![cfg(windows)]
 
+use crate::vtesc_seq;
+
 use core::ffi::c_void;
 
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::ptr::{null, null_mut};
 use std::sync::Once;
 
@@ -42,7 +44,13 @@ lazy_static! {
         buf_info.wAttributes
     };
     static ref IS_CYGWIN_FAMILY: bool = {
-        if let Ok(status) = Command::new("cygpath").arg("-V").status() {
+        if let Ok(status) = Command::new("cygpath")
+            .arg("-V")
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+        {
             return status.success();
         }
         false
@@ -106,56 +114,81 @@ fn write_conw(ansi_str: &str) -> Result<()> {
 }
 
 pub(crate) fn reset() {
-    if let Err(_) = write_conw("\x1b[0m") {
+    if *IS_CYGWIN_FAMILY {
+        print!("{}", vtesc_seq::NONE);
+    } else {
         let wattributes = *DEFAULT_WATTRIBUTES;
         set_con_text_attr(wattributes);
     }
 }
 
 pub(crate) fn set_red() {
-    if let Err(_) = write_conw("\x1b[0;32;31m") {
-        set_con_text_attr(0x4);
+    if let Err(_) = write_conw(vtesc_seq::RED) {
+        if *IS_CYGWIN_FAMILY {
+            print!("{}", vtesc_seq::RED);
+        } else {
+            set_con_text_attr(0x4);
+        }
     }
 }
 
 pub(crate) fn set_green() {
-    if let Err(_) = write_conw("\x1b[0;32;32m") {
-        set_con_text_attr(0x2);
+    if let Err(_) = write_conw(vtesc_seq::GREEN) {
+        if *IS_CYGWIN_FAMILY {
+            print!("{}", vtesc_seq::GREEN);
+        } else {
+            set_con_text_attr(0x2);
+        }
     }
 }
 
 pub(crate) fn set_blue() {
-    if let Err(_) = write_conw("\x1b[0;32;34m") {
-        set_con_text_attr(0x1);
+    if let Err(_) = write_conw(vtesc_seq::BLUE) {
+        if *IS_CYGWIN_FAMILY {
+            print!("{}", vtesc_seq::BLUE);
+        } else {
+            set_con_text_attr(0x1);
+        }
     }
 }
 
 pub(crate) fn set_white() {
-    if let Err(_) = write_conw("\x1b[1;37m") {
-        set_con_text_attr(0x7);
+    if let Err(_) = write_conw(vtesc_seq::WHITE) {
+        if *IS_CYGWIN_FAMILY {
+            print!("{}", vtesc_seq::WHITE);
+        } else {
+            set_con_text_attr(0x7);
+        }
     }
 }
 
 pub(crate) fn set_high_light() {
-    if let Err(_) = write_conw("\x1b[1m") {
-        todo!();
+    if let Err(_) = write_conw(vtesc_seq::HIGH_LIGHT) {
+        if *IS_CYGWIN_FAMILY {
+            print!("{}", vtesc_seq::HIGH_LIGHT);
+        } else {
+            todo!();
+        }
     }
 }
 
 pub(crate) fn set_under_line() {
-    if let Err(_) = write_conw("\x1b[4m") {
-        todo!();
+    if let Err(_) = write_conw(vtesc_seq::UNDER_LINE) {
+        if *IS_CYGWIN_FAMILY {
+            print!("{}", vtesc_seq::UNDER_LINE);
+        } else {
+            todo!();
+        }
     }
 }
 
 pub(crate) fn cls() {
-    if let Err(_) = write_conw("\x1bc") {
-        let is_cygwin_family = *IS_CYGWIN_FAMILY;
-        if is_cygwin_family {
-            print!("\x1bc");
+    if let Err(_) = write_conw(vtesc_seq::CLEAR_SCREEN) {
+        if *IS_CYGWIN_FAMILY {
+            print!("{}", vtesc_seq::CLEAR_SCREEN);
         } else {
             let stdout_handle = get_stdout_handle();
-            let mut csbi: CONSOLE_SCREEN_BUFFER_INFO = CONSOLE_SCREEN_BUFFER_INFO::default();
+            let mut csbi = CONSOLE_SCREEN_BUFFER_INFO::default();
             let mut scroll_rect = SMALL_RECT::default();
             let mut scroll_target = COORD::default();
             let mut fill = CHAR_INFO::default();
@@ -204,8 +237,17 @@ pub(crate) fn cls() {
     }
 }
 
-pub(crate) fn println(r#str: &str) {
+pub(crate) fn print(r#str: &str) {
     if let Err(_) = write_conw(r#str) {
-        todo!();
+        if *IS_CYGWIN_FAMILY {
+            print!("{}", r#str);
+        } else {
+            todo!();
+        }
     }
+}
+
+pub(crate) fn println(r#str: &str) {
+    print(r#str);
+    print!("\n");
 }
