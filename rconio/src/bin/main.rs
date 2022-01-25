@@ -12,10 +12,13 @@ fn main() {
     set_high_light();
     println!("HIGH_LIGHT");
     set_red();
+    set_high_light();
     println!("RED");
     set_green();
+    set_high_light();
     println!("GREEN");
     set_blue();
+    set_high_light();
     println!("BLUE");
     set_under_line();
     println!("UNDER_LINE");
