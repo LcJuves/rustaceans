@@ -175,7 +175,7 @@ fn write_conw(ansi_str: &str) -> Result<()> {
 
 pub(crate) fn reset() {
     if *IS_MINTTY {
-        print!("{}", cvtseq::CSI_NONE);
+        print!("{}", cvtseq::SGR_NONE);
     } else {
         let wattributes = *DEFAULT_WATTRIBUTES;
         set_con_text_attr(wattributes);
@@ -184,9 +184,9 @@ pub(crate) fn reset() {
 
 pub(crate) fn set_red() {
     if *IS_MINTTY {
-        print!("{}", cvtseq::CSI_RED);
+        print!("{}", cvtseq::SGR_RED);
     } else {
-        if let Err(_) = write_conw(cvtseq::CSI_RED) {
+        if let Err(_) = write_conw(cvtseq::SGR_RED) {
             set_con_text_attr(0x04 /* RED */);
         }
     }
@@ -194,9 +194,9 @@ pub(crate) fn set_red() {
 
 pub(crate) fn set_green() {
     if *IS_MINTTY {
-        print!("{}", cvtseq::CSI_GREEN);
+        print!("{}", cvtseq::SGR_GREEN);
     } else {
-        if let Err(_) = write_conw(cvtseq::CSI_GREEN) {
+        if let Err(_) = write_conw(cvtseq::SGR_GREEN) {
             set_con_text_attr(0x2 /* GREEN */);
         }
     }
@@ -204,9 +204,9 @@ pub(crate) fn set_green() {
 
 pub(crate) fn set_blue() {
     if *IS_MINTTY {
-        print!("{}", cvtseq::CSI_BLUE);
+        print!("{}", cvtseq::SGR_BLUE);
     } else {
-        if let Err(_) = write_conw(cvtseq::CSI_BLUE) {
+        if let Err(_) = write_conw(cvtseq::SGR_BLUE) {
             set_con_text_attr(0x1 /* BLUE */);
         }
     }
@@ -214,9 +214,9 @@ pub(crate) fn set_blue() {
 
 pub(crate) fn set_white() {
     if *IS_MINTTY {
-        print!("{}", cvtseq::CSI_WHITE);
+        print!("{}", cvtseq::SGR_WHITE);
     } else {
-        if let Err(_) = write_conw(cvtseq::CSI_WHITE) {
+        if let Err(_) = write_conw(cvtseq::SGR_WHITE) {
             set_con_text_attr(0x7 /* WHITE */);
         }
     }
@@ -224,9 +224,9 @@ pub(crate) fn set_white() {
 
 pub(crate) fn set_high_light() {
     if *IS_MINTTY {
-        print!("{}", cvtseq::CSI_HIGH_LIGHT);
+        print!("{}", cvtseq::SGR_HIGH_LIGHT);
     } else {
-        if let Err(_) = write_conw(cvtseq::CSI_HIGH_LIGHT) {
+        if let Err(_) = write_conw(cvtseq::SGR_HIGH_LIGHT) {
             let mut wattributes = get_curr_wattributes();
             let wattr_bg_color = wattr_bg_color(wattributes);
             let wattr_fg_color = wattr_fg_color(wattributes);
@@ -238,9 +238,9 @@ pub(crate) fn set_high_light() {
 
 pub(crate) fn set_under_line() {
     if *IS_MINTTY {
-        print!("{}", cvtseq::CSI_UNDER_LINE);
+        print!("{}", cvtseq::SGR_UNDER_LINE);
     } else {
-        if let Err(_) = write_conw(cvtseq::CSI_UNDER_LINE) {
+        if let Err(_) = write_conw(cvtseq::SGR_UNDER_LINE) {
             todo!();
         }
     }
