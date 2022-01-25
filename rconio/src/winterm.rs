@@ -3,7 +3,7 @@
 
 #![cfg(windows)]
 
-use crate::vtesc_seq;
+use crate::cvtseq;
 
 use core::ffi::c_void;
 use core::mem::size_of;
@@ -175,7 +175,7 @@ fn write_conw(ansi_str: &str) -> Result<()> {
 
 pub(crate) fn reset() {
     if *IS_MINTTY {
-        print!("{}", vtesc_seq::NONE);
+        print!("{}", cvtseq::CSI_NONE);
     } else {
         let wattributes = *DEFAULT_WATTRIBUTES;
         set_con_text_attr(wattributes);
@@ -184,9 +184,9 @@ pub(crate) fn reset() {
 
 pub(crate) fn set_red() {
     if *IS_MINTTY {
-        print!("{}", vtesc_seq::RED);
+        print!("{}", cvtseq::CSI_RED);
     } else {
-        if let Err(_) = write_conw(vtesc_seq::RED) {
+        if let Err(_) = write_conw(cvtseq::CSI_RED) {
             set_con_text_attr(0x04 /* RED */);
         }
     }
@@ -194,9 +194,9 @@ pub(crate) fn set_red() {
 
 pub(crate) fn set_green() {
     if *IS_MINTTY {
-        print!("{}", vtesc_seq::GREEN);
+        print!("{}", cvtseq::CSI_GREEN);
     } else {
-        if let Err(_) = write_conw(vtesc_seq::GREEN) {
+        if let Err(_) = write_conw(cvtseq::CSI_GREEN) {
             set_con_text_attr(0x2 /* GREEN */);
         }
     }
@@ -204,9 +204,9 @@ pub(crate) fn set_green() {
 
 pub(crate) fn set_blue() {
     if *IS_MINTTY {
-        print!("{}", vtesc_seq::BLUE);
+        print!("{}", cvtseq::CSI_BLUE);
     } else {
-        if let Err(_) = write_conw(vtesc_seq::BLUE) {
+        if let Err(_) = write_conw(cvtseq::CSI_BLUE) {
             set_con_text_attr(0x1 /* BLUE */);
         }
     }
@@ -214,9 +214,9 @@ pub(crate) fn set_blue() {
 
 pub(crate) fn set_white() {
     if *IS_MINTTY {
-        print!("{}", vtesc_seq::WHITE);
+        print!("{}", cvtseq::CSI_WHITE);
     } else {
-        if let Err(_) = write_conw(vtesc_seq::WHITE) {
+        if let Err(_) = write_conw(cvtseq::CSI_WHITE) {
             set_con_text_attr(0x7 /* WHITE */);
         }
     }
@@ -224,9 +224,9 @@ pub(crate) fn set_white() {
 
 pub(crate) fn set_high_light() {
     if *IS_MINTTY {
-        print!("{}", vtesc_seq::HIGH_LIGHT);
+        print!("{}", cvtseq::CSI_HIGH_LIGHT);
     } else {
-        if let Err(_) = write_conw(vtesc_seq::HIGH_LIGHT) {
+        if let Err(_) = write_conw(cvtseq::CSI_HIGH_LIGHT) {
             let mut wattributes = get_curr_wattributes();
             let wattr_bg_color = wattr_bg_color(wattributes);
             let wattr_fg_color = wattr_fg_color(wattributes);
@@ -238,9 +238,9 @@ pub(crate) fn set_high_light() {
 
 pub(crate) fn set_under_line() {
     if *IS_MINTTY {
-        print!("{}", vtesc_seq::UNDER_LINE);
+        print!("{}", cvtseq::CSI_UNDER_LINE);
     } else {
-        if let Err(_) = write_conw(vtesc_seq::UNDER_LINE) {
+        if let Err(_) = write_conw(cvtseq::CSI_UNDER_LINE) {
             todo!();
         }
     }
@@ -248,9 +248,9 @@ pub(crate) fn set_under_line() {
 
 pub(crate) fn cls() {
     if *IS_MINTTY {
-        print!("{}", vtesc_seq::CLEAR_SCREEN);
+        print!("{}", cvtseq::ESC_CLEAR_SCREEN);
     } else {
-        if let Err(_) = write_conw(vtesc_seq::CLEAR_SCREEN) {
+        if let Err(_) = write_conw(cvtseq::ESC_CLEAR_SCREEN) {
             let stdout_handle = get_stdout_handle();
             let mut csbi = CONSOLE_SCREEN_BUFFER_INFO::default();
             let mut scroll_rect = SMALL_RECT::default();
