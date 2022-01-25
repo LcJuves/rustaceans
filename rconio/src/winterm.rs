@@ -24,7 +24,7 @@ use windows::Win32::System::Console::STD_OUTPUT_HANDLE;
 lazy_static! {
     static ref DEFAULT_WATTRIBUTES: u16 = {
         let mut buf_info = CONSOLE_SCREEN_BUFFER_INFO::default();
-        let stdout_handle = &*STDOUT_HANDLE;
+        let stdout_handle = *STDOUT_HANDLE;
         unsafe {
             GetConsoleScreenBufferInfo(
                 stdout_handle,
@@ -40,7 +40,7 @@ lazy_static! {
 
 const ONCE_INIT: Once = Once::new();
 
-fn get_stdout_handle() -> HANDLE {
+pub(crate) fn get_stdout_handle() -> HANDLE {
     let stdout_handle = *STDOUT_HANDLE;
     ONCE_INIT.call_once(|| {
         let _ = *DEFAULT_WATTRIBUTES;
@@ -136,8 +136,14 @@ pub(crate) fn set_under_line() {
     }
 }
 
-pub(crate) fn clear_screen() {
-    if let Err(_) = write_conw("\x1b[2J") {
+// pub(crate) fn clear_screen() {
+//     if let Err(_) = write_conw("\x1bc") {
+//         todo!();
+//     }
+// }
+
+pub(crate) fn println(r#str: &str) {
+    if let Err(_) = write_conw(r#str) {
         todo!();
     }
 }
