@@ -1,4 +1,5 @@
 //! https://docs.microsoft.com/zh-cn/windows/console/clearing-the-screen
+//! http://www.cplusplus.com/articles/2ywTURfi/
 
 #![cfg(windows)]
 
@@ -98,8 +99,40 @@ fn check_is_mintty() -> bool {
 fn set_con_text_attr(wattributes: u16) {
     unsafe {
         let stdout_handle = get_stdout_handle();
-        SetConsoleTextAttribute(stdout_handle, wattributes).ok().unwrap_or(());
+        // FIXME
+        let default_wattributes = *DEFAULT_WATTRIBUTES;
+        let default_wattr_bg_color = wattr_bg_color(default_wattributes);
+        let default_wattr_fg_color = wattr_fg_color(default_wattributes);
+        dbg!(default_wattr_bg_color);
+        dbg!(default_wattr_fg_color);
+
+        let wattr_bg_color = wattr_bg_color(wattributes);
+        let wattr_fg_color = wattr_fg_color(wattributes);
+        // dbg!(wattr_bg_color);
+        // dbg!(wattr_fg_color);
+
+        let mut _wattributes: u16 = wattributes;
+        if wattr_bg_color == 0 {
+            _wattributes = default_wattr_bg_color << 4 | _wattributes;
+        }
+
+        if wattr_fg_color == 0 {
+            _wattributes = default_wattr_fg_color | _wattributes;
+        }
+        // END FIXME
+
+        SetConsoleTextAttribute(stdout_handle, _wattributes).ok().unwrap_or(());
     }
+}
+
+#[inline]
+fn wattr_fg_color(wattributes: u16) -> u16 {
+    wattributes % 16
+}
+
+#[inline]
+fn wattr_bg_color(wattributes: u16) -> u16 {
+    (wattributes / 16) % 16
 }
 
 fn write_conw(ansi_str: &str) -> Result<()> {
@@ -154,7 +187,7 @@ pub(crate) fn set_red() {
         print!("{}", vtesc_seq::RED);
     } else {
         if let Err(_) = write_conw(vtesc_seq::RED) {
-            set_con_text_attr(0x4 /* RED */);
+            set_con_text_attr(0x04 /* RED */);
         }
     }
 }
