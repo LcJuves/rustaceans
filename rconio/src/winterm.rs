@@ -6,7 +6,7 @@ use crate::vtesc_seq;
 
 use core::ffi::c_void;
 
-use std::process::{Command, Stdio};
+use std::env::var;
 use std::ptr::{null, null_mut};
 use std::sync::Once;
 
@@ -43,15 +43,9 @@ lazy_static! {
         }
         buf_info.wAttributes
     };
-    static ref IS_CYGWIN_FAMILY: bool = {
-        if let Ok(status) = Command::new("cygpath")
-            .arg("-V")
-            .stdin(Stdio::null())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .status()
-        {
-            return status.success();
+    static ref IS_XTERM: bool = {
+        if let Ok(term) = var("TERM") {
+            return term == "xterm";
         }
         false
     };
@@ -114,7 +108,7 @@ fn write_conw(ansi_str: &str) -> Result<()> {
 }
 
 pub(crate) fn reset() {
-    if *IS_CYGWIN_FAMILY {
+    if *IS_XTERM {
         print!("{}", vtesc_seq::NONE);
     } else {
         let wattributes = *DEFAULT_WATTRIBUTES;
@@ -124,7 +118,7 @@ pub(crate) fn reset() {
 
 pub(crate) fn set_red() {
     if let Err(_) = write_conw(vtesc_seq::RED) {
-        if *IS_CYGWIN_FAMILY {
+        if *IS_XTERM {
             print!("{}", vtesc_seq::RED);
         } else {
             set_con_text_attr(0x4);
@@ -134,7 +128,7 @@ pub(crate) fn set_red() {
 
 pub(crate) fn set_green() {
     if let Err(_) = write_conw(vtesc_seq::GREEN) {
-        if *IS_CYGWIN_FAMILY {
+        if *IS_XTERM {
             print!("{}", vtesc_seq::GREEN);
         } else {
             set_con_text_attr(0x2);
@@ -144,7 +138,7 @@ pub(crate) fn set_green() {
 
 pub(crate) fn set_blue() {
     if let Err(_) = write_conw(vtesc_seq::BLUE) {
-        if *IS_CYGWIN_FAMILY {
+        if *IS_XTERM {
             print!("{}", vtesc_seq::BLUE);
         } else {
             set_con_text_attr(0x1);
@@ -154,7 +148,7 @@ pub(crate) fn set_blue() {
 
 pub(crate) fn set_white() {
     if let Err(_) = write_conw(vtesc_seq::WHITE) {
-        if *IS_CYGWIN_FAMILY {
+        if *IS_XTERM {
             print!("{}", vtesc_seq::WHITE);
         } else {
             set_con_text_attr(0x7);
@@ -164,7 +158,7 @@ pub(crate) fn set_white() {
 
 pub(crate) fn set_high_light() {
     if let Err(_) = write_conw(vtesc_seq::HIGH_LIGHT) {
-        if *IS_CYGWIN_FAMILY {
+        if *IS_XTERM {
             print!("{}", vtesc_seq::HIGH_LIGHT);
         } else {
             todo!();
@@ -174,7 +168,7 @@ pub(crate) fn set_high_light() {
 
 pub(crate) fn set_under_line() {
     if let Err(_) = write_conw(vtesc_seq::UNDER_LINE) {
-        if *IS_CYGWIN_FAMILY {
+        if *IS_XTERM {
             print!("{}", vtesc_seq::UNDER_LINE);
         } else {
             todo!();
@@ -184,7 +178,7 @@ pub(crate) fn set_under_line() {
 
 pub(crate) fn cls() {
     if let Err(_) = write_conw(vtesc_seq::CLEAR_SCREEN) {
-        if *IS_CYGWIN_FAMILY {
+        if *IS_XTERM {
             print!("{}", vtesc_seq::CLEAR_SCREEN);
         } else {
             let stdout_handle = get_stdout_handle();
@@ -239,7 +233,7 @@ pub(crate) fn cls() {
 
 pub(crate) fn print(r#str: &str) {
     if let Err(_) = write_conw(r#str) {
-        if *IS_CYGWIN_FAMILY {
+        if *IS_XTERM {
             print!("{}", r#str);
         } else {
             todo!();
