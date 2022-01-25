@@ -32,23 +32,12 @@ use windows::Win32::System::Console::CONSOLE_MODE;
 use windows::Win32::System::Console::CONSOLE_SCREEN_BUFFER_INFO;
 use windows::Win32::System::Console::COORD;
 use windows::Win32::System::Console::ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+use windows::Win32::System::Console::FOREGROUND_INTENSITY;
 use windows::Win32::System::Console::SMALL_RECT;
 use windows::Win32::System::Console::STD_OUTPUT_HANDLE;
 
 lazy_static! {
-    static ref DEFAULT_WATTRIBUTES: u16 = {
-        let mut buf_info = CONSOLE_SCREEN_BUFFER_INFO::default();
-        let stdout_handle = *STDOUT_HANDLE;
-        unsafe {
-            GetConsoleScreenBufferInfo(
-                stdout_handle,
-                &mut buf_info as *mut CONSOLE_SCREEN_BUFFER_INFO,
-            )
-            .ok()
-            .unwrap_or(());
-        }
-        buf_info.wAttributes
-    };
+    static ref DEFAULT_WATTRIBUTES: u16 = get_curr_wattributes();
     static ref IS_MINTTY: bool = check_is_mintty();
     pub(crate) static ref STDOUT_HANDLE: HANDLE = unsafe { GetStdHandle(STD_OUTPUT_HANDLE) };
 }
@@ -61,6 +50,17 @@ pub(crate) fn get_stdout_handle() -> HANDLE {
         let _ = *DEFAULT_WATTRIBUTES;
     });
     stdout_handle
+}
+
+fn get_curr_wattributes() -> u16 {
+    let mut buf_info = CONSOLE_SCREEN_BUFFER_INFO::default();
+    let stdout_handle = *STDOUT_HANDLE;
+    unsafe {
+        GetConsoleScreenBufferInfo(stdout_handle, &mut buf_info as *mut CONSOLE_SCREEN_BUFFER_INFO)
+            .ok()
+            .unwrap_or(());
+    }
+    buf_info.wAttributes
 }
 
 // https://github.com/softprops/atty/blob/master/src/lib.rs
@@ -103,8 +103,8 @@ fn set_con_text_attr(wattributes: u16) {
         let default_wattributes = *DEFAULT_WATTRIBUTES;
         let default_wattr_bg_color = wattr_bg_color(default_wattributes);
         let default_wattr_fg_color = wattr_fg_color(default_wattributes);
-        dbg!(default_wattr_bg_color);
-        dbg!(default_wattr_fg_color);
+        // dbg!(default_wattr_bg_color);
+        // dbg!(default_wattr_fg_color);
 
         let wattr_bg_color = wattr_bg_color(wattributes);
         let wattr_fg_color = wattr_fg_color(wattributes);
@@ -227,7 +227,11 @@ pub(crate) fn set_high_light() {
         print!("{}", vtesc_seq::HIGH_LIGHT);
     } else {
         if let Err(_) = write_conw(vtesc_seq::HIGH_LIGHT) {
-            todo!();
+            let mut wattributes = get_curr_wattributes();
+            let wattr_bg_color = wattr_bg_color(wattributes);
+            let wattr_fg_color = wattr_fg_color(wattributes);
+            wattributes = wattr_bg_color << 4 | (FOREGROUND_INTENSITY as u16 | wattr_fg_color);
+            set_con_text_attr(wattributes);
         }
     }
 }
