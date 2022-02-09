@@ -2,13 +2,16 @@
 # Created at 2021/7/25 14:45
 # @author Liangcheng Juves
 
-base_dir="$(cd "$(dirname "$0")"; pwd)"
+base_dir="$(
+    cd "$(dirname "$0")" || exit
+    pwd
+)"
 
 is_macos() {
     if [[ ! "$(uname -o)" =~ "Linux" ]]; then
-        return 1;
+        return 1
     else
-        return 0;
+        return 0
     fi
 }
 
@@ -17,8 +20,8 @@ once() {
 
     if [ -d "${java_home}" ]; then
         # Clean
-        rm -rf "${base_dir}/${dylib}"
-        rm -rf "${base_dir}/CallJNI.h"
+        rm -f "${base_dir}/${dylib}"
+        rm -f "${base_dir}/CallJNI.h"
 
         javac_path="${java_home}/bin/javac"
         java_path="${java_home}/bin/java"
@@ -27,9 +30,12 @@ once() {
         "${java_path}" -version
         echo -e "\n"
 
-        cd "${base_dir}/../jcalls"; "${javac_path}" -encoding utf8 -h "${base_dir}" CallJNI.java
+        (
+            cd "${base_dir}/../jcalls" || exit
+            "${javac_path}" -encoding utf8 -h "${base_dir}" CallJNI.java
+        )
 
-        if [ $(is_macos) ]; then
+        if [[ $(is_macos) ]]; then
             gcc -dynamiclib -I "${base_dir}" "${base_dir}/main.c" -o "${base_dir}/${dylib}"
         else
             gcc -I "${base_dir}" -fPIC -shared -o "${base_dir}/${dylib}" "${base_dir}/main.c"
@@ -40,8 +46,14 @@ once() {
         echo -e "\n============================================================"
         echo -e "============================================================\n"
 
-        cd "${base_dir}/../jcalls"; "${javac_path}" Main.java
-        cd "${base_dir}/../jcalls"; "${java_path}" -Djava.library.path="${base_dir}" Main
+        (
+            cd "${base_dir}/../jcalls" || exit
+            "${javac_path}" Main.java
+        )
+        (
+            cd "${base_dir}/../jcalls" || exit
+            "${java_path}" -Djava.library.path="${base_dir}" Main
+        )
 
         echo -e "\n///////////////////////////////////////////////////////////////"
         echo -e "///////////////////////////////////////////////////////////////"
@@ -55,14 +67,15 @@ java_home_array=(
     "/Users/liangchengj/Downloads/jdk8u292-b10/Contents/Home"
 )
 
-if [ $(is_macos) ]; then
+if [[ $(is_macos) ]]; then
     dylib_ext="dylib"
 else
     dylib_ext="so"
 fi
 
-dylib="lib$(cat "${base_dir}/../Cargo.toml" | grep name | awk 'END{print}' | awk -F '"' '{print $2}').${dylib_ext}"
+dylib_name="$(tail "${base_dir}/../Cargo.toml" | grep name | awk 'END{print}' | awk -F '"' '{print $2}')"
+dylib="lib${dylib_name}.${dylib_ext}"
 
-for java_home in ${java_home_array[@]}; do
+for java_home in "${java_home_array[@]}"; do
     once "${java_home}"
 done
