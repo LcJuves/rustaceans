@@ -5,7 +5,7 @@
  */
 #include <unistd.h>
 
-#include "rustdef.h"
+#include "rdef.h"
 
 void main(void) {
     u128 q = 2;
