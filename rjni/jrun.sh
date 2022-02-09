@@ -8,6 +8,7 @@ base_dir="$(
 )"
 
 run_type=release
+dylib_dir="${base_dir}/../target/${run_type}"
 dylib_name="$(tail "${base_dir}/Cargo.toml" | grep name | awk 'END{print}' | awk -F '"' '{print $2}')"
 
 (
@@ -15,7 +16,7 @@ dylib_name="$(tail "${base_dir}/Cargo.toml" | grep name | awk 'END{print}' | awk
     cargo build --${run_type}
 )
 
-dylib="$(ls "${base_dir}"/target/"${run_type}"/"${dylib_name}".{dll,dylib,so} 2>/dev/null)"
+dylib="$(ls "${dylib_dir}"/"${dylib_name}".{dll,dylib,so} 2>/dev/null)"
 ls -hl "${dylib}"
 
 once() {
@@ -36,7 +37,7 @@ once() {
         )
         (
             cd "${base_dir}/jcalls" || exit
-            "${java_path}" -Djava.library.path="${base_dir}/target/${run_type}" Main
+            "${java_path}" -Djava.library.path="${dylib_dir}" Main
         )
 
         echo -e "\n///////////////////////////////////////////////////////////////"
