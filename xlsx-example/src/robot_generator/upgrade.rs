@@ -194,6 +194,5 @@ fn test_compute_sha512sum() {
         compute_sha512sum(include_bytes!("../../tests/res/upgrade/macos/xlsx-example-1.0.2")),
         remove_eol(include_str!("../../tests/res/upgrade/macos/xlsx-example-1.0.2.sha512"))
     );
-    assert_eq!(compute_sha512sum(include_bytes!("../../../gitp.sh")), "bc7639ae2652dc188f2dfc7700a1c32cfad7579c753c1e9febd8853a623501a076365fadbd20379a22fa5914cbb4a2fcf52e1181e315d15e2eb4e9ec6f3c71e2");
     assert_eq!(compute_sha512sum(include_bytes!("../../tests/res/exam0.xlsx")), "f75b8b5d5278f3eb5a07134ef19c1130da74bfc759c0d25fea5a391d1acef9ace6ca251e067f2c09bed400964afc0b818ede1fac518e29a2aadeada716e8edee");
 }
