@@ -4,8 +4,8 @@
  * @author Liangcheng Juves
  */
 
-#ifndef _RUSTDEF_H
-#define _RUSTDEF_H
+#ifndef _RDEF_H
+#define _RDEF_H
 
 #include <inttypes.h>
 #include <stdbool.h>
@@ -50,4 +50,4 @@ typedef double f64; /* 64-bit */
 } /* extern "C" */
 #endif /* __cplusplus */
 
-#endif /* _RUSTDEF_H */
+#endif /* _RDEF_H */
