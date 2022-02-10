@@ -6,6 +6,7 @@ workspace.members = [
     "demo",
     "ferris-says",
     "fmedia",
+    "gitp",
     "hello-rocket",
     "hello-rust",
     "hex-string",
