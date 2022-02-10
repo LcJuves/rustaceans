@@ -5,8 +5,11 @@ use clap::{App, Arg, ArgMatches};
 use lazy_static::lazy_static;
 
 lazy_static! {
-    pub(crate) static ref CLI_MATCHES: ArgMatches<'static> = {
-        App::new("RF TestCase Generator")
+    pub(crate) static ref CLI_MATCHES: ArgMatches<'static> = init_cli_matches();
+}
+
+fn init_cli_matches() -> ArgMatches<'static> {
+    App::new("RF TestCase Generator")
         .version("1.0.4")
         .author("Liangcheng Juves <liangchengj@outlook.com>")
         .usage("genrobot [FLAGS] [OPTIONS]")
@@ -164,7 +167,6 @@ lazy_static! {
                 .takes_value(true)
         )
         .get_matches()
-    };
 }
 
 pub(crate) fn args_os_has_flag(name: &str) -> bool {
