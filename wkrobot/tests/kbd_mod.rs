@@ -44,11 +44,8 @@ pub(crate) fn _compile_kbd_exe() -> Result<PathBuf, std::io::Error> {
         kbd_archive_path.push("kbdbin");
     }
 
-    let rustc_kbdbin_cmd_status = Command::new("rustc")
-        .arg(kbdbin_path)
-        .arg("-o")
-        .arg(&kbd_archive_path)
-        .status()?;
+    let rustc_kbdbin_cmd_status =
+        Command::new("rustc").arg(kbdbin_path).arg("-o").arg(&kbd_archive_path).status()?;
     assert!(rustc_kbdbin_cmd_status.success());
     Ok(kbd_archive_path)
 }

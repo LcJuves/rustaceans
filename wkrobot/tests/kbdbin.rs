@@ -8,9 +8,7 @@ fn main() -> Result<()> {
 
     stdin().lock().read_line(&mut input)?;
 
-    let output = &input[..input
-        .rfind("\r")
-        .unwrap_or(input.rfind("\n").unwrap_or(input.len()))];
+    let output = &input[..input.rfind("\r").unwrap_or(input.rfind("\n").unwrap_or(input.len()))];
     print!("{}", output);
 
     Ok(())

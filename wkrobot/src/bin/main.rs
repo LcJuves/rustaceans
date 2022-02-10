@@ -17,10 +17,8 @@ async fn hello_world(req: Request<Body>) -> Result<Response<Body>, Infallible> {
         return Ok(resp);
     }
     if let Some(url_query_string) = req.uri().query() {
-        let url_query_split = url_query_string
-            .split("&")
-            .filter(|s| !s.is_empty())
-            .collect::<Vec<&str>>();
+        let url_query_split =
+            url_query_string.split("&").filter(|s| !s.is_empty()).collect::<Vec<&str>>();
         let mut search_params = HashMap::<String, String>::new();
         for url_query in url_query_split {
             let url_query_split_index = url_query.find("=").unwrap();

@@ -15,11 +15,8 @@ fn _compile_focus_exe() -> Result<PathBuf, std::io::Error> {
         focus_archive_path.push("focusbin");
     }
 
-    let rustc_focusbin_cmd_status = Command::new("rustc")
-        .arg(focusbin_path)
-        .arg("-o")
-        .arg(&focus_archive_path)
-        .status()?;
+    let rustc_focusbin_cmd_status =
+        Command::new("rustc").arg(focusbin_path).arg("-o").arg(&focus_archive_path).status()?;
     assert!(rustc_focusbin_cmd_status.success());
     Ok(focus_archive_path)
 }

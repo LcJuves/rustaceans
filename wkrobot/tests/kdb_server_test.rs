@@ -36,10 +36,7 @@ async fn request(
     for (k, v) in headers {
         req_builder = req_builder.header(k, v);
     }
-    req_builder = req_builder
-        .method(method)
-        .uri(url)
-        .version(Version::HTTP_11);
+    req_builder = req_builder.method(method).uri(url).version(Version::HTTP_11);
 
     let client = Client::new();
     let req = req_builder.body(body)?;
@@ -59,16 +56,10 @@ async fn get_without_headers(url: &str) -> Result<Response<Body>, Box<dyn Error>
 }
 
 async fn test_kbd_req(frequency: u16, key_code: u16) -> Result<(), Box<dyn Error>> {
-    let url = format!(
-        "http://127.0.0.1:3000/?frequency={}&keyCode={}",
-        frequency, key_code
-    );
+    let url = format!("http://127.0.0.1:3000/?frequency={}&keyCode={}", frequency, key_code);
     let resp = get_without_headers(&url).await?;
     assert_eq!(resp.status(), StatusCode::OK);
-    assert_eq!(
-        format!("{:?}", (*resp.body())),
-        format!("{:?}", Body::empty())
-    );
+    assert_eq!(format!("{:?}", (*resp.body())), format!("{:?}", Body::empty()));
     Ok(())
 }
 
@@ -89,9 +80,7 @@ fn test_server_kbd() -> Result<(), Box<dyn Error>> {
         assert!(cmd_status.success());
     });
 
-    let mut kbdbin_child = Command::new(&kbd_archive_path)
-        .stdout(Stdio::piped())
-        .spawn()?;
+    let mut kbdbin_child = Command::new(&kbd_archive_path).stdout(Stdio::piped()).spawn()?;
 
     thread::spawn(|| {
         thread::sleep(Duration::from_millis(300));
@@ -103,9 +92,7 @@ fn test_server_kbd() -> Result<(), Box<dyn Error>> {
     kbdbin_child.wait()?;
     assert_eq!(output_string, "aa");
 
-    let mut kbdbin_child = Command::new(&kbd_archive_path)
-        .stdout(Stdio::piped())
-        .spawn()?;
+    let mut kbdbin_child = Command::new(&kbd_archive_path).stdout(Stdio::piped()).spawn()?;
 
     thread::spawn(move || {
         thread::sleep(Duration::from_millis(300));
@@ -132,9 +119,7 @@ fn test_server_kbd() -> Result<(), Box<dyn Error>> {
     kbdbin_child.wait()?;
     assert_eq!(output_string, "liangcheng juves");
 
-    let mut kbdbin_child = Command::new(&kbd_archive_path)
-        .stdout(Stdio::piped())
-        .spawn()?;
+    let mut kbdbin_child = Command::new(&kbd_archive_path).stdout(Stdio::piped()).spawn()?;
 
     thread::spawn(move || {
         thread::sleep(Duration::from_millis(300));

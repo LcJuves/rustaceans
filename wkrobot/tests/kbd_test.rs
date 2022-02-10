@@ -21,9 +21,7 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
 fn test_kbd() -> Result<(), Box<dyn Error>> {
     let kbd_archive_path = _compile_kbd_exe()?;
 
-    let mut kbdbin_child = Command::new(&kbd_archive_path)
-        .stdout(Stdio::piped())
-        .spawn()?;
+    let mut kbdbin_child = Command::new(&kbd_archive_path).stdout(Stdio::piped()).spawn()?;
 
     thread::spawn(|| {
         thread::sleep(Duration::from_millis(300));
@@ -37,9 +35,7 @@ fn test_kbd() -> Result<(), Box<dyn Error>> {
     kbdbin_child.wait()?;
     assert_eq!(output_string, "lll");
 
-    let mut kbdbin_child = Command::new(&kbd_archive_path)
-        .stdout(Stdio::piped())
-        .spawn()?;
+    let mut kbdbin_child = Command::new(&kbd_archive_path).stdout(Stdio::piped()).spawn()?;
 
     thread::spawn(|| {
         thread::sleep(Duration::from_millis(500));
@@ -55,9 +51,7 @@ fn test_kbd() -> Result<(), Box<dyn Error>> {
     kbdbin_child.wait()?;
     assert_eq!(output_string, "AAA");
 
-    let mut kbdbin_child = Command::new(&kbd_archive_path)
-        .stdout(Stdio::piped())
-        .spawn()?;
+    let mut kbdbin_child = Command::new(&kbd_archive_path).stdout(Stdio::piped()).spawn()?;
 
     thread::spawn(|| {
         thread::sleep(Duration::from_millis(500));
@@ -88,9 +82,7 @@ fn test_kbd() -> Result<(), Box<dyn Error>> {
     kbdbin_child.wait()?;
     assert_eq!(output_string, "Liangcheng Juves");
 
-    let mut kbdbin_child = Command::new(&kbd_archive_path)
-        .stdout(Stdio::piped())
-        .spawn()?;
+    let mut kbdbin_child = Command::new(&kbd_archive_path).stdout(Stdio::piped()).spawn()?;
 
     thread::spawn(|| {
         thread::sleep(Duration::from_millis(500));
