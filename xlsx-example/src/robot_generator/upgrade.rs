@@ -189,11 +189,11 @@ fn test_get_curr_exe_version() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn test_compute_sha512sum() {
-    assert_eq!(compute_sha512sum(include_bytes!("../../rustfmt.toml")), "35a6fad01772997cd82793cd8c3c4991f52581de87a0a9253db6158ff4724aaea7751aca4a74cafb71fc2377581ebcc4f738829c97587ecae5aa3c985825db34");
+    assert_eq!(compute_sha512sum(include_bytes!("../../../rustfmt.toml")), "35a6fad01772997cd82793cd8c3c4991f52581de87a0a9253db6158ff4724aaea7751aca4a74cafb71fc2377581ebcc4f738829c97587ecae5aa3c985825db34");
     assert_eq!(
         compute_sha512sum(include_bytes!("../../tests/res/upgrade/macos/xlsx-example-1.0.2")),
         remove_eol(include_str!("../../tests/res/upgrade/macos/xlsx-example-1.0.2.sha512"))
     );
-    assert_eq!(compute_sha512sum(include_bytes!("../../gitp.sh")), "421a87b6b25f6bef3d0c37e77a838d697803a246f9335ccd2d0bfba9ab609942c55d97dbe9d4a49742872f4f52996bdc036ff12a8eadb3a91ee65fe1149e4d14");
+    assert_eq!(compute_sha512sum(include_bytes!("../../../gitp.sh")), "bc7639ae2652dc188f2dfc7700a1c32cfad7579c753c1e9febd8853a623501a076365fadbd20379a22fa5914cbb4a2fcf52e1181e315d15e2eb4e9ec6f3c71e2");
     assert_eq!(compute_sha512sum(include_bytes!("../../tests/res/exam0.xlsx")), "f75b8b5d5278f3eb5a07134ef19c1130da74bfc759c0d25fea5a391d1acef9ace6ca251e067f2c09bed400964afc0b818ede1fac518e29a2aadeada716e8edee");
 }

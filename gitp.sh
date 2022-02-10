@@ -8,6 +8,11 @@ base_dir="$(
     pwd
 )"
 
+(
+    cd "${base_dir}" || exit
+    cargo fmt
+)
+
 git -C "${base_dir}" add "${base_dir}"
 git -C "${base_dir}" commit -m "Updated at ${tm}" --author "Liangcheng Juves <liangchengj@outlook.com>"
 git -C "${base_dir}" push -u origin main
