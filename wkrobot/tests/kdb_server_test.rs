@@ -69,15 +69,15 @@ fn test_server_kbd() -> Result<(), Box<dyn Error>> {
     let kbd_archive_path = _compile_kbd_exe()?;
 
     thread::spawn(move || {
-        let cmd_status = Command::new("cargo")
+        assert!(Command::new("cargo")
             .arg("run")
             .current_dir(cargo_manifest_dir_path)
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .status()
-            .unwrap();
-        assert!(cmd_status.success());
+            .unwrap()
+            .success());
     });
 
     let mut kbdbin_child = Command::new(&kbd_archive_path).stdout(Stdio::piped()).spawn()?;
@@ -94,7 +94,7 @@ fn test_server_kbd() -> Result<(), Box<dyn Error>> {
 
     let mut kbdbin_child = Command::new(&kbd_archive_path).stdout(Stdio::piped()).spawn()?;
 
-    thread::spawn(move || {
+    thread::spawn(|| {
         thread::sleep(Duration::from_millis(300));
         TOKIO_RT.block_on(test_kbd_req(1, VK_L)).unwrap();
         TOKIO_RT.block_on(test_kbd_req(1, VK_I)).unwrap();
@@ -121,7 +121,7 @@ fn test_server_kbd() -> Result<(), Box<dyn Error>> {
 
     let mut kbdbin_child = Command::new(&kbd_archive_path).stdout(Stdio::piped()).spawn()?;
 
-    thread::spawn(move || {
+    thread::spawn(|| {
         thread::sleep(Duration::from_millis(300));
         TOKIO_RT.block_on(test_kbd_req(1, VK_0)).unwrap();
         TOKIO_RT.block_on(test_kbd_req(1, VK_1)).unwrap();
