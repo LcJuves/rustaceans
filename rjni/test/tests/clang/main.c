@@ -3,6 +3,7 @@
 
 #include "CallJNI.h"
 #include "jni.h"
+#include "rdef.h"
 
 #ifdef DEBUG
 int main(int argc, char const *argv[]) {
