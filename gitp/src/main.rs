@@ -3,6 +3,7 @@ use std::io::{stdin, stdout, BufRead, Error, Write};
 use std::process::{Command, Stdio};
 
 use chrono::prelude::*;
+use ruimpl::rmeol;
 
 fn main() -> Result<(), Error> {
     #[allow(unused_assignments)]
@@ -44,9 +45,7 @@ fn main() -> Result<(), Error> {
     stdout().flush()?;
     stdin().lock().read_line(&mut commit_msg)?;
 
-    commit_msg = (&commit_msg
-        [0..(commit_msg.rfind("\r").unwrap_or(commit_msg.rfind("\n").unwrap()))])
-        .to_owned();
+    commit_msg = rmeol(&commit_msg);
 
     // git -C "${base_dir}" commit -m "Updated at ${tm}" --author "Liangcheng Juves <liangchengj@outlook.com>"
     if commit_msg.is_empty() {
