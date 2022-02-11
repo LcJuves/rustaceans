@@ -8,7 +8,7 @@ import java.io.PrintStream;
 class CallJNI {
 
   static {
-    System.loadLibrary("rjni");
+    System.loadLibrary("rjnit");
     System.out.println();
   }
 

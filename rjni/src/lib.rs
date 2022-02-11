@@ -1,63 +1,104 @@
 #[macro_use]
 mod rbind;
+mod platf;
 
-use rbind::*;
-use std::ffi::*;
-use std::os::raw::*;
+pub use rbind::*;
 
-impl_jni_on_load!(_, _, {
-    println!("JNI >>> OnLoad");
-    JNI_VERSION_1_1
-});
+#[cfg(test)]
+mod tests {
 
-impl_jni_on_unload!(_, _, {
-    println!("JNI >>> OnUnload");
-});
+    // use crate::platf::*;
 
-unsafe_jni_fn!(Java_CallJNI_getVersion, (env: *mut JNIEnv, _: Jclass), Jint, {
-    let fn_get_version = (*(*env)).get_version.unwrap();
-    fn_get_version(env)
-});
-
-unsafe_jni_fn!(
-    Java_CallJNI_defineClass,
-    (
-        env: *mut JNIEnv,
-        _: Jclass,
-        _name: *const c_char,
-        _loader: Jobject,
-        _buf: *const Jbyte,
-        _len: Jsize
-    ),
-    Jclass,
-    {
-        let fn_find_class = (*(*env)).find_class.unwrap();
-        fn_find_class(env, CString::new("java/lang/Class").unwrap().into_raw())
-    }
-);
-
-unsafe_jni_fn!(Java_CallJNI_findClass, (env: *mut JNIEnv, _: Jclass, name: Jstring), Jclass, {
-    let fn_get_string_utf_chars = (*(*env)).get_string_utfchars.unwrap();
-    let c_str = fn_get_string_utf_chars(env, name, JNI_FALSE as *mut Jboolean);
-
-    let fn_find_class = (*(*env)).find_class.unwrap();
-    fn_find_class(env, c_str)
-});
-
-unsafe_jni_fn!(Java_CallJNI_getSystemOut, (env: *mut JNIEnv, _: Jclass), Jobject, {
-    let fn_find_class = (*(*env)).find_class.unwrap();
-    let jcls_system = fn_find_class(env, CString::new("java/lang/System").unwrap().into_raw());
-
-    let fn_get_static_field_id = (*(*env)).get_static_field_id.unwrap();
-    let jfid_out = fn_get_static_field_id(
+    use std::{
         env,
-        jcls_system,
-        CString::new("out").unwrap().into_raw(),
-        CString::new("Ljava/io/PrintStream;").unwrap().into_raw(),
-    );
+        path::Path,
+        process::{Command, Stdio},
+    };
 
-    let fn_get_static_object_field = (*(*env)).get_static_object_field.unwrap();
-    let out = fn_get_static_object_field(env, jcls_system, jfid_out);
+    // use toml::Value;
 
-    out
-});
+    #[test]
+    fn it_works() {
+        let profile = env!("PROFILE");
+        dbg!(&profile);
+
+        let cargo_manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let cargo_build_dir = cargo_manifest_dir.join("test");
+
+        if profile == "release" {
+            assert!(Command::new("cargo")
+                .arg("build")
+                .arg(format!("--{profile}"))
+                .current_dir(&cargo_build_dir)
+                .stdin(Stdio::null())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .status()
+                .unwrap()
+                .success());
+        } else {
+            assert!(Command::new("cargo")
+                .arg("build")
+                .current_dir(&cargo_build_dir)
+                .stdin(Stdio::null())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .status()
+                .unwrap()
+                .success());
+        }
+
+        let out_dir = env!("OUT_DIR");
+        let dylib_dir = &out_dir[..(out_dir.rfind(profile).unwrap() + profile.len())];
+        dbg!(&dylib_dir);
+
+        let jcalls_dir = cargo_build_dir.join("tests").join("jcalls");
+        let env_java_home = env::var("JAVA_HOME").unwrap();
+        let java_home_paths = vec![Path::new(&env_java_home)];
+        for java_home in java_home_paths {
+            if java_home.exists() {
+                let javac_path = java_home.join("bin").join("javac");
+                let java_path = java_home.join("bin").join("java");
+
+                println!();
+                assert!(Command::new(&java_path).arg("-version").status().unwrap().success());
+                println!("============================================================");
+                println!("============================================================");
+                println!();
+
+                assert!(Command::new(&javac_path)
+                    .arg("Main.java")
+                    .current_dir(&jcalls_dir)
+                    .status()
+                    .unwrap()
+                    .success());
+                assert!(Command::new(&java_path)
+                    .arg(format!("-Djava.library.path={dylib_dir}"))
+                    .arg("Main")
+                    .current_dir(&jcalls_dir)
+                    .status()
+                    .unwrap()
+                    .success());
+
+                println!();
+                println!("///////////////////////////////////////////////////////////////");
+                println!("///////////////////////////////////////////////////////////////");
+                println!("///////////////////////////////////////////////////////////////");
+            }
+        }
+
+        // let cargo_toml_content = read_to_string(cargo_build_dir.join("Cargo.toml")).unwrap();
+        // let value = cargo_toml_content.parse::<Value>().unwrap();
+        // let dylib_name = value["lib"]["name"].as_str().unwrap();
+        // let dylib_ext = if Platform::IS_MACOS {
+        //     "dylib"
+        // } else if Platform::IS_LINUX {
+        //     "so"
+        // } else {
+        //     "dll"
+        // };
+        // let dylib = format!("{dylib_name}.{dylib_ext}");
+
+        println!();
+    }
+}

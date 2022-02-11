@@ -17,6 +17,7 @@ workspace.members = [
     "rfserv",
     "rgrep",
     "rjni",
+    "rjni/test",
     "rotp",
     "ruimpl",
     "tcp-client",
