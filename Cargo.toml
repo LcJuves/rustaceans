@@ -18,6 +18,7 @@ workspace.members = [
     "rgrep",
     "rjni",
     "rotp",
+    "ruimpl",
     "tcp-client",
     "tcp-server",
     "wasm-game-of-life",
