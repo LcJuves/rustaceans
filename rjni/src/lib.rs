@@ -14,12 +14,12 @@ impl_jni_on_unload!(_, _, {
     println!("JNI >>> OnUnload");
 });
 
-unsafe_jni_fn_def!(Java_CallJNI_getVersion, (env: *mut JNIEnv, _: Jclass), Jint, {
+unsafe_jni_fn!(Java_CallJNI_getVersion, (env: *mut JNIEnv, _: Jclass), Jint, {
     let fn_get_version = (*(*env)).get_version.unwrap();
     fn_get_version(env)
 });
 
-unsafe_jni_fn_def!(
+unsafe_jni_fn!(
     Java_CallJNI_defineClass,
     (
         env: *mut JNIEnv,
@@ -36,7 +36,7 @@ unsafe_jni_fn_def!(
     }
 );
 
-unsafe_jni_fn_def!(Java_CallJNI_findClass, (env: *mut JNIEnv, _: Jclass, name: Jstring), Jclass, {
+unsafe_jni_fn!(Java_CallJNI_findClass, (env: *mut JNIEnv, _: Jclass, name: Jstring), Jclass, {
     let fn_get_string_utf_chars = (*(*env)).get_string_utfchars.unwrap();
     let c_str = fn_get_string_utf_chars(env, name, JNI_FALSE as *mut Jboolean);
 
@@ -44,7 +44,7 @@ unsafe_jni_fn_def!(Java_CallJNI_findClass, (env: *mut JNIEnv, _: Jclass, name: J
     fn_find_class(env, c_str)
 });
 
-unsafe_jni_fn_def!(Java_CallJNI_getSystemOut, (env: *mut JNIEnv, _: Jclass), Jobject, {
+unsafe_jni_fn!(Java_CallJNI_getSystemOut, (env: *mut JNIEnv, _: Jclass), Jobject, {
     let fn_find_class = (*(*env)).find_class.unwrap();
     let jcls_system = fn_find_class(env, CString::new("java/lang/System").unwrap().into_raw());
 

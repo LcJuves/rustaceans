@@ -69,7 +69,7 @@ macro_rules! unsafe_extern_c_var_fn {
 /// # Such as
 ///
 /// ```rust
-/// jni_fn_def!(
+/// jni_fn!(
 ///     JNI_OnLoad,
 ///     (vm: *mut JavaVM, reserved: *mut c_void),
 ///     Jint,
@@ -88,7 +88,7 @@ macro_rules! unsafe_extern_c_var_fn {
 /// }
 /// ```
 #[macro_export]
-macro_rules! jni_fn_def {
+macro_rules! jni_fn {
     ($name:tt, ($($ident:tt: $ty:ty), *), $ret_ty:ty, $code:block) => {
         #[no_mangle]
         pub extern "system" fn $name($($ident: $ty, )*) -> $ret_ty $code
@@ -98,7 +98,7 @@ macro_rules! jni_fn_def {
 /// # Such as
 ///
 /// ```rust
-/// unsafe_jni_fn_def!(
+/// unsafe_jni_fn!(
 ///     JNI_OnUnload,
 ///     (vm: *mut JavaVM, reserved: *mut c_void),
 ///     (),
@@ -113,7 +113,7 @@ macro_rules! jni_fn_def {
 /// }
 /// ```
 #[macro_export]
-macro_rules! unsafe_jni_fn_def {
+macro_rules! unsafe_jni_fn {
     ($name:tt, ($($ident:tt: $ty:ty), *), $ret_ty:ty, $code:block) => {
         #[no_mangle]
         pub unsafe extern "system" fn $name($($ident: $ty, )*) -> $ret_ty $code
@@ -141,7 +141,7 @@ macro_rules! unsafe_jni_fn_def {
 #[macro_export]
 macro_rules! impl_jni_on_load {
     ($param_vm_name:tt, $param_reserved_name:tt, $code:block) => {
-        jni_fn_def!(
+        jni_fn!(
             JNI_OnLoad,
             ($param_vm_name: *mut JavaVM, $param_reserved_name: *mut c_void),
             Jint,
@@ -167,7 +167,7 @@ macro_rules! impl_jni_on_load {
 #[macro_export]
 macro_rules! impl_jni_on_unload {
     ($param_vm_name:tt, $param_reserved_name:tt, $code:block) => {
-        jni_fn_def!(
+        jni_fn!(
             JNI_OnUnload,
             ($param_vm_name: *mut JavaVM, $param_reserved_name: *mut c_void),
             (),
