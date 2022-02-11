@@ -27,6 +27,7 @@ ssri = "7.0.0"
 toml = "0.5.8"
 Boa = "0.13.0"
 regex = "1.5.4"
+ruimpl = "0.1.0"
 
 [build-dependencies]
 embed-resource = "1.6.5"

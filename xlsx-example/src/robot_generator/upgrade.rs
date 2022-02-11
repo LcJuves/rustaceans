@@ -3,7 +3,6 @@
 
 use crate::robot_generator::cli_parser::option_value_of;
 use crate::seeval;
-use crate::util::common::remove_eol;
 use crate::util::hyper::*;
 use crate::TOKIO_RT;
 
@@ -16,6 +15,7 @@ use std::str::FromStr;
 
 use hyper::StatusCode;
 use lazy_static::lazy_static;
+use ruimpl::rmeol;
 use serde::{Deserialize, Serialize};
 use ssri::{Algorithm, IntegrityOpts};
 
@@ -84,7 +84,7 @@ pub(crate) async fn dl_and_check_latest_exef(
         panic!();
     }
     let exef_sha512sum_content = resp_body_bytes_from(exef_sha512sum_resp).await?;
-    let exef_sha512sum_content = remove_eol(std::str::from_utf8(&exef_sha512sum_content)?);
+    let exef_sha512sum_content = rmeol(std::str::from_utf8(&exef_sha512sum_content)?);
     let exef_sha512sum = exef_sha512sum_content
         [0..(exef_sha512sum_content.rfind(" ").unwrap_or(exef_sha512sum_content.len()))]
         .trim();
@@ -152,7 +152,7 @@ pub(crate) fn get_curr_exe_version() -> Result<String, Box<dyn Error>> {
     seeval!(curr_exe_path);
     let output = Command::new(curr_exe_path.as_os_str()).arg("-V").output()?;
     seeval!(output);
-    let version_info_line = remove_eol(std::str::from_utf8(&output.stdout)?);
+    let version_info_line = rmeol(std::str::from_utf8(&output.stdout)?);
     seeval!(version_info_line);
     let version = version_info_line[version_info_line.rfind(" ").unwrap_or(0)..].trim();
     seeval!(version);
@@ -192,7 +192,7 @@ fn test_compute_sha512sum() {
     assert_eq!(compute_sha512sum(include_bytes!("../../../rustfmt.toml")), "35a6fad01772997cd82793cd8c3c4991f52581de87a0a9253db6158ff4724aaea7751aca4a74cafb71fc2377581ebcc4f738829c97587ecae5aa3c985825db34");
     assert_eq!(
         compute_sha512sum(include_bytes!("../../tests/res/upgrade/macos/xlsx-example-1.0.2")),
-        remove_eol(include_str!("../../tests/res/upgrade/macos/xlsx-example-1.0.2.sha512"))
+        rmeol(include_str!("../../tests/res/upgrade/macos/xlsx-example-1.0.2.sha512"))
     );
     assert_eq!(compute_sha512sum(include_bytes!("../../tests/res/exam0.xlsx")), "f75b8b5d5278f3eb5a07134ef19c1130da74bfc759c0d25fea5a391d1acef9ace6ca251e067f2c09bed400964afc0b818ede1fac518e29a2aadeada716e8edee");
 }

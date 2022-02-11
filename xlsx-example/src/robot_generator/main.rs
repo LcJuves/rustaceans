@@ -204,7 +204,7 @@ pub(crate) fn add_me_to_path_var() -> Result<(), Box<dyn Error>> {
                 .arg("REG QUERY HKCU\\Environment /v PATH | findstr PATH")
                 .output()?
                 .stdout;
-            let cmd_stdout = crate::util::common::remove_eol(std::str::from_utf8(&cmd_stdout)?);
+            let cmd_stdout = ruimpl::rmeol(std::str::from_utf8(&cmd_stdout)?);
             let cmd_stdout = cmd_stdout[(cmd_stdout.rfind("_SZ ").unwrap_or(0) + 4)..].trim();
             let mut cmd_stdout = cmd_stdout.to_owned();
             assert!(!cmd_stdout.is_empty());

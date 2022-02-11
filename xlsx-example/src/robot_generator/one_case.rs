@@ -1,7 +1,6 @@
 use crate::reflection::Reflection;
 use crate::robot_generator::cli_parser::*;
 use crate::robot_generator::util::*;
-use crate::util::common::remove_eol;
 
 use core::char::REPLACEMENT_CHARACTER;
 use std::error::Error;
@@ -11,6 +10,7 @@ use std::path::{Path, MAIN_SEPARATOR};
 use std::sync::Once;
 
 use lazy_static::lazy_static;
+use ruimpl::rmeol;
 use serde::{Deserialize, Serialize};
 
 lazy_static! {
@@ -352,7 +352,7 @@ fn get_author_and_mod_tag() -> Result<(String, String), std::io::Error> {
         stdin().lock().read_line(&mut mod_tag)?;
     }
 
-    Ok((remove_eol(&author_tag), remove_eol(&mod_tag)))
+    Ok((rmeol(&author_tag), rmeol(&mod_tag)))
 }
 
 fn read_user_robot_template() -> Result<String, std::io::Error> {

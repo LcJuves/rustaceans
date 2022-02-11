@@ -1,6 +1,5 @@
 use crate::seeval;
 use crate::time_millis_string;
-use crate::util::common::remove_eol;
 use crate::util::hyper::*;
 
 use std::collections::HashMap;
@@ -16,6 +15,7 @@ use hyper::{Body, Client, Method, Request, Response, Version};
 use lazy_static::lazy_static;
 use qrcode::render::unicode;
 use qrcode::QrCode;
+use ruimpl::rmeol;
 use serde_json::json;
 
 lazy_static! {
@@ -660,7 +660,7 @@ fn read_stdin_phone_num() -> Result<String, Box<dyn Error>> {
     stdout().write(b"Please enter your phone number: ")?;
     stdout().flush()?;
     stdin().lock().read_line(&mut phone_num)?;
-    Ok(remove_eol(&phone_num))
+    Ok(rmeol(&phone_num))
 }
 
 fn read_stdin_sms_code() -> Result<u32, Box<dyn Error>> {
@@ -670,7 +670,7 @@ fn read_stdin_sms_code() -> Result<u32, Box<dyn Error>> {
     stdout().flush()?;
     stdin().lock().read_line(&mut sms_code)?;
 
-    let sms_code = remove_eol(&sms_code);
+    let sms_code = rmeol(&sms_code);
 
     use std::str::FromStr;
     Ok(u32::from_str(&sms_code)?)
