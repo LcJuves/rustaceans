@@ -43,7 +43,7 @@
 /// ```rust
 /// Option<unsafe extern "system" fn(env: *mut JNIEnv) -> Jint>
 /// ```
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! unsafe_extern_system_fn {
     (($($param_name:tt: $param_ty:ty), *) -> $ret_ty:ty) => {
         Option<unsafe extern "system" fn($($param_name: $param_ty, )*) -> $ret_ty>
@@ -59,7 +59,7 @@ macro_rules! unsafe_extern_system_fn {
 /// ```rust
 /// Option<unsafe extern "C" fn(env: *mut JNIEnv, clazz: Jclass, methodID: JmethodID, ...) -> Jobject>
 /// ```
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! unsafe_extern_c_var_fn {
     (($($param_name:tt: $param_ty:ty), *) -> $ret_ty:ty) => {
         Option<unsafe extern "C" fn($($param_name: $param_ty, )* ...) -> $ret_ty>
@@ -87,7 +87,7 @@ macro_rules! unsafe_extern_c_var_fn {
 ///     /* The return value must be >= JNI_VERSION_1_1 */
 /// }
 /// ```
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! jni_fn {
     ($name:tt, ($($ident:tt: $ty:ty), *), $ret_ty:ty, $code:block) => {
         #[no_mangle]
@@ -112,7 +112,7 @@ macro_rules! jni_fn {
 ///     /* code */
 /// }
 /// ```
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! unsafe_jni_fn {
     ($name:tt, ($($ident:tt: $ty:ty), *), $ret_ty:ty, $code:block) => {
         #[no_mangle]
@@ -138,7 +138,7 @@ macro_rules! unsafe_jni_fn {
 ///     /* The return value must be >= JNI_VERSION_1_1 */
 /// });
 /// ```
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! impl_jni_on_load {
     ($param_vm_name:tt, $param_reserved_name:tt, $code:block) => {
         jni_fn!(
@@ -164,7 +164,7 @@ macro_rules! impl_jni_on_load {
 /// ```rust
 /// impl_jni_on_unload!(vm, reserved, { /* code */ });
 /// ```
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! impl_jni_on_unload {
     ($param_vm_name:tt, $param_reserved_name:tt, $code:block) => {
         jni_fn!(
@@ -176,28 +176,19 @@ macro_rules! impl_jni_on_unload {
     };
 }
 
-use std::ffi::c_void;
-use std::os::raw::c_char;
+use std::os::raw::{c_char, c_uchar, c_void};
 
 pub type VaList = *mut c_void;
 
 /* Primitive types that match up with Java equivalents */
 
-/// unsigned 8 bits
-pub type Jboolean = u8;
-/// signed 8 bits
+pub type Jboolean = c_uchar;
 pub type Jbyte = i8;
-/// unsigned 16 bits
 pub type Jchar = u16;
-/// signed 16 bits
 pub type Jshort = i16;
-/// signed 32 bits
 pub type Jint = i32;
-/// signed 64 bits
 pub type Jlong = i64;
-/// 32-bit IEEE 754
 pub type Jfloat = f32;
-/// 64-bit IEEE 754
 pub type Jdouble = f64;
 
 /// "cardinal indices and sizes"
