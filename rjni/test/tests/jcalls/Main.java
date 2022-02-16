@@ -1,4 +1,5 @@
 import java.io.PrintStream;
+import java.lang.reflect.Method;
 
 /** Main */
 class Main {
@@ -24,6 +25,12 @@ class Main {
         }
     }
 
+    private static void _assert(boolean condition) {
+        if (!condition) {
+            throw new AssertionError();
+        }
+    }
+
     public static void main(String[] args) {
         for (; ; ) {
             try {
@@ -36,6 +43,10 @@ class Main {
                 assertType(clazz, String.class.getClass());
                 println(clazz.getName());
                 pass();
+
+                Method method = String.class.getMethod("valueOf", boolean.class);
+                String ret = CallJNI.fromReflectedMethod(method);
+                _assert(ret.equals(String.valueOf(false)));
 
                 PrintStream out = (PrintStream) CallJNI.getSystemOut();
                 assertType(out, PrintStream.class);

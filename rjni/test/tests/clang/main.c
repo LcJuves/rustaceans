@@ -31,6 +31,15 @@ JNIEXPORT jclass JNICALL Java_CallJNI_findClass(JNIEnv *env, jclass _,
     return (*env)->FindClass(env, c_str_name);
 }
 
+JNIEXPORT jstring JNICALL Java_CallJNI_fromReflectedMethod(JNIEnv *env,
+                                                           jclass _,
+                                                           jobject method) {
+    jclass jcls_String = (*env)->FindClass(env, "java/lang/String");
+    jmethodID method_id = (*env)->FromReflectedMethod(env, method);
+    return (jstring)(*env)->CallStaticObjectMethod(env, jcls_String, method_id,
+                                                   JNI_FALSE);
+}
+
 JNIEXPORT jobject JNICALL Java_CallJNI_getSystemOut(JNIEnv *env, jclass _) {
     jclass jcls_System = (*env)->FindClass(env, "java/lang/System");
     jfieldID jfid_out = (*env)->GetStaticFieldID(env, jcls_System, "out",

@@ -22,3 +22,5 @@ tests/tmp.json
 *.exe
 test*.*
 xlsx-example/.cargo/config.toml
+*.log
+rjni/test/tests/clang/rdef.h

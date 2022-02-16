@@ -4,6 +4,7 @@
  * @author Liangcheng Juves
  */
 import java.io.PrintStream;
+import java.lang.reflect.Method;
 
 class CallJNI {
 
@@ -17,6 +18,8 @@ class CallJNI {
     static native Class<?> defineClass(String name, ClassLoader loader, byte[] buf, int len);
 
     static native Class<?> findClass(String name);
+
+    static native String fromReflectedMethod(Method method);
 
     static native PrintStream getSystemOut();
 }

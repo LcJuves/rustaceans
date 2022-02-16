@@ -12,32 +12,37 @@ extern "C" {
  * Method:    getVersion
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_CallJNI_getVersion
-  (JNIEnv *, jclass);
+JNIEXPORT jint JNICALL Java_CallJNI_getVersion(JNIEnv *, jclass);
 
 /*
  * Class:     CallJNI
  * Method:    defineClass
  * Signature: (Ljava/lang/String;Ljava/lang/ClassLoader;[BI)Ljava/lang/Class;
  */
-JNIEXPORT jclass JNICALL Java_CallJNI_defineClass
-  (JNIEnv *, jclass, jstring, jobject, jbyteArray, jint);
+JNIEXPORT jclass JNICALL Java_CallJNI_defineClass(JNIEnv *, jclass, jstring,
+                                                  jobject, jbyteArray, jint);
 
 /*
  * Class:     CallJNI
  * Method:    findClass
  * Signature: (Ljava/lang/String;)Ljava/lang/Class;
  */
-JNIEXPORT jclass JNICALL Java_CallJNI_findClass
-  (JNIEnv *, jclass, jstring);
+JNIEXPORT jclass JNICALL Java_CallJNI_findClass(JNIEnv *, jclass, jstring);
+
+/*
+ * Class:     CallJNI
+ * Method:    fromReflectedMethod
+ * Signature: (Ljava/lang/reflect/Method;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_CallJNI_fromReflectedMethod(JNIEnv *, jclass,
+                                                           jobject);
 
 /*
  * Class:     CallJNI
  * Method:    getSystemOut
  * Signature: ()Ljava/io/PrintStream;
  */
-JNIEXPORT jobject JNICALL Java_CallJNI_getSystemOut
-  (JNIEnv *, jclass);
+JNIEXPORT jobject JNICALL Java_CallJNI_getSystemOut(JNIEnv *, jclass);
 
 #ifdef __cplusplus
 }
