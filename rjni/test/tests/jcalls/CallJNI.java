@@ -4,13 +4,15 @@
  * @author Liangcheng Juves
  */
 import java.io.PrintStream;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 class CallJNI {
 
+    static final String loadStatus = null;
+
     static {
         System.loadLibrary("rjnit");
-        System.out.println();
     }
 
     static native int getVersion();
@@ -20,6 +22,8 @@ class CallJNI {
     static native Class<?> findClass(String name);
 
     static native String fromReflectedMethod(Method method);
+
+    static native void fromReflectedField(Field field);
 
     static native PrintStream getSystemOut();
 }

@@ -13,7 +13,14 @@ int main(int argc, char const *argv[]) {
 #endif
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
-    println("%s", "JNI >>> OnLoad");
+    JNIEnv *jenv;
+    (*vm)->GetEnv(vm, (void **)&jenv, JNI_VERSION_1_1);
+    jclass jcls_CallJNI = (*jenv)->FindClass(jenv, "CallJNI");
+    jfieldID jfid_loadStatus = (*jenv)->GetStaticFieldID(
+        jenv, jcls_CallJNI, "loadStatus", "Ljava/lang/String;");
+    jstring jstr_loadStatus = (*jenv)->NewStringUTF(jenv, "Loaded");
+    (*jenv)->SetStaticObjectField(jenv, jcls_CallJNI, jfid_loadStatus,
+                                  jstr_loadStatus);
     return JNI_VERSION_1_1;
 }
 
