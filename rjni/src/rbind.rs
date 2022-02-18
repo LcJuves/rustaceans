@@ -47,7 +47,10 @@
 macro_rules! unsafe_extern_system_fn {
     (($($param_name:tt: $param_ty:ty), *) -> $ret_ty:ty) => {
         Option<unsafe extern "system" fn($($param_name: $param_ty, )*) -> $ret_ty>
-    }
+    };
+    (($($param_name:tt: $param_ty:ty), *)) => {
+        Option<unsafe extern "system" fn($($param_name: $param_ty, )*)>
+    };
 }
 
 /// # Examples
@@ -63,7 +66,10 @@ macro_rules! unsafe_extern_system_fn {
 macro_rules! unsafe_extern_c_var_fn {
     (($($param_name:tt: $param_ty:ty), *) -> $ret_ty:ty) => {
         Option<unsafe extern "C" fn($($param_name: $param_ty, )* ...) -> $ret_ty>
-    }
+    };
+    (($($param_name:tt: $param_ty:ty), *)) => {
+        Option<unsafe extern "C" fn($($param_name: $param_ty, )* ...)>
+    };
 }
 
 /// # Such as
@@ -304,16 +310,16 @@ pub struct JNINativeInterface {
     pub throw: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jthrowable) -> Jint),
     pub throw_new: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz: Jclass, msg: *const c_char) -> Jint),
     pub exception_occurred: unsafe_extern_system_fn!((env: *mut JNIEnv) -> Jthrowable),
-    pub exception_describe: unsafe_extern_system_fn!((env: *mut JNIEnv) -> !),
-    pub exception_clear: unsafe_extern_system_fn!((env: *mut JNIEnv) -> !),
-    pub fatal_error: unsafe_extern_system_fn!((env: *mut JNIEnv, msg: *const c_char) -> !),
+    pub exception_describe: unsafe_extern_system_fn!((env: *mut JNIEnv)),
+    pub exception_clear: unsafe_extern_system_fn!((env: *mut JNIEnv)),
+    pub fatal_error: unsafe_extern_system_fn!((env: *mut JNIEnv, msg: *const c_char)),
 
     pub push_local_frame: unsafe_extern_system_fn!((env: *mut JNIEnv, capacity: Jint) -> Jint),
     pub pop_local_frame: unsafe_extern_system_fn!((env: *mut JNIEnv, result: Jobject) -> Jobject),
 
     pub new_global_ref: unsafe_extern_system_fn!((env: *mut JNIEnv, gref: Jobject) -> Jobject),
-    pub delete_global_ref: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject) -> !),
-    pub delete_local_ref: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject) -> !),
+    pub delete_global_ref: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject)),
+    pub delete_local_ref: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject)),
     pub is_same_object: unsafe_extern_system_fn!((env: *mut JNIEnv, obj1: Jobject, obj2: Jobject) -> Jboolean),
     pub new_local_ref: unsafe_extern_system_fn!((env: *mut JNIEnv, lref: Jobject) -> Jobject),
     pub ensure_local_capacity: unsafe_extern_system_fn!((env: *mut JNIEnv, capacity: Jint) -> Jint),
@@ -469,19 +475,20 @@ pub struct JNINativeInterface {
         args: *const jvalue
     ) -> Jdouble),
 
-    pub call_void_method: unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: Jobject, methodID: JmethodID) -> !),
+    pub call_void_method:
+        unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: Jobject, methodID: JmethodID)),
     pub call_void_method_v: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: Jobject,
         methodID: JmethodID,
         args: VaList
-    ) -> !),
+    )),
     pub call_void_method_a: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: Jobject,
         methodID: JmethodID,
         args: *const jvalue
-    ) -> !),
+    )),
 
     pub call_nonvirtual_object_method: unsafe_extern_c_var_fn!((
         env: *mut JNIEnv,
@@ -667,21 +674,22 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         obj: Jobject,
         clazz: Jclass,
-        methodID: JmethodID) -> !),
+        methodID: JmethodID
+    )),
     pub call_nonvirtual_void_method_v: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: Jobject,
         clazz: Jclass,
         methodID: JmethodID,
         args: VaList
-    ) -> !),
+    )),
     pub call_nonvirtual_void_method_a: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: Jobject,
         clazz: Jclass,
         methodID: JmethodID,
         args: *const jvalue
-    ) -> !),
+    )),
 
     pub get_field_id: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
@@ -700,60 +708,28 @@ pub struct JNINativeInterface {
     pub get_float_field: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, fieldID: JfieldID) -> Jfloat),
     pub get_double_field: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, fieldID: JfieldID) -> Jdouble),
 
-    pub set_object_field: unsafe_extern_system_fn!((
-        env: *mut JNIEnv,
-        obj: Jobject,
-        fieldID: JfieldID,
-        val: Jobject
-    ) -> !),
+    pub set_object_field:
+        unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, fieldID: JfieldID, val: Jobject)),
     pub set_boolean_field: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: Jobject,
         fieldID: JfieldID,
         val: Jboolean
-    ) -> !),
-    pub set_byte_field: unsafe_extern_system_fn!((
-        env: *mut JNIEnv,
-        obj: Jobject,
-        fieldID: JfieldID,
-        val: Jbyte
-    ) -> !),
-    pub set_char_field: unsafe_extern_system_fn!((
-        env: *mut JNIEnv,
-        obj: Jobject,
-        fieldID: JfieldID,
-        val: Jchar
-    ) -> !),
-    pub set_short_field: unsafe_extern_system_fn!((
-        env: *mut JNIEnv,
-        obj: Jobject,
-        fieldID: JfieldID,
-        val: Jshort
-    ) -> !),
-    pub set_int_field: unsafe_extern_system_fn!((
-        env: *mut JNIEnv,
-        obj: Jobject,
-        fieldID: JfieldID,
-        val: Jint
-    ) -> !),
-    pub set_long_field: unsafe_extern_system_fn!((
-        env: *mut JNIEnv,
-        obj: Jobject,
-        fieldID: JfieldID,
-        val: Jlong
-    ) -> !),
-    pub set_float_field: unsafe_extern_system_fn!((
-        env: *mut JNIEnv,
-        obj: Jobject,
-        fieldID: JfieldID,
-        val: Jfloat
-    ) -> !),
-    pub set_double_field: unsafe_extern_system_fn!((
-        env: *mut JNIEnv,
-        obj: Jobject,
-        fieldID: JfieldID,
-        val: Jdouble
-    ) -> !),
+    )),
+    pub set_byte_field:
+        unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, fieldID: JfieldID, val: Jbyte)),
+    pub set_char_field:
+        unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, fieldID: JfieldID, val: Jchar)),
+    pub set_short_field:
+        unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, fieldID: JfieldID, val: Jshort)),
+    pub set_int_field:
+        unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, fieldID: JfieldID, val: Jint)),
+    pub set_long_field:
+        unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, fieldID: JfieldID, val: Jlong)),
+    pub set_float_field:
+        unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, fieldID: JfieldID, val: Jfloat)),
+    pub set_double_field:
+        unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, fieldID: JfieldID, val: Jdouble)),
 
     pub get_static_method_id: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
@@ -888,19 +864,20 @@ pub struct JNINativeInterface {
         args: *const jvalue
     ) -> Jdouble),
 
-    pub call_static_void_method: unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: Jclass, methodID: JmethodID) -> !),
+    pub call_static_void_method:
+        unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: Jclass, methodID: JmethodID)),
     pub call_static_void_method_v: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: Jclass,
         methodID: JmethodID,
         args: VaList
-    ) -> !),
+    )),
     pub call_static_void_method_a: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: Jclass,
         methodID: JmethodID,
         args: *const jvalue
-    ) -> !),
+    )),
 
     pub get_static_field_id: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
@@ -923,55 +900,51 @@ pub struct JNINativeInterface {
         clazz: Jclass,
         fieldID: JfieldID,
         value: Jobject
-    ) -> !),
+    )),
     pub set_static_boolean_field: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: Jclass,
         fieldID: JfieldID,
         value: Jboolean
-    ) -> !),
+    )),
     pub set_static_byte_field: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: Jclass,
         fieldID: JfieldID,
         value: Jbyte
-    ) -> !),
+    )),
     pub set_static_char_field: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: Jclass,
         fieldID: JfieldID,
         value: Jchar
-    ) -> !),
+    )),
     pub set_static_short_field: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: Jclass,
         fieldID: JfieldID,
         value: Jshort
-    ) -> !),
-    pub set_static_int_field: unsafe_extern_system_fn!((
-        env: *mut JNIEnv,
-        clazz: Jclass,
-        fieldID: JfieldID,
-        value: Jint
-    ) -> !),
+    )),
+    pub set_static_int_field:
+        unsafe_extern_system_fn!((env: *mut JNIEnv, clazz: Jclass, fieldID: JfieldID, value: Jint)),
     pub set_static_long_field: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: Jclass,
         fieldID: JfieldID,
         value: Jlong
-    ) -> !),
+    )),
     pub set_static_float_field: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: Jclass,
         fieldID: JfieldID,
         value: Jfloat
-    ) -> !),
+    )),
     pub set_static_double_field: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: Jclass,
         fieldID: JfieldID,
         value: Jdouble
-    ) -> !),
+    )),
 
     pub new_string: unsafe_extern_system_fn!((env: *mut JNIEnv, unicode: *const Jchar, len: Jsize) -> Jstring),
     pub get_string_length: unsafe_extern_system_fn!((env: *mut JNIEnv, str: Jstring) -> Jsize),
@@ -980,7 +953,8 @@ pub struct JNINativeInterface {
         str: Jstring,
         isCopy: *mut Jboolean
     ) -> *const Jchar),
-    pub release_string_chars: unsafe_extern_system_fn!((env: *mut JNIEnv, str: Jstring, chars: *const Jchar) -> !),
+    pub release_string_chars:
+        unsafe_extern_system_fn!((env: *mut JNIEnv, str: Jstring, chars: *const Jchar)),
 
     pub new_string_utf: unsafe_extern_system_fn!((env: *mut JNIEnv, utf: *const c_char) -> Jstring),
     pub get_string_utflength: unsafe_extern_system_fn!((env: *mut JNIEnv, str: Jstring) -> Jsize),
@@ -989,7 +963,8 @@ pub struct JNINativeInterface {
         str: Jstring,
         isCopy: *mut Jboolean
     ) -> *const c_char),
-    pub release_string_utfchars: unsafe_extern_system_fn!((env: *mut JNIEnv, str: Jstring, chars: *const c_char) -> !),
+    pub release_string_utfchars:
+        unsafe_extern_system_fn!((env: *mut JNIEnv, str: Jstring, chars: *const c_char)),
 
     pub get_array_length: unsafe_extern_system_fn!((env: *mut JNIEnv, array: Jarray) -> Jsize),
 
@@ -1005,7 +980,7 @@ pub struct JNINativeInterface {
         array: JobjectArray,
         index: Jsize,
         val: Jobject
-    ) -> !),
+    )),
 
     pub new_boolean_array: unsafe_extern_system_fn!((env: *mut JNIEnv, len: Jsize) -> JbooleanArray),
     pub new_byte_array: unsafe_extern_system_fn!((env: *mut JNIEnv, len: Jsize) -> JbyteArray),
@@ -1062,49 +1037,49 @@ pub struct JNINativeInterface {
         array: JbooleanArray,
         elems: *mut Jboolean,
         mode: Jint
-    ) -> !),
+    )),
     pub release_byte_array_elements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: JbyteArray,
         elems: *mut Jbyte,
         mode: Jint
-    ) -> !),
+    )),
     pub release_char_array_elements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: JcharArray,
         elems: *mut Jchar,
         mode: Jint
-    ) -> !),
+    )),
     pub release_short_array_elements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: JshortArray,
         elems: *mut Jshort,
         mode: Jint
-    ) -> !),
+    )),
     pub release_int_array_elements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: JintArray,
         elems: *mut Jint,
         mode: Jint
-    ) -> !),
+    )),
     pub release_long_array_elements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: JlongArray,
         elems: *mut Jlong,
         mode: Jint
-    ) -> !),
+    )),
     pub release_float_array_elements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: JfloatArray,
         elems: *mut Jfloat,
         mode: Jint
-    ) -> !),
+    )),
     pub release_double_array_elements: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: JdoubleArray,
         elems: *mut Jdouble,
         mode: Jint
-    ) -> !),
+    )),
 
     pub get_boolean_array_region: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
@@ -1112,56 +1087,56 @@ pub struct JNINativeInterface {
         start: Jsize,
         len: Jsize,
         buf: *mut Jboolean
-    ) -> !),
+    )),
     pub get_byte_array_region: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: JbyteArray,
         start: Jsize,
         len: Jsize,
         buf: *mut Jbyte
-    ) -> !),
+    )),
     pub get_char_array_region: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: JcharArray,
         start: Jsize,
         len: Jsize,
         buf: *mut Jchar
-    ) -> !),
+    )),
     pub get_short_array_region: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: JshortArray,
         start: Jsize,
         len: Jsize,
         buf: *mut Jshort
-    ) -> !),
+    )),
     pub get_int_array_region: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: JintArray,
         start: Jsize,
         len: Jsize,
         buf: *mut Jint
-    ) -> !),
+    )),
     pub get_long_array_region: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: JlongArray,
         start: Jsize,
         len: Jsize,
         buf: *mut Jlong
-    ) -> !),
+    )),
     pub get_float_array_region: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: JfloatArray,
         start: Jsize,
         len: Jsize,
         buf: *mut Jfloat
-    ) -> !),
+    )),
     pub get_double_array_region: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: JdoubleArray,
         start: Jsize,
         len: Jsize,
         buf: *mut Jdouble
-    ) -> !),
+    )),
 
     pub set_boolean_array_region: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
@@ -1169,56 +1144,56 @@ pub struct JNINativeInterface {
         start: Jsize,
         len: Jsize,
         buf: *const Jboolean
-    ) -> !),
+    )),
     pub set_byte_array_region: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: JbyteArray,
         start: Jsize,
         len: Jsize,
         buf: *const Jbyte
-    ) -> !),
+    )),
     pub set_char_array_region: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: JcharArray,
         start: Jsize,
         len: Jsize,
         buf: *const Jchar
-    ) -> !),
+    )),
     pub set_short_array_region: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: JshortArray,
         start: Jsize,
         len: Jsize,
         buf: *const Jshort
-    ) -> !),
+    )),
     pub set_int_array_region: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: JintArray,
         start: Jsize,
         len: Jsize,
         buf: *const Jint
-    ) -> !),
+    )),
     pub set_long_array_region: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: JlongArray,
         start: Jsize,
         len: Jsize,
         buf: *const Jlong
-    ) -> !),
+    )),
     pub set_float_array_region: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: JfloatArray,
         start: Jsize,
         len: Jsize,
         buf: *const Jfloat
-    ) -> !),
+    )),
     pub set_double_array_region: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         array: JdoubleArray,
         start: Jsize,
         len: Jsize,
         buf: *const Jdouble
-    ) -> !),
+    )),
 
     pub register_natives: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
@@ -1239,14 +1214,14 @@ pub struct JNINativeInterface {
         start: Jsize,
         len: Jsize,
         buf: *mut Jchar
-    ) -> !),
+    )),
     pub get_string_utfregion: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         str: Jstring,
         start: Jsize,
         len: Jsize,
         buf: *mut c_char
-    ) -> !),
+    )),
 
     pub get_primitive_array_critical: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
@@ -1258,17 +1233,18 @@ pub struct JNINativeInterface {
         array: Jarray,
         carray: *mut c_void,
         mode: Jint
-    ) -> !),
+    )),
 
     pub get_string_critical: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         string: Jstring,
         isCopy: *mut Jboolean
     ) -> *const Jchar),
-    pub release_string_critical: unsafe_extern_system_fn!((env: *mut JNIEnv, string: Jstring, cstring: *const Jchar) -> !),
+    pub release_string_critical:
+        unsafe_extern_system_fn!((env: *mut JNIEnv, string: Jstring, cstring: *const Jchar)),
 
     pub new_weak_global_ref: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject) -> Jweak),
-    pub delete_weak_global_ref: unsafe_extern_system_fn!((env: *mut JNIEnv, gref: Jweak) -> !),
+    pub delete_weak_global_ref: unsafe_extern_system_fn!((env: *mut JNIEnv, gref: Jweak)),
 
     pub exception_check: unsafe_extern_system_fn!((env: *mut JNIEnv) -> Jboolean),
 
