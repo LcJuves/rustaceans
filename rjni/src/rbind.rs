@@ -45,11 +45,8 @@
 /// ```
 #[macro_export(local_inner_macros)]
 macro_rules! unsafe_extern_system_fn {
-    (($($param_name:tt: $param_ty:ty), *) -> $ret_ty:ty) => {
-        Option<unsafe extern "system" fn($($param_name: $param_ty, )*) -> $ret_ty>
-    };
-    (($($param_name:tt: $param_ty:ty), *)) => {
-        Option<unsafe extern "system" fn($($param_name: $param_ty, )*)>
+    (($($param_name:tt: $param_ty:ty), *)$( -> $ret_ty:ty)?) => {
+        Option<unsafe extern "system" fn($($param_name: $param_ty), *)$( -> $ret_ty)?>
     };
 }
 
@@ -64,11 +61,8 @@ macro_rules! unsafe_extern_system_fn {
 /// ```
 #[macro_export(local_inner_macros)]
 macro_rules! unsafe_extern_c_var_fn {
-    (($($param_name:tt: $param_ty:ty), *) -> $ret_ty:ty) => {
-        Option<unsafe extern "C" fn($($param_name: $param_ty, )* ...) -> $ret_ty>
-    };
-    (($($param_name:tt: $param_ty:ty), *)) => {
-        Option<unsafe extern "C" fn($($param_name: $param_ty, )* ...)>
+    (($($param_name:tt: $param_ty:ty), *)$( -> $ret_ty:ty)?) => {
+        Option<unsafe extern "C" fn($($param_name: $param_ty, )*...)$( -> $ret_ty)?>
     };
 }
 
@@ -95,42 +89,9 @@ macro_rules! unsafe_extern_c_var_fn {
 /// ```
 #[macro_export(local_inner_macros)]
 macro_rules! jni_fn {
-    ($name:tt, ($($ident:tt: $ty:ty), *), $ret_ty:ty, $code:block) => {
+    ($name:tt, ($($ident:tt: $ty:ty), +),$( $ret_ty:ty,)? $code:block) => {
         #[no_mangle]
-        pub extern "system" fn $name($($ident: $ty, )*) -> $ret_ty $code
-    };
-    ($name:tt, ($($ident:tt: $ty:ty), *), $code:block) => {
-        #[no_mangle]
-        pub extern "system" fn $name($($ident: $ty, )*) $code
-    };
-}
-
-/// # Such as
-///
-/// ```rust
-/// unsafe_jni_fn!(
-///     JNI_OnUnload,
-///     (vm: *mut JavaVM, reserved: *mut c_void),
-///     (),
-///     { /* code */ }
-/// );
-/// ```
-/// expand to
-/// ```rust
-/// #[no_mangle]
-/// pub unsafe extern "system" fn JNI_OnUnload(vm: *mut JavaVM, reserved: *mut c_void) {
-///     /* code */
-/// }
-/// ```
-#[macro_export(local_inner_macros)]
-macro_rules! unsafe_jni_fn {
-    ($name:tt, ($($ident:tt: $ty:ty), *), $ret_ty:ty, $code:block) => {
-        #[no_mangle]
-        pub unsafe extern "system" fn $name($($ident: $ty, )*) -> $ret_ty $code
-    };
-    ($name:tt, ($($ident:tt: $ty:ty), *), $code:block) => {
-        #[no_mangle]
-        pub unsafe extern "system" fn $name($($ident: $ty, )*) $code
+        pub extern "system" fn $name($($ident: $ty, )+)$( -> $ret_ty)? $code
     };
 }
 
@@ -187,6 +148,51 @@ macro_rules! impl_jni_on_unload {
             (),
             $code
         );
+    };
+}
+
+#[macro_export(local_inner_macros)]
+macro_rules! env_call {
+    ($env:expr, $method_name:ident$(, $($arg:expr), *)?) => {
+        (|| {
+            unsafe { (*(*$env)).$method_name.unwrap()($env$(, $($arg, )*)?) }
+        })()
+    };
+}
+
+#[macro_export(local_inner_macros)]
+macro_rules! vm_call {
+    ($vm:expr, $method_name:ident$(, $($arg:expr), *)?) => {
+        (|| {
+            unsafe { (*(*$vm)).$method_name.unwrap()($vm$(, $($arg, )*)?) }
+        })()
+    };
+}
+
+#[macro_export(local_inner_macros)]
+macro_rules! char_const_ptr {
+    ($str:expr) => {
+        (|| CString::new($str).unwrap().into_raw())()
+    };
+}
+
+#[macro_export(local_inner_macros)]
+macro_rules! jstring {
+    ($env:expr, $str:expr) => {
+        (|| env_call!($env, new_string_utf, char_const_ptr!($str)))()
+    };
+}
+
+#[macro_export(local_inner_macros)]
+macro_rules! env_from_vm {
+    ($vm:expr) => {
+        (|| {
+            let mut env = core::ptr::null_mut::<c_void>();
+            core::assert!(
+                vm_call!($vm, get_env, &mut env as *mut *mut c_void, JNI_VERSION_1_1) == JNI_OK
+            );
+            env as *mut JNIEnv
+        })()
     };
 }
 
