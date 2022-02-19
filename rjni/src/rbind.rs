@@ -269,8 +269,8 @@ pub enum JobjectRefType {
 
 #[repr(C)]
 pub struct JNINativeMethod {
-    pub name: *const c_char,
-    pub signature: *const c_char,
+    pub name: *mut c_char,
+    pub signature: *mut c_char,
     pub fn_ptr: *mut c_void,
 }
 
