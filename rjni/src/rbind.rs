@@ -99,6 +99,10 @@ macro_rules! jni_fn {
         #[no_mangle]
         pub extern "system" fn $name($($ident: $ty, )*) -> $ret_ty $code
     };
+    ($name:tt, ($($ident:tt: $ty:ty), *), $code:block) => {
+        #[no_mangle]
+        pub extern "system" fn $name($($ident: $ty, )*) $code
+    };
 }
 
 /// # Such as
@@ -123,6 +127,10 @@ macro_rules! unsafe_jni_fn {
     ($name:tt, ($($ident:tt: $ty:ty), *), $ret_ty:ty, $code:block) => {
         #[no_mangle]
         pub unsafe extern "system" fn $name($($ident: $ty, )*) -> $ret_ty $code
+    };
+    ($name:tt, ($($ident:tt: $ty:ty), *), $code:block) => {
+        #[no_mangle]
+        pub unsafe extern "system" fn $name($($ident: $ty, )*) $code
     };
 }
 
