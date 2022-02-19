@@ -53,7 +53,7 @@ jni_fn!(Java_CallJNI_findClass, (env: *mut JNIEnv, _: Jclass, name: Jstring), Jc
 
 jni_fn!(
     Java_CallJNI_fromReflectedMethod,
-    (env: *mut JNIEnv, jcls: Jclass, method: Jobject),
+    (env: *mut JNIEnv, _: Jclass, method: Jobject),
     Jstring,
     {
         let jcls_string = env_call!(env, find_class, char_const_ptr!("java/lang/String"));
@@ -74,7 +74,7 @@ jni_fn!(Java_CallJNI_fromReflectedField, (env: *mut JNIEnv, _: Jclass, field: Jo
     env_call!(env, get_static_object_field, jcls_system, field_id)
 });
 
-jni_fn!(Java_CallJNI_toReflectedMethod, (env: *mut JNIEnv, jcls: Jclass), Jobject, {
+jni_fn!(Java_CallJNI_toReflectedMethod, (env: *mut JNIEnv, _: Jclass), Jobject, {
     let jcls_string = env_call!(env, find_class, char_const_ptr!("java/lang/String"));
     let jmid_value_of = env_call!(
         env,

@@ -24,3 +24,8 @@ test*.*
 xlsx-example/.cargo/config.toml
 *.log
 rjni/test/tests/clang/rdef.h
+zig-cache
+zig-out
+rjni/test/tests/zig/src/CallJNI.zig
+rjni/test/tests/zig/src/jni.zig
+rjni/test/tests/zig/src/main_c.zig

@@ -40,6 +40,7 @@ class Main {
     }
 
     public static void main(String[] args) {
+        long startTimeMillis = System.currentTimeMillis();
         System.out.println();
         for (; ; ) {
             try {
@@ -110,5 +111,7 @@ class Main {
                 break;
             }
         }
+        long endTimeMillis = System.currentTimeMillis();
+        System.out.println(endTimeMillis - startTimeMillis);
     }
 }
