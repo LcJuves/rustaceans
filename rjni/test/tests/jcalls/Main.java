@@ -77,7 +77,22 @@ class Main {
                         () -> {
                             try {
                                 Field field = System.class.getDeclaredField("out");
-                                // CallJNI.fromReflectedField(field);
+                                PrintStream ret = CallJNI.fromReflectedField(field);
+                                _assert(ret.equals(System.out));
+                            } catch (Exception e) {
+                                throw new AssertionError(e);
+                            }
+                        });
+
+                test(
+                        "ToReflectedMethod",
+                        () -> {
+                            try {
+                                Method method = CallJNI.toReflectedMethod();
+                                _assert(
+                                        String.class
+                                                .cast(method.invoke(String.class, false))
+                                                .equals(String.valueOf(false)));
                             } catch (Exception e) {
                                 throw new AssertionError(e);
                             }

@@ -23,7 +23,9 @@ class CallJNI {
 
     static native String fromReflectedMethod(Method method);
 
-    static native void fromReflectedField(Field field);
+    static native PrintStream fromReflectedField(Field field);
+
+    static native Method toReflectedMethod();
 
     static native PrintStream getSystemOut();
 }

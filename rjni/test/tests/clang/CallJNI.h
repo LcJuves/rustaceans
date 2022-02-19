@@ -40,10 +40,17 @@ JNIEXPORT jstring JNICALL Java_CallJNI_fromReflectedMethod(JNIEnv *, jclass,
 /*
  * Class:     CallJNI
  * Method:    fromReflectedField
- * Signature: (Ljava/lang/reflect/Field;)V
+ * Signature: (Ljava/lang/reflect/Field;)Ljava/io/PrintStream;
  */
-JNIEXPORT void JNICALL Java_CallJNI_fromReflectedField(JNIEnv *, jclass,
-                                                       jobject);
+JNIEXPORT jobject JNICALL Java_CallJNI_fromReflectedField(JNIEnv *, jclass,
+                                                          jobject);
+
+/*
+ * Class:     CallJNI
+ * Method:    toReflectedMethod
+ * Signature: ()Ljava/lang/reflect/Method;
+ */
+JNIEXPORT jobject JNICALL Java_CallJNI_toReflectedMethod(JNIEnv *, jclass);
 
 /*
  * Class:     CallJNI
