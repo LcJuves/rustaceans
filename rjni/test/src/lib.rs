@@ -117,6 +117,58 @@ jni_fn!(Java_CallJNI_toReflectedField, (env: *mut JNIEnv, _: Jclass), Jobject, {
     env_call!(env, to_reflected_field, jcls_system, jfid_system_out, JNI_TRUE)
 });
 
+// _00024 -> '$'
+// _1 -> '_'
+jni_fn!(Java_CallJNI__00024_1throw, (env: *mut JNIEnv, _: Jclass, obj: Jthrowable), Jint, {
+    env_call!(env, throw, obj)
+});
+
+jni_fn!(
+    Java_CallJNI_throwNew,
+    (env: *mut JNIEnv, _: Jclass, clazz: Jclass, message: Jstring),
+    Jint,
+    {
+        let message = env_call!(env, get_string_utfchars, message, JNI_FALSE as *mut Jboolean);
+        env_call!(env, throw_new, clazz, message)
+    }
+);
+
+jni_fn!(Java_CallJNI_exceptionOccurred, (env: *mut JNIEnv, _: Jclass), Jthrowable, {
+    assert!(env_call!(env, exception_occurred).is_null());
+    let jcls_runtime_exception =
+        env_call!(env, find_class, char_const_ptr!("java/lang/RuntimeException"));
+    assert!(
+        env_call!(env, throw_new, jcls_runtime_exception, char_const_ptr!("JNICALL")) == JNI_OK
+    );
+    let jthrowable = env_call!(env, exception_occurred);
+    env_call!(env, exception_clear);
+    assert!(!jthrowable.is_null());
+    jthrowable
+});
+
+jni_fn!(Java_CallJNI_exceptionDescribe, (env: *mut JNIEnv, _: Jclass), {
+    let jcls_runtime_exception =
+        env_call!(env, find_class, char_const_ptr!("java/lang/RuntimeException"));
+    assert!(
+        env_call!(env, throw_new, jcls_runtime_exception, char_const_ptr!("JNICALL")) == JNI_OK
+    );
+    env_call!(env, exception_describe);
+});
+
+jni_fn!(Java_CallJNI_exceptionClear, (env: *mut JNIEnv, _: Jclass), {
+    let jcls_runtime_exception =
+        env_call!(env, find_class, char_const_ptr!("java/lang/RuntimeException"));
+    assert!(
+        env_call!(env, throw_new, jcls_runtime_exception, char_const_ptr!("JNICALL")) == JNI_OK
+    );
+    env_call!(env, exception_clear);
+});
+
+jni_fn!(Java_CallJNI_fatalError, (env: *mut JNIEnv, _: Jclass, msg: Jstring), {
+    let msg = env_call!(env, get_string_utfchars, msg, JNI_FALSE as *mut Jboolean);
+    env_call!(env, fatal_error, msg);
+});
+
 jni_fn!(Java_CallJNI_getSystemOut, (env: *mut JNIEnv, _: Jclass), Jobject, {
     let jcls_system = env_call!(env, find_class, char_const_ptr!("java/lang/System"));
     let jfid_out = env_call!(

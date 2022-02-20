@@ -1,3 +1,5 @@
+const std = @import("std");
+
 const jni = @import("zbind.zig");
 
 const JNIEnv = jni.JNIEnv;
@@ -11,10 +13,12 @@ const jfield_id = jni.jfield_id;
 const jmethod_id = jni.jmethod_id;
 const jboolean = jni.jboolean;
 const jbyte_array = jni.jbyte_array;
+const jthrowable = jni.jthrowable;
 
 const jni_version_1_1 = jni.jni_version_1_1;
 const jni_false = jni.jni_false;
 const jni_true = jni.jni_true;
+const jni_ok = jni.jni_ok;
 
 pub export fn @"JNI_OnLoad"(vm: [*c]JavaVM, _: ?*anyopaque) jint {
     var env: [*c]JNIEnv = undefined;
@@ -27,7 +31,7 @@ pub export fn @"JNI_OnLoad"(vm: [*c]JavaVM, _: ?*anyopaque) jint {
 }
 
 pub export fn @"JNI_OnUnload"(_: [*c]JavaVM, _: ?*anyopaque) void {
-    const stdout = @import("std").io.getStdOut().writer();
+    const stdout = std.io.getStdOut().writer();
     stdout.writeAll("JNI >>> OnUnload") catch unreachable;
 }
 
@@ -83,6 +87,44 @@ pub export fn @"Java_CallJNI_toReflectedField"(env: [*c]JNIEnv, _: jclass) jobje
     const jcls_system: jclass = env.*.*.find_class.?(env, "java/lang/System");
     const jfid_system_out: jfield_id = env.*.*.get_static_field_id.?(env, jcls_system, "out", "Ljava/io/PrintStream;");
     return env.*.*.to_reflected_field.?(env, jcls_system, jfid_system_out, jni_true);
+}
+
+// _00024 -> '$'
+// _1 -> '_'
+pub export fn @"Java_CallJNI__00024_1throw"(env: [*c]JNIEnv, _: jclass, obj: jthrowable) jint {
+    return env.*.*.throw.?(env, obj);
+}
+
+pub export fn @"Java_CallJNI_throwNew"(env: [*c]JNIEnv, _: jclass, clazz: jclass, message: jstring) jint {
+    const c_message = env.*.*.get_string_utf_chars.?(env, message, @intToPtr([*c]jboolean, jni_false));
+    return env.*.*.throw_new.?(env, clazz, c_message);
+}
+
+pub export fn @"Java_CallJNI_exceptionOccurred"(env: [*c]JNIEnv, _: jclass) jthrowable {
+    std.debug.assert(env.*.*.exception_occurred.?(env) == null);
+    const jcls_runtime_exception = env.*.*.find_class.?(env, "java/lang/RuntimeException");
+    std.debug.assert(env.*.*.throw_new.?(env, jcls_runtime_exception, "JNICALL") == jni_ok);
+    const _jthrowable = env.*.*.exception_occurred.?(env);
+    env.*.*.exception_clear.?(env);
+    std.debug.assert(_jthrowable != null);
+    return _jthrowable;
+}
+
+pub export fn @"Java_CallJNI_exceptionDescribe"(env: [*c]JNIEnv, _: jclass) void {
+    const jcls_runtime_exception = env.*.*.find_class.?(env, "java/lang/RuntimeException");
+    std.debug.assert(env.*.*.throw_new.?(env, jcls_runtime_exception, "JNICALL") == jni_ok);
+    env.*.*.exception_describe.?(env);
+}
+
+pub export fn @"Java_CallJNI_exceptionClear"(env: [*c]JNIEnv, _: jclass) void {
+    const jcls_runtime_exception = env.*.*.find_class.?(env, "java/lang/RuntimeException");
+    std.debug.assert(env.*.*.throw_new.?(env, jcls_runtime_exception, "JNICALL") == jni_ok);
+    env.*.*.exception_clear.?(env);
+}
+
+pub export fn @"Java_CallJNI_fatalError"(env: [*c]JNIEnv, _: jclass, msg: jstring) void {
+    const c_msg = env.*.*.get_string_utf_chars.?(env, msg, @intToPtr([*c]jboolean, jni_false));
+    env.*.*.fatal_error.?(env, c_msg);
 }
 
 pub export fn @"Java_CallJNI_getSystemOut"(env: [*c]JNIEnv, _: jclass) jobject {

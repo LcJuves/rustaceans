@@ -297,7 +297,7 @@ pub struct JNINativeInterface {
     reserved2: *mut c_void,
 
     reserved3: *mut c_void,
-    /// Returns the major version number in the higher 16 bits and the minor version number in the lower 16 bits.
+    /// Returns the version of the native method interface. For Java SE Platform 10 and later, it returns [`JNI_VERSION_10`].
     pub get_version: unsafe_extern_system_fn!((env: *mut JNIEnv) -> Jint),
 
     /// Loads a class from a buffer of raw class data. The buffer containing the raw class data is not referenced by the VM after the `define_class` call returns, and it may be discarded if desired.
@@ -308,15 +308,35 @@ pub struct JNINativeInterface {
         buf: *const Jbyte,
         buf_len: Jsize
     ) -> Jclass),
-    /// Returns a class object from a fully-qualified name, or `NULL` if the `class` cannot be found.
+    /// In JDK release 1.1, this function loads a locally-defined class. It searches the directories and zip files specified by the `CLASSPATH` environment variable for the class with the specified name.
+    ///
+    /// Since JDK 1.2, the Java security model allows non-system classes to load and call native methods. `find_class` locates the class loader associated with the current native method; that is, the class loader of the class
+    /// that declared the native method. If the native method belongs to a system class, no class loader will be involved. Otherwise, the proper class loader will be invoked to load, link, and initialize, the named class.
+    ///
+    /// Since JDK 1.2, when `find_class` is called through the Invocation Interface, there is no current native method or its associated class loader. In that case, the result of [ClassLoader.getSystemClassLoader] is used. This
+    /// is the class loader the virtual machine creates for applications, and is able to locate classes listed in the `java.class.path` property.
+    ///
+    /// [ClassLoader.getSystemClassLoader]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/ClassLoader.html#getSystemClassLoader()
     pub find_class: unsafe_extern_system_fn!((env: *mut JNIEnv, name: *const c_char) -> Jclass),
 
-    /// A JNI method ID that corresponds to the given Java reflection method, or NULL if the operation fails.
+    /// Converts a [java.lang.reflect.Method] or [java.lang.reflect.Constructor] object to a method ID.
+    ///
+    /// [java.lang.reflect.Method]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/reflect/Method.html
+    /// [java.lang.reflect.Constructor]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/reflect/Constructor.html
     pub from_reflected_method: unsafe_extern_system_fn!((env: *mut JNIEnv, method: Jobject) -> JmethodID),
-    /// A JNI field ID that corresponds to the given Java reflection field, or NULL if the operation fails.
+    /// Converts a [java.lang.reflect.Field] to a field ID.
+    ///
+    /// [java.lang.reflect.Field]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/reflect/Field.html
     pub from_reflected_field: unsafe_extern_system_fn!((env: *mut JNIEnv, field: Jobject) -> JfieldID),
 
-    /// Returns an instance of the `java.lang.reflect.Method` or `java.lang.reflect.Constructor` which corresponds to the given `method_id`, or `NULL` if the operation fails.
+    /// Converts a method ID derived from `cls` to a [java.lang.reflect.Method] or [java.lang.reflect.Constructor] object. `is_static` must be set to [`JNI_TRUE`] if the method ID refers to a static field, and [`JNI_FALSE`]
+    /// otherwise.
+    ///
+    /// Throws [OutOfMemoryError] and returns 0 if fails.
+    ///
+    /// [java.lang.reflect.Method]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/reflect/Method.html
+    /// [java.lang.reflect.Constructor]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/reflect/Constructor.html
+    /// [OutOfMemoryError]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/OutOfMemoryError.html
     pub to_reflected_method: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         cls: Jclass,
@@ -324,15 +344,21 @@ pub struct JNINativeInterface {
         is_static: Jboolean
     ) -> Jobject),
 
-    /// If `clazz` represents any class other than the class `Object`, then this function returns the object that represents the superclass of the class specified by `clazz`.
-    /// If `clazz` specifies the class `Object`, or `clazz` represents an interface, this function returns `NULL`.
+    /// If `clazz` represents any class other than the class [Object], then this function returns the object that represents the superclass of the class specified by `clazz`.
+    ///
+    /// If `clazz` specifies the class [Object], or `clazz` represents an interface, this function returns `NULL`.
+    ///
+    /// [Object]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html
     pub get_superclass: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz: Jclass) -> Jclass),
     /// Determines whether an object of `clazz1` can be safely cast to `clazz2`.
     pub is_assignable_from: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz1: Jclass, clazz2: Jclass) -> Jboolean),
 
-    /// Converts a field ID derived from `cls` to a `java.lang.reflect.Field` object. `is_static` must be set to [`JNI_TRUE`] if `field_id` refers to a static field, and [`JNI_FALSE`] otherwise.
+    /// Converts a field ID derived from `cls` to a [java.lang.reflect.Field] object. `is_static` must be set to [`JNI_TRUE`] if `field_id` refers to a static field, and [`JNI_FALSE`] otherwise.
     ///
-    /// Throws `OutOfMemoryError` and returns 0 if fails.
+    /// Throws [OutOfMemoryError] and returns 0 if fails.
+    ///
+    /// [java.lang.reflect.Field]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/reflect/Field.html
+    /// [OutOfMemoryError]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/OutOfMemoryError.html
     pub to_reflected_field: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         cls: Jclass,
@@ -340,14 +366,33 @@ pub struct JNINativeInterface {
         is_static: Jboolean
     ) -> Jobject),
 
+    /// Causes a [java.lang.Throwable] object to be thrown.
+    ///
+    /// [java.lang.Throwable]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html
     pub throw: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jthrowable) -> Jint),
-    pub throw_new: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz: Jclass, msg: *const c_char) -> Jint),
+    /// Constructs an exception object from the specified class with the message specified by `message` and causes that exception to be thrown.
+    pub throw_new: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz: Jclass, message: *const c_char) -> Jint),
+    /// Determines if an exception is being thrown. The exception stays being thrown until either the native code calls `exception_clear`, or the Java code handles the exception.
     pub exception_occurred: unsafe_extern_system_fn!((env: *mut JNIEnv) -> Jthrowable),
+    /// Prints an exception and a backtrace of the stack to a system error-reporting channel, such as `stderr`. The pending exception is cleared as a side-effect of calling this function. This is a convenience routine provided for
+    /// debugging.
     pub exception_describe: unsafe_extern_system_fn!((env: *mut JNIEnv)),
+    /// Clears any exception that is currently being thrown. If no exception is currently being thrown, this routine has no effect.
     pub exception_clear: unsafe_extern_system_fn!((env: *mut JNIEnv)),
+    /// Raises a fatal error and does not expect the VM to recover. This function does not return.
     pub fatal_error: unsafe_extern_system_fn!((env: *mut JNIEnv, msg: *const c_char)),
 
+    /// Creates a new local reference frame, in which at least a given number of local references can be created. Returns 0 on success, a negative number and a pending [OutOfMemoryError] on failure.
+    ///
+    /// Note that local references already created in previous local frames are still valid in the current local frame.
+    ///
+    /// As with `ensure_local_capacity`, some Java Virtual Machine implementations may choose to limit the maximum `capacity`, which may cause the function to return an error.
+    ///
+    /// [OutOfMemoryError]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/OutOfMemoryError.html
     pub push_local_frame: unsafe_extern_system_fn!((env: *mut JNIEnv, capacity: Jint) -> Jint),
+    /// Pops off the current local reference frame, frees all the local references, and returns a local reference in the previous local reference frame for the given `result` object.
+    ///
+    /// Pass `NULL` as `result` if you do not need to return a reference to the previous frame.
     pub pop_local_frame: unsafe_extern_system_fn!((env: *mut JNIEnv, result: Jobject) -> Jobject),
 
     pub new_global_ref: unsafe_extern_system_fn!((env: *mut JNIEnv, gref: Jobject) -> Jobject),
@@ -1299,17 +1344,23 @@ pub struct JNINativeInterface {
         capacity: Jlong
     ) -> Jobject),
     pub get_direct_buffer_address: unsafe_extern_system_fn!((env: *mut JNIEnv, buf: Jobject) -> *mut c_void),
-    /// Fetches and returns the capacity of the memory region referenced by the given direct `java.nio.Buffer`. The capacity is the number of *elements* that the memory region contains.
+    /// Fetches and returns the capacity of the memory region referenced by the given direct [java.nio.Buffer]. The capacity is the number of *elements* that the memory region contains.
+    ///
+    /// [java.nio.Buffer]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/Buffer.html
     pub get_direct_buffer_capacity: unsafe_extern_system_fn!((env: *mut JNIEnv, buf: Jobject) -> Jlong),
 
     /// Returns the type of the object referred to by the `obj` argument. The argument `obj` can either be a local, global or weak global reference, or `NULL`.
     ///
-    /// `JNI_VERSION` >= `JNI_VERSION_1_6` can be used normally
+    /// `JNI_VERSION` >= [`JNI_VERSION_1_6`] can be used normally
     pub get_object_ref_type: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject) -> JobjectRefType),
-    /// Returns the `java.lang.Module` object for the module that the class is a member of. If the class is not in a named module then the unnamed module of the class loader for the class is returned. If the class represents
-    /// an array type then this function returns the `Module` object for the element type. If the class represents a primitive type or `void`, then the `Module` object for the `java.base` module is returned.
+    /// Returns the [java.lang.Module] object for the module that the class is a member of. If the class is not in a named module then the unnamed module of the class loader for the class is returned. If the class represents
+    /// an array type then this function returns the [Module] object for the element type. If the class represents a primitive type or `void`, then the [Module] object for the [java.base] module is returned.
     ///
-    /// `JNI_VERSION` >= `JNI_VERSION_9` can be used normally
+    /// `JNI_VERSION` >= [`JNI_VERSION_9`] can be used normally
+    ///
+    /// [java.lang.Module]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Module.html
+    /// [Module]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Module.html
+    /// [java.base]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/module-summary.html
     pub get_module: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz: Jclass) -> Jobject),
 }
 
@@ -1326,7 +1377,7 @@ pub struct JNIInvokeInterface {
     /// attached, the VM attaches the current thread and then waits until the current thread is the only non-daemon user-level thread.
     pub destroy_java_vm: unsafe_extern_system_fn!((vm: *mut JavaVM) -> Jint),
 
-    /// Attaches the current thread to a Java VM. Returns a JNI interface pointer in the `JNIEnv` argument.
+    /// Attaches the current thread to a Java VM. Returns a JNI interface pointer in the [`JNIEnv`] argument.
     ///
     /// Trying to attach a thread that is already attached is a no-op.
     ///
@@ -1350,9 +1401,11 @@ pub struct JNIInvokeInterface {
 
     pub get_env: unsafe_extern_system_fn!((vm: *mut JavaVM, env: *mut *mut c_void, version: Jint) -> Jint),
 
-    /// Same semantics as `attach_current_thread`, but the newly-created `java.lang.Thread` instance is a daemon.
+    /// Same semantics as `attach_current_thread`, but the newly-created [java.lang.Thread] instance is a daemon.
     ///
-    /// If the thread has already been attached via either `attach_current_thread` or `attach_current_thread_as_daemon`, this routine simply sets the value pointed to by `penv` to the `JNIEnv` of the current thread. In this case neither `attach_current_thread` nor this routine have any effect on the *daemon* status of the thread.
+    /// If the thread has already been attached via either `attach_current_thread` or `attach_current_thread_as_daemon`, this routine simply sets the value pointed to by `penv` to the [`JNIEnv`] of the current thread. In this case neither `attach_current_thread` nor this routine have any effect on the *daemon* status of the thread.
+    ///
+    /// [java.lang.Thread]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Thread.html
     pub attach_current_thread_as_daemon: unsafe_extern_system_fn!((
         vm: *mut JavaVM,
         penv: *mut *mut c_void,
@@ -1390,12 +1443,12 @@ extern "system" {
      * Note these are the only symbols exported for JNI by the VM
      */
 
-    /// Returns a default configuration for the Java VM. Before calling this function, native code must set the vm_args->version field to the JNI version it expects the VM to support. After this function returns, vm_args->version will be set to the actual JNI version the VM supports.
-    ///
-    /// Returns JNI_OK if the requested version is supported; returns a JNI error code (a negative number) if the requested version is not supported.
+    /// Returns a default configuration for the Java VM. Before calling this function, native code must set the vm_args->version field to the JNI version it expects the VM to support. After this function returns, vm_args-
+    /// >version will be set to the actual JNI version the VM supports.
     #[link_name = "JNI_GetDefaultJavaVMInitArgs"]
     pub fn jni_get_default_java_vm_init_args(vm_args: *mut c_void) -> Jint;
-    /// Loads and initializes a Java VM. The current thread becomes the main thread. Sets the env argument to the JNI interface pointer of the main thread.
+    /// Loads and initializes a Java VM. The current thread becomes the main thread. Sets the `p_env` argument to the JNI interface pointer of the main thread.
+    ///
     /// Creation of multiple VMs in a single process is not supported.
     #[link_name = "JNI_CreateJavaVM"]
     pub fn jni_create_java_vm(
@@ -1403,7 +1456,9 @@ extern "system" {
         p_env: *mut *mut c_void,
         vm_args: *mut c_void,
     ) -> Jint;
-    /// Returns all Java VMs that have been created. Pointers to VMs are written in the buffer `vm_buf` in the order they are created. At most `buf_len` number of entries will be written. The total number of created VMs is returned in `n_vms`.
+    /// Returns all Java VMs that have been created. Pointers to VMs are written in the buffer `vm_buf` in the order they are created. At most `buf_len` number of entries will be written. The total number of created VMs is
+    /// returned in `n_vms`.
+    ///
     /// Creation of multiple VMs in a single process is not supported.
     #[link_name = "JNI_GetCreatedJavaVMs"]
     pub fn jni_get_created_java_vms(

@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -152,6 +153,69 @@ class Main {
                                                 .equals(System.out));
                             } catch (Exception e) {
                                 throw new AssertionError(e);
+                            }
+                        });
+
+                test(
+                        "Throw",
+                        () -> {
+                            try {
+                                _assert(CallJNI.$_throw(new IOException()) == 0);
+                            } catch (Exception e) {
+                                _assert(e.getClass() == IOException.class);
+                            }
+                        });
+
+                test(
+                        "ThrowNew",
+                        () -> {
+                            try {
+                                _assert(CallJNI.throwNew(RuntimeException.class, "JNICALL") == 0);
+                            } catch (Exception e) {
+                                _assert(e.getClass() == RuntimeException.class);
+                                _assert(e.getMessage().equals("JNICALL"));
+                            }
+                        });
+
+                test(
+                        "ExceptionOccurred",
+                        () -> {
+                            Throwable throwable = CallJNI.exceptionOccurred();
+                            _assert(throwable.getClass() == RuntimeException.class);
+                            _assert(throwable.getMessage().equals("JNICALL"));
+                        });
+
+                test(
+                        "ExceptionDescribe",
+                        () -> {
+                            try {
+                                CallJNI.exceptionDescribe();
+                            } catch (Exception e) {
+                                String stackTrace0 = e.getStackTrace()[0].toString();
+                                _assert(
+                                        stackTrace0.contains(
+                                                "Exception in thread \"main\" java.lang.RuntimeException: JNICALL"));
+                            }
+                        });
+
+                test(
+                        "ExceptionClear",
+                        () -> {
+                            try {
+                                CallJNI.exceptionClear();
+                            } catch (Exception e) {
+                                _assert(e == null);
+                            }
+                        });
+
+                test(
+                        "FatalError",
+                        () -> {
+                            try {
+                                // TODO
+                                // CallJNI.fatalError("JNICALL");
+                            } catch (Throwable tr) {
+
                             }
                         });
 

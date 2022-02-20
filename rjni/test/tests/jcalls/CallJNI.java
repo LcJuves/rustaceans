@@ -33,5 +33,17 @@ class CallJNI {
 
     static native Field toReflectedField();
 
+    static native int $_throw(Throwable obj);
+
+    static native int throwNew(Class<?> clazz, String message);
+
+    static native Throwable exceptionOccurred();
+
+    static native void exceptionDescribe();
+
+    static native void exceptionClear();
+
+    static native void fatalError(String msg);
+
     static native PrintStream getSystemOut();
 }
