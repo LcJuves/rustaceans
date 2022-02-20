@@ -196,22 +196,30 @@ macro_rules! env_from_vm {
     };
 }
 
-use std::os::raw::{c_char, c_uchar, c_void};
+use std::os::raw::{c_char, c_void};
 
 pub type VaList = *mut c_void;
 
 /* Primitive types that match up with Java equivalents */
 
-pub type Jboolean = c_uchar;
+/// unsigned 8 bits
+pub type Jboolean = u8;
+/// signed 8 bits
 pub type Jbyte = i8;
+/// unsigned 16 bits
 pub type Jchar = u16;
+/// signed 16 bits
 pub type Jshort = i16;
+/// signed 32 bits
 pub type Jint = i32;
+/// signed 64 bits
 pub type Jlong = i64;
+/// 32 bits
 pub type Jfloat = f32;
+/// 64 bits
 pub type Jdouble = f64;
 
-/// "cardinal indices and sizes"
+/// The [`Jsize`] integer type is used to describe cardinal indices and sizes.
 pub type Jsize = Jint;
 
 /* Reference types that match up with Java equivalents */
@@ -236,9 +244,10 @@ pub type JobjectArray = Jarray;
 
 pub type Jweak = Jobject;
 
-/// When passing arguments from Rust to a Java method, the jvalue union is used
+/// When passing arguments from Rust to a Java method, the [`Jvalue`] union is used.
+/// The [`Jvalue`] union type is used as the element type in argument arrays.
 #[repr(C)]
-pub union jvalue {
+pub union Jvalue {
     // Primitive types
     pub z: Jboolean,
     pub b: Jbyte,
@@ -274,9 +283,9 @@ pub struct JNINativeMethod {
     pub fn_ptr: *mut c_void,
 }
 
-/// `JNIEnv` implements the "Java Native Inferface", and contains most of what you'll use to interact with Java from Rust
+/// [`JNIEnv`] implements the "Java Native Inferface", and contains most of what you'll use to interact with Java from Rust
 pub type JNIEnv = *const JNINativeInterface;
-/// `JavaVM` (along with a handful of global functions) implements the "Java Invocation Interface",
+/// [`JavaVM`] (along with a handful of global functions) implements the "Java Invocation Interface",
 /// which allow you to create and destroy a Java Virtual Machine
 pub type JavaVM = *const JNIInvokeInterface;
 
@@ -288,21 +297,26 @@ pub struct JNINativeInterface {
     reserved2: *mut c_void,
 
     reserved3: *mut c_void,
+    /// Returns the major version number in the higher 16 bits and the minor version number in the lower 16 bits.
     pub get_version: unsafe_extern_system_fn!((env: *mut JNIEnv) -> Jint),
 
+    /// Loads a class from a buffer of raw class data. The buffer containing the raw class data is not referenced by the VM after the `define_class` call returns, and it may be discarded if desired.
     pub define_class: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         name: *const c_char,
         loader: Jobject,
         buf: *const Jbyte,
-        len: Jsize
+        buf_len: Jsize
     ) -> Jclass),
+    /// Returns a class object from a fully-qualified name, or `NULL` if the `class` cannot be found.
     pub find_class: unsafe_extern_system_fn!((env: *mut JNIEnv, name: *const c_char) -> Jclass),
 
+    /// A JNI method ID that corresponds to the given Java reflection method, or NULL if the operation fails.
     pub from_reflected_method: unsafe_extern_system_fn!((env: *mut JNIEnv, method: Jobject) -> JmethodID),
+    /// A JNI field ID that corresponds to the given Java reflection field, or NULL if the operation fails.
     pub from_reflected_field: unsafe_extern_system_fn!((env: *mut JNIEnv, field: Jobject) -> JfieldID),
 
-    /// spec doesn't show Jboolean parameter
+    /// Returns an instance of the `java.lang.reflect.Method` or `java.lang.reflect.Constructor` which corresponds to the given `method_id`, or `NULL` if the operation fails.
     pub to_reflected_method: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         cls: Jclass,
@@ -310,10 +324,15 @@ pub struct JNINativeInterface {
         is_static: Jboolean
     ) -> Jobject),
 
-    pub get_superclass: unsafe_extern_system_fn!((env: *mut JNIEnv, sub: Jclass) -> Jclass),
-    pub is_assignable_from: unsafe_extern_system_fn!((env: *mut JNIEnv, sub: Jclass, sup: Jclass) -> Jboolean),
+    /// If `clazz` represents any class other than the class `Object`, then this function returns the object that represents the superclass of the class specified by `clazz`.
+    /// If `clazz` specifies the class `Object`, or `clazz` represents an interface, this function returns `NULL`.
+    pub get_superclass: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz: Jclass) -> Jclass),
+    /// Determines whether an object of `clazz1` can be safely cast to `clazz2`.
+    pub is_assignable_from: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz1: Jclass, clazz2: Jclass) -> Jboolean),
 
-    /// spec doesn't show Jboolean parameter
+    /// Converts a field ID derived from `cls` to a `java.lang.reflect.Field` object. `is_static` must be set to [`JNI_TRUE`] if `field_id` refers to a static field, and [`JNI_FALSE`] otherwise.
+    ///
+    /// Throws `OutOfMemoryError` and returns 0 if fails.
     pub to_reflected_field: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         cls: Jclass,
@@ -350,7 +369,7 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         clazz: Jclass,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jobject),
 
     pub get_object_class: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject) -> Jclass),
@@ -374,7 +393,7 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         obj: Jobject,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jobject),
 
     pub call_boolean_method: unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: Jobject, method_id: JmethodID) -> Jboolean),
@@ -388,7 +407,7 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         obj: Jobject,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jboolean),
 
     pub call_byte_method: unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: Jobject, method_id: JmethodID) -> Jbyte),
@@ -402,7 +421,7 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         obj: Jobject,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jbyte),
 
     pub call_char_method: unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: Jobject, method_id: JmethodID) -> Jchar),
@@ -416,7 +435,7 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         obj: Jobject,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jchar),
 
     pub call_short_method: unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: Jobject, method_id: JmethodID) -> Jshort),
@@ -430,7 +449,7 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         obj: Jobject,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jshort),
 
     pub call_int_method: unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: Jobject, method_id: JmethodID) -> Jint),
@@ -444,7 +463,7 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         obj: Jobject,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jint),
 
     pub call_long_method: unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: Jobject, method_id: JmethodID) -> Jlong),
@@ -458,7 +477,7 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         obj: Jobject,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jlong),
 
     pub call_float_method: unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: Jobject, method_id: JmethodID) -> Jfloat),
@@ -472,7 +491,7 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         obj: Jobject,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jfloat),
 
     pub call_double_method: unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: Jobject, method_id: JmethodID) -> Jdouble),
@@ -486,7 +505,7 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         obj: Jobject,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jdouble),
 
     pub call_void_method:
@@ -501,7 +520,7 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         obj: Jobject,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     )),
 
     pub call_nonvirtual_object_method: unsafe_extern_c_var_fn!((
@@ -521,7 +540,7 @@ pub struct JNINativeInterface {
         obj: Jobject,
         clazz: Jclass,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jobject),
 
     pub call_nonvirtual_boolean_method: unsafe_extern_c_var_fn!((
@@ -541,7 +560,7 @@ pub struct JNINativeInterface {
         obj: Jobject,
         clazz: Jclass,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jboolean),
 
     pub call_nonvirtual_byte_method: unsafe_extern_c_var_fn!((
@@ -561,7 +580,7 @@ pub struct JNINativeInterface {
         obj: Jobject,
         clazz: Jclass,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jbyte),
 
     pub call_nonvirtual_char_method: unsafe_extern_c_var_fn!((
@@ -581,7 +600,7 @@ pub struct JNINativeInterface {
         obj: Jobject,
         clazz: Jclass,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jchar),
 
     pub call_nonvirtual_short_method: unsafe_extern_c_var_fn!((
@@ -601,7 +620,7 @@ pub struct JNINativeInterface {
         obj: Jobject,
         clazz: Jclass,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jshort),
 
     pub call_nonvirtual_int_method: unsafe_extern_c_var_fn!((
@@ -621,7 +640,7 @@ pub struct JNINativeInterface {
         obj: Jobject,
         clazz: Jclass,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jint),
 
     pub call_nonvirtual_long_method: unsafe_extern_c_var_fn!((
@@ -641,7 +660,7 @@ pub struct JNINativeInterface {
         obj: Jobject,
         clazz: Jclass,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jlong),
 
     pub call_nonvirtual_float_method: unsafe_extern_c_var_fn!((
@@ -661,7 +680,7 @@ pub struct JNINativeInterface {
         obj: Jobject,
         clazz: Jclass,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jfloat),
 
     pub call_nonvirtual_double_method: unsafe_extern_c_var_fn!((
@@ -681,7 +700,7 @@ pub struct JNINativeInterface {
         obj: Jobject,
         clazz: Jclass,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jdouble),
 
     pub call_nonvirtual_void_method: unsafe_extern_c_var_fn!((
@@ -702,7 +721,7 @@ pub struct JNINativeInterface {
         obj: Jobject,
         clazz: Jclass,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     )),
 
     pub get_field_id: unsafe_extern_system_fn!((
@@ -771,7 +790,7 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         clazz: Jclass,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jobject),
 
     pub call_static_boolean_method: unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: Jclass, method_id: JmethodID) -> Jboolean),
@@ -785,7 +804,7 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         clazz: Jclass,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jboolean),
 
     pub call_static_byte_method: unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: Jclass, method_id: JmethodID) -> Jbyte),
@@ -799,7 +818,7 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         clazz: Jclass,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jbyte),
 
     pub call_static_char_method: unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: Jclass, method_id: JmethodID) -> Jchar),
@@ -813,7 +832,7 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         clazz: Jclass,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jchar),
 
     pub call_static_short_method: unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: Jclass, method_id: JmethodID) -> Jshort),
@@ -827,7 +846,7 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         clazz: Jclass,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jshort),
 
     pub call_static_int_method: unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: Jclass, method_id: JmethodID) -> Jint),
@@ -841,7 +860,7 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         clazz: Jclass,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jint),
 
     pub call_static_long_method: unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: Jclass, method_id: JmethodID) -> Jlong),
@@ -855,7 +874,7 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         clazz: Jclass,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jlong),
 
     pub call_static_float_method: unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: Jclass, method_id: JmethodID) -> Jfloat),
@@ -869,7 +888,7 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         clazz: Jclass,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jfloat),
 
     pub call_static_double_method: unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: Jclass, method_id: JmethodID) -> Jdouble),
@@ -883,7 +902,7 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         clazz: Jclass,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     ) -> Jdouble),
 
     pub call_static_void_method:
@@ -898,7 +917,7 @@ pub struct JNINativeInterface {
         env: *mut JNIEnv,
         clazz: Jclass,
         method_id: JmethodID,
-        args: *const jvalue
+        args: *const Jvalue
     )),
 
     pub get_static_field_id: unsafe_extern_system_fn!((
@@ -1280,13 +1299,15 @@ pub struct JNINativeInterface {
         capacity: Jlong
     ) -> Jobject),
     pub get_direct_buffer_address: unsafe_extern_system_fn!((env: *mut JNIEnv, buf: Jobject) -> *mut c_void),
+    /// Fetches and returns the capacity of the memory region referenced by the given direct `java.nio.Buffer`. The capacity is the number of *elements* that the memory region contains.
     pub get_direct_buffer_capacity: unsafe_extern_system_fn!((env: *mut JNIEnv, buf: Jobject) -> Jlong),
 
-    /// New JNI 1.6 Features
+    /// Returns the type of the object referred to by the `obj` argument. The argument `obj` can either be a local, global or weak global reference, or `NULL`.
     ///
     /// `JNI_VERSION` >= `JNI_VERSION_1_6` can be used normally
     pub get_object_ref_type: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject) -> JobjectRefType),
-    /// Module Features
+    /// Returns the `java.lang.Module` object for the module that the class is a member of. If the class is not in a named module then the unnamed module of the class loader for the class is returned. If the class represents
+    /// an array type then this function returns the `Module` object for the element type. If the class represents a primitive type or `void`, then the `Module` object for the `java.base` module is returned.
     ///
     /// `JNI_VERSION` >= `JNI_VERSION_9` can be used normally
     pub get_module: unsafe_extern_system_fn!((env: *mut JNIEnv, clazz: Jclass) -> Jobject),
@@ -1299,18 +1320,39 @@ pub struct JNIInvokeInterface {
     reserved1: *mut c_void,
     reserved2: *mut c_void,
 
+    /// Unloads a Java VM and reclaims its resources.
+    ///
+    /// Any thread, whether attached or not, can invoke this function. If the current thread is attached, the VM waits until the current thread is the only non-daemon user-level Java thread. If the current thread is not
+    /// attached, the VM attaches the current thread and then waits until the current thread is the only non-daemon user-level thread.
     pub destroy_java_vm: unsafe_extern_system_fn!((vm: *mut JavaVM) -> Jint),
 
+    /// Attaches the current thread to a Java VM. Returns a JNI interface pointer in the `JNIEnv` argument.
+    ///
+    /// Trying to attach a thread that is already attached is a no-op.
+    ///
+    /// A native thread cannot be attached simultaneously to two Java VMs.
+    ///
+    /// When a thread is attached to the VM, the context class loader is the bootstrap loader.
     pub attach_current_thread: unsafe_extern_system_fn!((
         vm: *mut JavaVM,
-        penv: *mut *mut c_void,
-        args: *mut c_void
+        p_env: *mut *mut c_void,
+        thr_args: *mut c_void
     ) -> Jint),
 
+    /// Detaches the current thread from a Java VM. All Java monitors held by this thread are released. All Java threads waiting for this thread to die are notified.
+    ///
+    /// The main thread can be detached from the VM.
+    ///
+    /// Trying to detach a thread that is not attached is a no-op.
+    ///
+    /// If an exception is pending when `detach_current_thread` is called, the VM may choose to report its existence.
     pub detach_current_thread: unsafe_extern_system_fn!((vm: *mut JavaVM) -> Jint),
 
-    pub get_env: unsafe_extern_system_fn!((vm: *mut JavaVM, penv: *mut *mut c_void, version: Jint) -> Jint),
+    pub get_env: unsafe_extern_system_fn!((vm: *mut JavaVM, env: *mut *mut c_void, version: Jint) -> Jint),
 
+    /// Same semantics as `attach_current_thread`, but the newly-created `java.lang.Thread` instance is a daemon.
+    ///
+    /// If the thread has already been attached via either `attach_current_thread` or `attach_current_thread_as_daemon`, this routine simply sets the value pointed to by `penv` to the `JNIEnv` of the current thread. In this case neither `attach_current_thread` nor this routine have any effect on the *daemon* status of the thread.
     pub attach_current_thread_as_daemon: unsafe_extern_system_fn!((
         vm: *mut JavaVM,
         penv: *mut *mut c_void,
@@ -1328,7 +1370,7 @@ pub struct JavaVMAttachArgs {
 /// JNI 1.2+ initialization (As of 1.6, the pre-1.2 structures are no longer supported)
 #[repr(C)]
 pub struct JavaVMOption {
-    option_string: *const c_char,
+    option_string: *const c_char, /* the option as a string in the default platform encoding */
     extra_info: *mut c_void,
 }
 
@@ -1347,16 +1389,27 @@ extern "system" {
      *
      * Note these are the only symbols exported for JNI by the VM
      */
-    pub fn JNI_GetDefaultJavaVMInitArgs(args: *mut c_void) -> Jint;
-    pub fn JNI_CreateJavaVM(
-        pvm: *mut *mut JavaVM,
-        penv: *mut *mut c_void,
-        args: *mut c_void,
+
+    /// Returns a default configuration for the Java VM. Before calling this function, native code must set the vm_args->version field to the JNI version it expects the VM to support. After this function returns, vm_args->version will be set to the actual JNI version the VM supports.
+    ///
+    /// Returns JNI_OK if the requested version is supported; returns a JNI error code (a negative number) if the requested version is not supported.
+    #[link_name = "JNI_GetDefaultJavaVMInitArgs"]
+    pub fn jni_get_default_java_vm_init_args(vm_args: *mut c_void) -> Jint;
+    /// Loads and initializes a Java VM. The current thread becomes the main thread. Sets the env argument to the JNI interface pointer of the main thread.
+    /// Creation of multiple VMs in a single process is not supported.
+    #[link_name = "JNI_CreateJavaVM"]
+    pub fn jni_create_java_vm(
+        p_vm: *mut *mut JavaVM,
+        p_env: *mut *mut c_void,
+        vm_args: *mut c_void,
     ) -> Jint;
-    pub fn JNI_GetCreatedJavaVMs(
+    /// Returns all Java VMs that have been created. Pointers to VMs are written in the buffer `vm_buf` in the order they are created. At most `buf_len` number of entries will be written. The total number of created VMs is returned in `n_vms`.
+    /// Creation of multiple VMs in a single process is not supported.
+    #[link_name = "JNI_GetCreatedJavaVMs"]
+    pub fn jni_get_created_java_vms(
         vm_buf: *mut *mut JavaVM,
         buf_len: Jsize,
-        num_vms: *mut Jsize,
+        n_vms: *mut Jsize,
     ) -> Jint;
 }
 
@@ -1367,38 +1420,47 @@ extern "system" {
 pub const JNI_FALSE: Jboolean = 0;
 pub const JNI_TRUE: Jboolean = 1;
 
+/// Java SE Platform 1.1
 pub const JNI_VERSION_1_1: Jint = 0x00010001;
+/// Java SE Platform 1.2 & 1.3
 pub const JNI_VERSION_1_2: Jint = 0x00010002;
+/// Java SE Platform 1.4 & 5.0
 pub const JNI_VERSION_1_4: Jint = 0x00010004;
+/// Java SE Platform 6 & 7
 pub const JNI_VERSION_1_6: Jint = 0x00010006;
+/// Java SE Platform 8
 pub const JNI_VERSION_1_8: Jint = 0x00010008;
+/// Java SE Platform 9
 pub const JNI_VERSION_9: Jint = 0x00090000;
+/// Java SE Platform 10+
 pub const JNI_VERSION_10: Jint = 0x000a0000;
 
 /*
- * possible return values for JNI functions
+ * General return value constants for JNI functions.
  */
 
-/// no error
+/// success
 pub const JNI_OK: Jint = 0;
-/// generic error
+/// unknown error
 pub const JNI_ERR: Jint = -1;
 /// thread detached from the VM
 pub const JNI_EDETACHED: Jint = -2;
 /// JNI version error
 pub const JNI_EVERSION: Jint = -3;
-/// Out of memory
+/// not enough memory
 pub const JNI_ENOMEM: Jint = -4;
 /// VM already created
 pub const JNI_EEXIST: Jint = -5;
-/// Invalid argument
+/// invalid arguments
 pub const JNI_EINVAL: Jint = -6;
 
 /*
- * used in ReleaseScalarArrayElements
+ * Primitive Array Release Modes
+ *
+ * 0: copy back the content and free the elems buffer
  */
 
-/// copy content, do not free buffer
+/// copy back the content but do not free the elems buffer
 pub const JNI_COMMIT: Jint = 1;
-/// free buffer w/o copying back
+/// free the buffer without copying back the possible changes
 pub const JNI_ABORT: Jint = 2;

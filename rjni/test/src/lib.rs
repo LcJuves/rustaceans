@@ -1,5 +1,4 @@
 use std::ffi::*;
-use std::os::raw::*;
 
 use rjni::*;
 
@@ -34,16 +33,25 @@ jni_fn!(Java_CallJNI_getVersion, (env: *mut JNIEnv, _: Jclass), Jint, {
 
 jni_fn!(
     Java_CallJNI_defineClass,
-    (
-        env: *mut JNIEnv,
-        _jcls: Jclass,
-        _name: *const c_char,
-        _loader: Jobject,
-        _buf: *const Jbyte,
-        _len: Jsize
-    ),
+    (env: *mut JNIEnv, jcls: Jclass, name: Jstring, bytes: JbyteArray),
     Jclass,
-    { env_call!(env, find_class, char_const_ptr!("java/lang/Class")) }
+    {
+        let name = env_call!(env, get_string_utfchars, name, JNI_FALSE as *mut Jboolean);
+
+        let jcls_class = env_call!(env, find_class, char_const_ptr!("java/lang/Class"));
+        let jmid_get_class_loader = env_call!(
+            env,
+            get_method_id,
+            jcls_class,
+            char_const_ptr!("getClassLoader"),
+            char_const_ptr!("()Ljava/lang/ClassLoader;")
+        );
+        let loader = env_call!(env, call_object_method, jcls, jmid_get_class_loader);
+
+        let buf = env_call!(env, get_byte_array_elements, bytes, JNI_FALSE as *mut Jboolean);
+        let len = env_call!(env, get_array_length, bytes);
+        env_call!(env, define_class, name, loader, buf, len)
+    }
 );
 
 jni_fn!(Java_CallJNI_findClass, (env: *mut JNIEnv, _: Jclass, name: Jstring), Jclass, {
@@ -84,6 +92,29 @@ jni_fn!(Java_CallJNI_toReflectedMethod, (env: *mut JNIEnv, _: Jclass), Jobject, 
         char_const_ptr!("(Z)Ljava/lang/String;")
     );
     env_call!(env, to_reflected_method, jcls_string, jmid_value_of, JNI_TRUE)
+});
+
+jni_fn!(Java_CallJNI_getSuperclass, (env: *mut JNIEnv, _: Jclass, clazz: Jclass), Jclass, {
+    env_call!(env, get_superclass, clazz)
+});
+
+jni_fn!(
+    Java_CallJNI_isAssignableFrom,
+    (env: *mut JNIEnv, _: Jclass, clazz1: Jclass, clazz2: Jclass),
+    Jboolean,
+    { env_call!(env, is_assignable_from, clazz1, clazz2) }
+);
+
+jni_fn!(Java_CallJNI_toReflectedField, (env: *mut JNIEnv, _: Jclass), Jobject, {
+    let jcls_system = env_call!(env, find_class, char_const_ptr!("java/lang/System"));
+    let jfid_system_out = env_call!(
+        env,
+        get_static_field_id,
+        jcls_system,
+        char_const_ptr!("out"),
+        char_const_ptr!("Ljava/io/PrintStream;")
+    );
+    env_call!(env, to_reflected_field, jcls_system, jfid_system_out, JNI_TRUE)
 });
 
 jni_fn!(Java_CallJNI_getSystemOut, (env: *mut JNIEnv, _: Jclass), Jobject, {

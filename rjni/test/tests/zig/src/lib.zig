@@ -10,9 +10,10 @@ const jobject = jni.jobject;
 const jfield_id = jni.jfield_id;
 const jmethod_id = jni.jmethod_id;
 const jboolean = jni.jboolean;
+const jbyte_array = jni.jbyte_array;
 
 const jni_version_1_1 = jni.jni_version_1_1;
-var jni_false = jni.jni_false;
+const jni_false = jni.jni_false;
 const jni_true = jni.jni_true;
 
 pub export fn @"JNI_OnLoad"(vm: [*c]JavaVM, _: ?*anyopaque) jint {
@@ -34,8 +35,21 @@ pub export fn @"Java_CallJNI_getVersion"(env: [*c]JNIEnv, _: jclass) jint {
     return env.*.*.get_version.?(env);
 }
 
+pub export fn @"Java_CallJNI_defineClass"(env: [*c]JNIEnv, jcls: jclass, name: jstring, bytes: jbyte_array) jclass {
+    const c_str_name = env.*.*.get_string_utf_chars.?(env, name, @intToPtr([*c]jboolean, jni_false));
+
+    const jcls_class = env.*.*.find_class.?(env, "java/lang/Class");
+    const jmid_get_class_loader = env.*.*.get_method_id.?(env, jcls_class, "getClassLoader", "()Ljava/lang/ClassLoader;");
+    const loader = env.*.*.call_object_method.?(env, jcls, jmid_get_class_loader);
+
+    const buf = env.*.*.get_byte_array_elements.?(env, bytes, @intToPtr([*c]jboolean, jni_false));
+    const len = env.*.*.get_array_length.?(env, bytes);
+
+    return env.*.*.define_class.?(env, c_str_name, loader, buf, len);
+}
+
 pub export fn @"Java_CallJNI_findClass"(env: [*c]JNIEnv, _: jclass, name: jstring) jclass {
-    const c_str_name: [*c]const u8 = env.*.*.get_string_utf_chars.?(env, name, @intToPtr([*c]jboolean, jni_false.*));
+    const c_str_name: [*c]const u8 = env.*.*.get_string_utf_chars.?(env, name, @intToPtr([*c]jboolean, jni_false));
     return env.*.*.find_class.?(env, c_str_name);
 }
 
@@ -55,6 +69,20 @@ pub export fn @"Java_CallJNI_toReflectedMethod"(env: [*c]JNIEnv, _: jclass) jobj
     const jcls_string: jclass = env.*.*.find_class.?(env, "java/lang/String");
     const jmid_valueOf: jmethod_id = env.*.*.get_static_method_id.?(env, jcls_string, "valueOf", "(Z)Ljava/lang/String;");
     return env.*.*.to_reflected_method.?(env, jcls_string, jmid_valueOf, jni_true);
+}
+
+pub export fn @"Java_CallJNI_getSuperclass"(env: [*c]JNIEnv, _: jclass, clazz: jclass) jclass {
+    return env.*.*.get_superclass.?(env, clazz);
+}
+
+pub export fn @"Java_CallJNI_isAssignableFrom"(env: [*c]JNIEnv, _: jclass, clazz1: jclass, clazz2: jclass) jboolean {
+    return env.*.*.is_assignable_from.?(env, clazz1, clazz2);
+}
+
+pub export fn @"Java_CallJNI_toReflectedField"(env: [*c]JNIEnv, _: jclass) jobject {
+    const jcls_system: jclass = env.*.*.find_class.?(env, "java/lang/System");
+    const jfid_system_out: jfield_id = env.*.*.get_static_field_id.?(env, jcls_system, "out", "Ljava/io/PrintStream;");
+    return env.*.*.to_reflected_field.?(env, jcls_system, jfid_system_out, jni_true);
 }
 
 pub export fn @"Java_CallJNI_getSystemOut"(env: [*c]JNIEnv, _: jclass) jobject {

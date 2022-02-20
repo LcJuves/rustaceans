@@ -17,7 +17,7 @@ class CallJNI {
 
     static native int getVersion();
 
-    static native Class<?> defineClass(String name, ClassLoader loader, byte[] buf, int len);
+    static native Class<?> defineClass(String name, byte[] bytes);
 
     static native Class<?> findClass(String name);
 
@@ -26,6 +26,12 @@ class CallJNI {
     static native PrintStream fromReflectedField(Field field);
 
     static native Method toReflectedMethod();
+
+    static native Class<?> getSuperclass(Class<?> clazz);
+
+    static native boolean isAssignableFrom(Class<?> clazz1, Class<?> clazz2);
+
+    static native Field toReflectedField();
 
     static native PrintStream getSystemOut();
 }

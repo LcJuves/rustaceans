@@ -1,6 +1,10 @@
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Main */
 class Main {
@@ -54,6 +58,21 @@ class Main {
                         });
 
                 test(
+                        "defineClass",
+                        () -> {
+                            try {
+                                byte[] definedClassBytes =
+                                        Files.readAllBytes(Paths.get("DefinedClass.class"));
+                                Class<?> clazz =
+                                        CallJNI.defineClass("DefinedClass", definedClassBytes);
+                                Method method = clazz.getMethod("getClassSimpleName");
+                                _assert(((String) method.invoke(clazz)).equals("DefinedClass"));
+                            } catch (Exception e) {
+                                throw new AssertionError(e);
+                            }
+                        });
+
+                test(
                         "FindClass",
                         () -> {
                             Class<?> clazz = CallJNI.findClass("java/lang/String");
@@ -94,6 +113,43 @@ class Main {
                                         String.class
                                                 .cast(method.invoke(String.class, false))
                                                 .equals(String.valueOf(false)));
+                            } catch (Exception e) {
+                                throw new AssertionError(e);
+                            }
+                        });
+
+                test(
+                        "GetSuperclass",
+                        () -> {
+                            try {
+                                Class<?> clazz = CallJNI.getSuperclass(String.class);
+                                _assert(clazz == Object.class);
+                            } catch (Exception e) {
+                                throw new AssertionError(e);
+                            }
+                        });
+
+                test(
+                        "IsAssignableFrom",
+                        () -> {
+                            try {
+                                boolean canBeCast =
+                                        CallJNI.isAssignableFrom(ArrayList.class, List.class);
+                                _assert(canBeCast);
+                            } catch (Exception e) {
+                                throw new AssertionError(e);
+                            }
+                        });
+
+                test(
+                        "ToReflectedField",
+                        () -> {
+                            try {
+                                Field field = CallJNI.toReflectedField();
+                                _assert(
+                                        PrintStream.class
+                                                .cast(field.get(System.class))
+                                                .equals(System.out));
                             } catch (Exception e) {
                                 throw new AssertionError(e);
                             }
