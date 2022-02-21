@@ -14,15 +14,8 @@ class Main {
         System.out.println(x);
     }
 
-    private static void eprintln(Object x) {
-        System.err.println(x);
-    }
-
     private static void pass() {
-        System.out.print("\033[32;1m");
-        System.out.print("PASS");
-        System.out.print("\033[m");
-        System.out.println();
+        println("\033[32;1mPASS\033[m");
     }
 
     private static <E> void assertType(E e, Class<?> clazz) {
@@ -37,7 +30,7 @@ class Main {
         }
     }
 
-    private static void test(String desc, Runnable runnable) {
+    static void test(String desc, Runnable runnable) {
         System.out.print(desc);
         System.out.print("   ");
         runnable.run();
@@ -46,7 +39,7 @@ class Main {
 
     public static void main(String[] args) {
         long startTimeMillis = System.currentTimeMillis();
-        System.out.println();
+        println("");
         for (; ; ) {
             try {
                 test(
@@ -208,18 +201,7 @@ class Main {
                             }
                         });
 
-                test(
-                        "FatalError",
-                        () -> {
-                            try {
-                                // TODO
-                                // CallJNI.fatalError("JNICALL");
-                            } catch (Throwable tr) {
-
-                            }
-                        });
-
-                System.out.println();
+                println("");
                 PrintStream out = (PrintStream) CallJNI.getSystemOut();
                 assertType(out, PrintStream.class);
                 out.println("CallJNI: System.out >>>");
@@ -227,11 +209,10 @@ class Main {
                 break;
             } catch (Throwable tr) {
                 tr.printStackTrace();
-                eprintln("FAILED");
-                break;
+                CallJNI.fatalError("FAILED");
             }
         }
         long endTimeMillis = System.currentTimeMillis();
-        System.out.println(endTimeMillis - startTimeMillis);
+        println(endTimeMillis - startTimeMillis);
     }
 }

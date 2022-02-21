@@ -22,6 +22,27 @@ mod tests {
 
     fn javac_and_run(jcalls_dir: &Path, javac_path: &Path, java_path: &Path, dylib_out_dir: &str) {
         assert!(Command::new(javac_path)
+            .arg("FatalErrorTest.java")
+            .current_dir(jcalls_dir)
+            .status()
+            .unwrap()
+            .success());
+
+        let child = Command::new(java_path)
+            .arg(format!("-Djava.library.path={dylib_out_dir}"))
+            .arg("FatalErrorTest")
+            .current_dir(jcalls_dir)
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let output = child.wait_with_output().unwrap();
+        let stdout_string = String::from_utf8_lossy(&output.stdout);
+        print!("{stdout_string}");
+        assert!(stdout_string.contains("FATAL ERROR in native method: JNICALL"));
+        assert!(stdout_string.contains("at CallJNI.fatalError(Native Method)"));
+        println!("\u{1b}[32;1mPASS\u{1b}[m");
+
+        assert!(Command::new(javac_path)
             .arg("Main.java")
             .current_dir(jcalls_dir)
             .status()
