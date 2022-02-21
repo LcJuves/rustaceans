@@ -2,6 +2,7 @@
 //! http://www.cplusplus.com/articles/2ywTURfi/
 
 #![cfg(windows)]
+#![allow(dead_code)]
 
 use crate::cvtseq;
 

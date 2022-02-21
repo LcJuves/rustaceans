@@ -20,59 +20,59 @@ pub fn encode(src: &[u8]) -> Vec<u8> {
 
     let mut cpy = src.iter().cloned().collect::<Vec<u8>>();
     (|src_len| {
-        let rder = src_len % NUMBER_OF_BYTES_PER_GROUP;
-        if rder != 0 {
-            for _ in 0..(NUMBER_OF_BYTES_PER_GROUP - rder) {
+        let remainder = src_len % NUMBER_OF_BYTES_PER_GROUP;
+        if remainder != 0 {
+            for _ in 0..(NUMBER_OF_BYTES_PER_GROUP - remainder) {
                 cpy.push(b'\0');
             }
         }
     })(src_len);
 
-    let mut cpyi = 0usize;
+    let mut cpy_i = 0usize;
 
     let mut dst = Vec::<u8>::new();
 
-    while cpyi < cpy.len() {
-        let cpyi_1 = cpyi + 1;
-        let cpyi_2 = cpyi + 2;
-        let cpyi_3 = cpyi + 3;
-        let cpyi_4 = cpyi + 4;
+    while cpy_i < cpy.len() {
+        let cpy_i_1 = cpy_i + 1;
+        let cpy_i_2 = cpy_i + 2;
+        let cpy_i_3 = cpy_i + 3;
+        let cpy_i_4 = cpy_i + 4;
 
         // Alphabet unsigned indexes
-        let albeti_0 = cpy[cpyi] as usize;
-        let albeti_1 = cpy[cpyi_1] as usize;
-        let albeti_2 = cpy[cpyi_2] as usize;
-        let albeti_3 = cpy[cpyi_3] as usize;
-        let albeti_4 = cpy[cpyi_4] as usize;
+        let albet_i_0 = cpy[cpy_i] as usize;
+        let albet_i_1 = cpy[cpy_i_1] as usize;
+        let albet_i_2 = cpy[cpy_i_2] as usize;
+        let albet_i_3 = cpy[cpy_i_3] as usize;
+        let albet_i_4 = cpy[cpy_i_4] as usize;
 
-        dst.push(ALPHABET[albeti_0 >> 3] as u8);
-        dst.push(ALPHABET[(albeti_0 & 0x7) << 2 | albeti_1 >> 6] as u8);
-        dst.push(match b'\0' != cpy[cpyi_1] && cpyi_1 != src_len {
-            true => ALPHABET[(albeti_1 & 0x3e) >> 1] as u8,
+        dst.push(ALPHABET[albet_i_0 >> 3] as u8);
+        dst.push(ALPHABET[(albet_i_0 & 0x7) << 2 | albet_i_1 >> 6] as u8);
+        dst.push(match b'\0' != cpy[cpy_i_1] && cpy_i_1 != src_len {
+            true => ALPHABET[(albet_i_1 & 0x3e) >> 1] as u8,
             _ => b'=',
         });
-        dst.push(match b'\0' != cpy[cpyi_1] && cpyi_1 != src_len {
-            true => ALPHABET[(albeti_1 & 0x1) << 4 | (albeti_2 & 0xf0) >> 4] as u8,
+        dst.push(match b'\0' != cpy[cpy_i_1] && cpy_i_1 != src_len {
+            true => ALPHABET[(albet_i_1 & 0x1) << 4 | (albet_i_2 & 0xf0) >> 4] as u8,
             _ => b'=',
         });
-        dst.push(match b'\0' != cpy[cpyi_2] && cpyi_2 != src_len + 1 {
-            true => ALPHABET[(albeti_2 & 0xf) << 1 | (albeti_3 & 0x80) >> 7] as u8,
+        dst.push(match b'\0' != cpy[cpy_i_2] && cpy_i_2 != src_len + 1 {
+            true => ALPHABET[(albet_i_2 & 0xf) << 1 | (albet_i_3 & 0x80) >> 7] as u8,
             _ => b'=',
         });
-        dst.push(match b'\0' != cpy[cpyi_3] && cpyi_3 != src_len + 2 {
-            true => ALPHABET[(albeti_3 & 0x7c) >> 2] as u8,
+        dst.push(match b'\0' != cpy[cpy_i_3] && cpy_i_3 != src_len + 2 {
+            true => ALPHABET[(albet_i_3 & 0x7c) >> 2] as u8,
             _ => b'=',
         });
-        dst.push(match b'\0' != cpy[cpyi_3] && cpyi_3 != src_len + 2 {
-            true => ALPHABET[(albeti_3 & 0x3) << 3 | (albeti_4 & 0xe0) >> 5] as u8,
+        dst.push(match b'\0' != cpy[cpy_i_3] && cpy_i_3 != src_len + 2 {
+            true => ALPHABET[(albet_i_3 & 0x3) << 3 | (albet_i_4 & 0xe0) >> 5] as u8,
             _ => b'=',
         });
-        dst.push(match b'\0' != cpy[cpyi_4] && cpyi_4 != src_len + 3 {
-            true => ALPHABET[albeti_4 & 0x1f] as u8,
+        dst.push(match b'\0' != cpy[cpy_i_4] && cpy_i_4 != src_len + 3 {
+            true => ALPHABET[albet_i_4 & 0x1f] as u8,
             _ => b'=',
         });
 
-        cpyi += NUMBER_OF_BYTES_PER_GROUP;
+        cpy_i += NUMBER_OF_BYTES_PER_GROUP;
     }
 
     dst
@@ -81,9 +81,9 @@ pub fn encode(src: &[u8]) -> Vec<u8> {
 #[allow(dead_code)]
 pub fn decode(src: &[u8]) -> Vec<u8> {
     // Find the index of every eight from the Base32 encoding table
-    let find_albeti = |elems: &[u8]| -> (i8, i8, i8, i8, i8, i8, i8, i8) {
+    let find_albet_i = |elems: &[u8]| -> (i8, i8, i8, i8, i8, i8, i8, i8) {
         // Define every eight as a pair of indexes
-        let mut albeti = (-1i8, -1i8, -1i8, -1i8, -1i8, -1i8, -1i8, -1i8);
+        let mut albet_i = (-1i8, -1i8, -1i8, -1i8, -1i8, -1i8, -1i8, -1i8);
         let mut count = 0u8;
 
         for i in 0..(ALPHABET.len()) {
@@ -94,63 +94,71 @@ pub fn decode(src: &[u8]) -> Vec<u8> {
                 if ale == elems[elemi] {
                     let i_i = i as i8;
                     match elemi {
-                        0 => albeti.0 = i_i,
-                        1 => albeti.1 = i_i,
-                        2 => albeti.2 = i_i,
-                        3 => albeti.3 = i_i,
-                        4 => albeti.4 = i_i,
-                        5 => albeti.5 = i_i,
-                        6 => albeti.6 = i_i,
-                        7 => albeti.7 = i_i,
+                        0 => albet_i.0 = i_i,
+                        1 => albet_i.1 = i_i,
+                        2 => albet_i.2 = i_i,
+                        3 => albet_i.3 = i_i,
+                        4 => albet_i.4 = i_i,
+                        5 => albet_i.5 = i_i,
+                        6 => albet_i.6 = i_i,
+                        7 => albet_i.7 = i_i,
                         _ => panic!("error"),
                     }
                     match count {
-                        7 => return albeti, /* Eight indexes found */
+                        7 => return albet_i, /* Eight indexes found */
                         _ => count += 1,
                     }
                 }
             }
         }
 
-        albeti
+        albet_i
     };
 
-    let mut srci = 0usize;
+    let mut src_i = 0usize;
 
     let mut dst = Vec::<u8>::new();
 
     loop {
-        if srci == src.len() {
+        if src_i == src.len() {
             break;
         }
 
         // Find the index of every eight elements from the Base32 encoding table
-        let (albeti_0, albeti_1, albeti_2, albeti_3, albeti_4, albeti_5, albeti_6, albeti_7) =
-            find_albeti(&src[srci..(srci + NUMBER_OF_ENCODED_BYTES_PER_GROUP)]);
+        let (
+            albet_i_0,
+            albet_i_1,
+            albet_i_2,
+            albet_i_3,
+            albet_i_4,
+            albet_i_5,
+            albet_i_6,
+            albet_i_7,
+        ) = find_albet_i(&src[src_i..(src_i + NUMBER_OF_ENCODED_BYTES_PER_GROUP)]);
 
-        dst.push((albeti_0 << 3 | albeti_1 >> 2) as u8);
+        dst.push((albet_i_0 << 3 | albet_i_1 >> 2) as u8);
 
-        match albeti_2 != -1 && albeti_3 != -1 {
+        match albet_i_2 != -1 && albet_i_3 != -1 {
             false => break,
-            _ => dst.push((albeti_1 << 6 | albeti_2 << 1 | albeti_3 >> 4) as u8),
+            _ => dst.push((albet_i_1 << 6 | albet_i_2 << 1 | albet_i_3 >> 4) as u8),
         }
 
-        match albeti_4 {
+        match albet_i_4 {
             -1 => break,
-            _ => dst.push((albeti_3 << 4 | albeti_4 >> 1) as u8),
+            _ => dst.push((albet_i_3 << 4 | albet_i_4 >> 1) as u8),
         }
 
-        match albeti_5 != -1 && albeti_6 != -1 {
+        match albet_i_5 != -1 && albet_i_6 != -1 {
             false => break,
-            _ => dst.push((albeti_4 << 7 | albeti_5 << 2 | albeti_6 >> 3) as u8),
+            _ => dst.push((albet_i_4 << 7 | albet_i_5 << 2 | albet_i_6 >> 3) as u8),
         }
 
-        match albeti_7 {
+        match albet_i_7 {
             -1 => break,
-            _ => dst.push((albeti_6 << 5 | albeti_7) as u8),
+            _ => dst.push((albet_i_6 << 5 | albet_i_7) as u8),
         }
 
-        srci += NUMBER_OF_ENCODED_BYTES_PER_GROUP;
+        src_i += NUMBER_OF_ENCODED_BYTES_PER_GROUP;
     }
     dst
 }

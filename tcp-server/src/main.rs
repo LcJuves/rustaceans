@@ -6,7 +6,7 @@ fn echo_main(addr: &str) -> Result<()> {
     println!("Listening on {}", addr);
     loop {
         let (mut tcp_stream, socket_addr) = listener.accept()?;
-        println!("Connection recevied from {}", socket_addr);
+        println!("Connection received from {}", socket_addr);
         let mut out_stream = tcp_stream.try_clone()?;
         std::thread::spawn(move || {
             let mut ret = Vec::<u8>::new();
@@ -14,7 +14,7 @@ fn echo_main(addr: &str) -> Result<()> {
             loop {
                 let len = match tcp_stream.read(&mut buf) {
                     Ok(0) => {
-                        println!("Recevied data is: {}", String::from_utf8_lossy(&ret));
+                        println!("Received data is: {}", String::from_utf8_lossy(&ret));
                         println!("Connection closed");
                         return Ok(());
                     }

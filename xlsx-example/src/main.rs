@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         //     (TOKIO_RT.as_ref()?).block_on(sign_in_tp_by_sms())?;
 
         // let (ep_jwt_token_current, sessionid, username, email, staff_code, token) =
-        //     (TOKIO_RT.as_ref()?).block_on(sign_in_tp_by_scan_moa_arcode())?;
+        //     (TOKIO_RT.as_ref()?).block_on(sign_in_tp_by_scan_moa_qrcode())?;
         // seeval!((&ep_jwt_token_current, &sessionid, &username, &email, &staff_code, &token));
 
         use crate::robot_generator::upgrade::*;
@@ -36,7 +36,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         // self_upgrade()?;
         // add_me_to_path_var()?;
-        set_alias("rman")?;
+        set_alias("r-man")?;
     } */
 
     Ok(())

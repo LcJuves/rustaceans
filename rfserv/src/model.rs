@@ -10,7 +10,7 @@ lazy_static! {
     pub static ref LF: &'static str = "\n";
     pub(crate) static ref SP: &'static str = " ";
     pub(crate) static ref SERVER_NAME: &'static str = "rfserv";
-    pub(crate) static ref RLOGO_SVG: &'static str = include_str!("w3c/rlogo.svg");
+    pub(crate) static ref RUST_LOGO_SVG: &'static str = include_str!("w3c/rust_logo.svg");
     pub(crate) static ref HTML_TEMP_PART1: &'static str = r#"<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="X-UA-Compatible" content="ie=edge"><title>"#;
     pub(crate) static ref HTML_TEMP_PART2: &'static str = r#"</title><style>"#;
     pub(crate) static ref HTML_TEMP_PART3: &'static str =

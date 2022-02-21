@@ -45,7 +45,7 @@ pub(crate) fn gen_not_found_html(title: &str, not_found_path: &str) -> String {
     html.push_str(&HTML_TEMP_PART2);
     html.push_str(&COMMON_CSS);
     html.push_str(&HTML_TEMP_PART3);
-    html.push_str(&format!("let rlogoSvg=`{}`;", &RLOGO_SVG.to_owned()));
+    html.push_str(&format!("let rustLogoSvg=`{}`;", &RUST_LOGO_SVG.to_owned()));
     html.push_str(&format!("let notFoundPath='{}';", not_found_path));
     html.push_str(&NOT_FOUND_JS);
     html.push_str(&HTML_TEMP_PART4);

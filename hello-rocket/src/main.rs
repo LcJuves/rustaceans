@@ -8,7 +8,7 @@ extern crate mysql;
 
 use mysql::serde_json::json;
 
-use fairing::CommomFairing;
+use fairing::CommonFairing;
 
 use model::items_resp::ItemResp;
 use mysql_access::read;
@@ -31,5 +31,5 @@ fn items() -> Option<String> {
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build().mount("/", routes![index, items]).attach(CommomFairing)
+    rocket::build().mount("/", routes![index, items]).attach(CommonFairing)
 }

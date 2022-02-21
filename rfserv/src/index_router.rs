@@ -6,12 +6,12 @@
 use lazy_static::lazy_static;
 
 lazy_static! {
-    pub static ref DEFAULT_INDEX_ROUTERES: Vec<&'static str> = vec!["/index.html", "/index",];
+    pub static ref DEFAULT_INDEX_ROUTERS: Vec<&'static str> = vec!["/index.html", "/index",];
     pub static ref ROOT_ROUTER: &'static str = "/";
 }
 
 pub fn include_index_router(uri: &str) -> bool {
-    for router in DEFAULT_INDEX_ROUTERES.iter() {
+    for router in DEFAULT_INDEX_ROUTERS.iter() {
         if *router == uri {
             return true;
         }

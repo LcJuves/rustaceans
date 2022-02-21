@@ -52,10 +52,10 @@ pub(crate) fn compute_sha512sum(bytes: &[u8]) -> String {
     hex
 }
 
-pub(crate) async fn dl_and_check_latest_exef(
+pub(crate) async fn dl_and_check_latest_exec_file(
     latest_info: &LatestInfo,
 ) -> Result<(), Box<dyn Error>> {
-    let patf_name = if cfg!(target_os = "macos") {
+    let platf_name = if cfg!(target_os = "macos") {
         "macos"
     } else if cfg!(any(target_os = "linux", target_os = "l4re")) {
         "linux"
@@ -64,39 +64,39 @@ pub(crate) async fn dl_and_check_latest_exef(
     } else {
         panic!("Unsupported platform")
     };
-    let exef_url = format!(
+    let exec_file_url = format!(
         "http://{}/{}/{}-{}",
-        &*UPGRADE_HOST, patf_name, latest_info.name, latest_info.version
+        &*UPGRADE_HOST, platf_name, latest_info.name, latest_info.version
     );
     #[cfg(windows)]
-    let exef_url = exef_url + ".exe";
-    let exef_resp = get_without_headers(&exef_url).await?;
-    if exef_resp.status() != StatusCode::OK {
-        println!("GET {} \n{:#?}", exef_url, exef_resp);
+    let exec_file_url = exec_file_url + ".exe";
+    let exec_file_resp = get_without_headers(&exec_file_url).await?;
+    if exec_file_resp.status() != StatusCode::OK {
+        println!("GET {} \n{:#?}", exec_file_url, exec_file_resp);
         panic!();
     }
-    let mut exef_content = resp_body_bytes_from(exef_resp).await?;
+    let mut exec_file_content = resp_body_bytes_from(exec_file_resp).await?;
 
-    let exef_sha512sum_url = format!("{}{}", exef_url, ".sha512");
-    let exef_sha512sum_resp = get_without_headers(&exef_sha512sum_url).await?;
-    if exef_sha512sum_resp.status() != StatusCode::OK {
-        println!("GET {} \n{:#?}", exef_sha512sum_url, exef_sha512sum_resp);
+    let exec_file_sha512sum_url = format!("{}{}", exec_file_url, ".sha512");
+    let exec_file_sha512sum_resp = get_without_headers(&exec_file_sha512sum_url).await?;
+    if exec_file_sha512sum_resp.status() != StatusCode::OK {
+        println!("GET {} \n{:#?}", exec_file_sha512sum_url, exec_file_sha512sum_resp);
         panic!();
     }
-    let exef_sha512sum_content = resp_body_bytes_from(exef_sha512sum_resp).await?;
-    let exef_sha512sum_content = rmeol(std::str::from_utf8(&exef_sha512sum_content)?);
-    let exef_sha512sum = exef_sha512sum_content
-        [0..(exef_sha512sum_content.rfind(" ").unwrap_or(exef_sha512sum_content.len()))]
+    let exec_file_sha512sum_content = resp_body_bytes_from(exec_file_sha512sum_resp).await?;
+    let exec_file_sha512sum_content = rmeol(std::str::from_utf8(&exec_file_sha512sum_content)?);
+    let exec_file_sha512sum = exec_file_sha512sum_content
+        [0..(exec_file_sha512sum_content.rfind(" ").unwrap_or(exec_file_sha512sum_content.len()))]
         .trim();
 
-    if compute_sha512sum(&exef_content) == exef_sha512sum {
+    if compute_sha512sum(&exec_file_content) == exec_file_sha512sum {
         let mut curr_exe_file = OpenOptions::new()
             .create(true)
             .truncate(true)
             .read(true)
             .write(true)
             .open(get_curr_exe_path()?)?;
-        curr_exe_file.write_all(&mut exef_content)?;
+        curr_exe_file.write_all(&mut exec_file_content)?;
         curr_exe_file.flush()?;
     } else {
         panic!();
@@ -116,7 +116,7 @@ pub(crate) fn self_upgrade() -> Result<(), Box<dyn Error>> {
         {
             println!("The latest version number returned by the server is: {}, which is less than the current version number: {}; no need to update", latest_info_version, curr_exe_version);
         } else {
-            dl_and_check_latest_exef(&latest_info).await?;
+            dl_and_check_latest_exec_file(&latest_info).await?;
             println!(
                 "Successfully updated from version {} to {}!",
                 curr_exe_version, latest_info_version

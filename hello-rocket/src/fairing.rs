@@ -7,10 +7,10 @@ use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::{ContentType, Method};
 use rocket::{Request, Response};
 
-pub struct CommomFairing;
+pub struct CommonFairing;
 
 #[allow(dead_code)]
-impl CommomFairing {
+impl CommonFairing {
     #[cfg(debug_assertions)]
     const ACCESS_CONTROL_ALLOW_ORIGIN: &'static str = "*";
 
@@ -19,9 +19,9 @@ impl CommomFairing {
 }
 
 #[rocket::async_trait]
-impl Fairing for CommomFairing {
+impl Fairing for CommonFairing {
     fn info(&self) -> Info {
-        Info { name: "CommomFairing", kind: Kind::Request | Kind::Response }
+        Info { name: "CommonFairing", kind: Kind::Request | Kind::Response }
     }
 
     async fn on_response<'r>(&self, req: &'r Request<'_>, resp: &mut Response<'r>) {

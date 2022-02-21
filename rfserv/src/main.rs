@@ -68,7 +68,7 @@ fn handle_conn(mut stream: TcpStream) -> Result<()> {
             path_buf = path_buf.join(path);
         }
     } else if *ROOT_ROUTER == simple_request_uri {
-        for index_router in DEFAULT_INDEX_ROUTERES.iter() {
+        for index_router in DEFAULT_INDEX_ROUTERS.iter() {
             let should_join =
                 (&index_router[(index_router.find('/').unwrap_or(0) + 1)..]).to_string();
             let should_join = &should_join[..(should_join.find('/').unwrap_or(should_join.len()))];
@@ -156,7 +156,7 @@ Content-Type: text/html;charset=utf-8\r\n",
         write_crlf(&mut stream)?;
     }
 
-    println!(">>>>>> Writed");
+    println!(">>>>>> Written");
     println!();
     println!();
 

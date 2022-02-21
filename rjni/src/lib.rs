@@ -20,7 +20,7 @@ mod tests {
 
     const ENABLE_ZIG: bool = true;
 
-    fn jcomp_and_run(jcalls_dir: &Path, javac_path: &Path, java_path: &Path, dylib_out_dir: &str) {
+    fn javac_and_run(jcalls_dir: &Path, javac_path: &Path, java_path: &Path, dylib_out_dir: &str) {
         assert!(Command::new(javac_path)
             .arg("Main.java")
             .current_dir(jcalls_dir)
@@ -111,7 +111,7 @@ mod tests {
                 println!("============================================================");
                 println!();
 
-                jcomp_and_run(&jcalls_dir, &javac_path, &java_path, &dylib_out_dir);
+                javac_and_run(&jcalls_dir, &javac_path, &java_path, &dylib_out_dir);
 
                 println!();
                 println!("###############################################################");
@@ -181,7 +181,7 @@ mod tests {
                     }
                 }
 
-                jcomp_and_run(&jcalls_dir, &javac_path, &java_path, &dylib_out_dir);
+                javac_and_run(&jcalls_dir, &javac_path, &java_path, &dylib_out_dir);
 
                 println!();
                 println!("///////////////////////////////////////////////////////////////");

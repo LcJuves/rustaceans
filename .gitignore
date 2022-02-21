@@ -1,7 +1,7 @@
 *.lock
 target
 a.out
-.vscode
+.vscode/*.*
 .DS_Store
 *.md
 *.html
@@ -30,3 +30,4 @@ rjni/test/tests/zig/src/CallJNI.zig
 rjni/test/tests/zig/src/jni.zig
 rjni/test/tests/zig/src/main_c.zig
 !DefinedClass.class
+!.vscode/settings.json

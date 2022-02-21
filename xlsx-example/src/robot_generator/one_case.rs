@@ -72,7 +72,7 @@ impl Reflection for OneCase {
 impl OneCase {
     const ONCE_INIT: Once = Once::new();
 
-    fn replace_unsupport_char(&mut self) {
+    fn replace_unsupported_char(&mut self) {
         let r#fn = |string: &str| -> String {
             string
                 .replace(":", &REPLACEMENT_CHARACTER.to_string())
@@ -228,7 +228,7 @@ impl OneCase {
                 .case_title
                 .replace(r"\", &REPLACEMENT_CHARACTER.to_string())
                 .replace("/", &REPLACEMENT_CHARACTER.to_string());
-            self.replace_unsupport_char();
+            self.replace_unsupported_char();
 
             let case_dir = &dir.join(&self.feature_name);
             if !case_dir.exists() {
@@ -236,7 +236,7 @@ impl OneCase {
             }
             let robot_path = case_dir.join(format!("{}{}", &self.case_title, ".robot"));
             if Self::overwritten_and_confirm_by_user(&robot_path)?
-                || args_os_has_flag("--overwritten-slient")
+                || args_os_has_flag("--overwritten-silent")
                 || !robot_path.exists()
             {
                 if args_os_has_flag("-v") || args_os_has_flag("--verbose") {

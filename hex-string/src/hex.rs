@@ -19,10 +19,10 @@ impl HexString {
         let char_to_digit = |n: usize| hex.chars().nth(n).unwrap().to_digit(Self::RADIX).unwrap();
         let mut ret = Vec::<u8>::new();
         for i in 0..(hex.len() / 2) {
-            let dgti = 2 * i;
-            let mut digit = char_to_digit(dgti);
+            let digit_idx = 2 * i;
+            let mut digit = char_to_digit(digit_idx);
             digit <<= 4;
-            digit |= char_to_digit(dgti + 1);
+            digit |= char_to_digit(digit_idx + 1);
             ret.push(digit as u8);
         }
         ret

@@ -78,8 +78,8 @@ fn init_cli_matches() -> ArgMatches<'static> {
                 .required_unless_one(&vec!["xlsx-url","xlsx-path","export-def-temp","tp-proj-name","tp-root-path","tp-path","upgrade","amtpv","set-alias","login"])
         )
         .arg(
-            Arg::with_name("overwritten-slient")
-                .long("overwritten-slient")
+            Arg::with_name("overwritten-silent")
+                .long("overwritten-silent")
                 .multiple(true)
                 .help("If the robot file to be generated already exists, it will be overwritten")
                 .required_unless_one(&vec!["xlsx-url","xlsx-path","export-def-temp","tp-proj-name","tp-root-path","tp-path","upgrade","amtpv","set-alias","login"])

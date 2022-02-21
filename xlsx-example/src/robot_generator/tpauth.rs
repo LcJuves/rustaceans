@@ -10,7 +10,7 @@ use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub(crate) struct LoginedAuthInfo<'a> {
+pub(crate) struct LoggedAuthInfo<'a> {
     ep_jwt_token_current: &'a str,
     sessionid: &'a str,
     user_name: &'a str,
@@ -20,9 +20,9 @@ pub(crate) struct LoginedAuthInfo<'a> {
 }
 
 #[allow(dead_code)]
-impl<'a> LoginedAuthInfo<'a> {
+impl<'a> LoggedAuthInfo<'a> {
     pub(crate) fn new() -> Self {
-        LoginedAuthInfo {
+        LoggedAuthInfo {
             ep_jwt_token_current: "",
             sessionid: "",
             user_name: "",
@@ -104,7 +104,7 @@ lazy_static! {
         let ret_string = (&String::from_utf8_lossy(&user_info_json_bytes)).to_string();
         return Ok(Box::leak(ret_string.into_boxed_str()));
     };
-    pub(crate) static ref AUTH_CONF: Result<LoginedAuthInfo<'static>, Error> = {
+    pub(crate) static ref AUTH_CONF: Result<LoggedAuthInfo<'static>, Error> = {
         let auth_conf_json = AUTH_CONF_JSON.as_ref().unwrap();
         Ok(serde_json::from_str(auth_conf_json)?)
     };

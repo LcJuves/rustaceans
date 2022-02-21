@@ -15,26 +15,26 @@
 #[allow(dead_code)]
 pub fn compute(keys: &[f64], kill: f64) -> Vec<Vec<f64>> {
     let ks_len = keys.len();
-    let nbit = 1 << ks_len;
+    let n_bit = 1 << ks_len;
     let mut nin: f64;
 
-    let mut nret = Vec::<f64>::new();
+    let mut n_ret = Vec::<f64>::new();
     let mut ret = Vec::<Vec<f64>>::new();
 
-    for i in 0..nbit {
+    for i in 0..n_bit {
         nin = 0f64;
-        nret.clear();
+        n_ret.clear();
         for j in 0..ks_len {
             let tmp = 1 << j; // Right shift from 0 to n
             if tmp & i != 0
             /* And operation, it will be 1 when the same is 1 */
             {
                 nin += keys[j];
-                nret.push(keys[j]);
+                n_ret.push(keys[j]);
             }
         }
         if nin == kill {
-            ret.push(nret.clone());
+            ret.push(n_ret.clone());
             continue;
         }
     }

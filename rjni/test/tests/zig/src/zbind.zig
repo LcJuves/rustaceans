@@ -80,7 +80,7 @@ pub const JNINativeMethod = extern struct {
     fn_ptr: ?*anyopaque,
 };
 
-/// `JNIEnv` implements the "Java Native Inferface", and contains most of what you'll use to interact with Java from ZIG
+/// `JNIEnv` implements the "Java Native Interface", and contains most of what you'll use to interact with Java from ZIG
 pub const JNIEnv = [*c]const JNINativeInterface;
 /// `JavaVM` (along with a handful of global functions) implements the "Java Invocation Interface",
 /// which allow you to create and destroy a Java Virtual Machine

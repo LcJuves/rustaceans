@@ -283,7 +283,7 @@ pub struct JNINativeMethod {
     pub fn_ptr: *mut c_void,
 }
 
-/// [`JNIEnv`] implements the "Java Native Inferface", and contains most of what you'll use to interact with Java from Rust
+/// [`JNIEnv`] implements the "Java Native Interface", and contains most of what you'll use to interact with Java from Rust
 pub type JNIEnv = *const JNINativeInterface;
 /// [`JavaVM`] (along with a handful of global functions) implements the "Java Invocation Interface",
 /// which allow you to create and destroy a Java Virtual Machine

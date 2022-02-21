@@ -541,7 +541,7 @@ pub(crate) async fn tp_login(
         return Ok(sign_in_tp_by_sms().await?);
     }
     // end unused code
-    Ok(sign_in_tp_by_scan_moa_arcode().await?)
+    Ok(sign_in_tp_by_scan_moa_qrcode().await?)
 }
 
 pub(crate) async fn sign_in_tp_by_sms(
@@ -586,7 +586,7 @@ pub(crate) async fn sign_in_tp_by_sms(
     Ok((ep_jwt_token_current, sessionid, user_name, email, staff_code, token))
 }
 
-pub(crate) async fn sign_in_tp_by_scan_moa_arcode(
+pub(crate) async fn sign_in_tp_by_scan_moa_qrcode(
 ) -> Result<(String, String, String, String, String, String), Box<dyn Error>> {
     clearscreen::clear()?;
     let (redirect_url, sessionid) = req_api_v1_login().await?;

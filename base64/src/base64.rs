@@ -35,15 +35,15 @@ pub fn encode(src: &[u8], url_safe: bool, no_padding: bool, wrap: bool) -> Vec<u
 
     let mut cpy = src.iter().cloned().collect::<Vec<u8>>();
     (|src_len| {
-        let rder = src_len % NUMBER_OF_BYTES_PER_GROUP;
-        if rder != 0 {
-            for _ in 0..(NUMBER_OF_BYTES_PER_GROUP - rder) {
+        let remainder = src_len % NUMBER_OF_BYTES_PER_GROUP;
+        if remainder != 0 {
+            for _ in 0..(NUMBER_OF_BYTES_PER_GROUP - remainder) {
                 cpy.push(b'\0');
             }
         }
     })(src_len);
 
-    let mut cpyi = 0usize;
+    let mut cpy_i = 0usize;
 
     let mut wrap_flag = 0usize;
 
@@ -51,23 +51,23 @@ pub fn encode(src: &[u8], url_safe: bool, no_padding: bool, wrap: bool) -> Vec<u
 
     let mut dst = Vec::<u8>::new();
 
-    while cpyi < cpy.len() {
-        let cpyi_1 = cpyi + 1;
-        let cpyi_2 = cpyi + 2;
+    while cpy_i < cpy.len() {
+        let cpy_i_1 = cpy_i + 1;
+        let cpy_i_2 = cpy_i + 2;
 
         // Alphabet unsigned indexes
-        let albeti_0 = cpy[cpyi] as usize;
-        let albeti_1 = cpy[cpyi_1] as usize;
-        let albeti_2 = cpy[cpyi_2] as usize;
+        let albet_i_0 = cpy[cpy_i] as usize;
+        let albet_i_1 = cpy[cpy_i_1] as usize;
+        let albet_i_2 = cpy[cpy_i_2] as usize;
 
-        dst.push(alphabet[albeti_0 >> 2] as u8);
-        dst.push(alphabet[(albeti_0 & 0x3) << 4 | albeti_1 >> 4] as u8);
-        dst.push(match b'\0' != cpy[cpyi_1] && cpyi_1 != src_len {
-            true => alphabet[(albeti_1 & 0xf) << 2 | albeti_2 >> 6] as u8,
+        dst.push(alphabet[albet_i_0 >> 2] as u8);
+        dst.push(alphabet[(albet_i_0 & 0x3) << 4 | albet_i_1 >> 4] as u8);
+        dst.push(match b'\0' != cpy[cpy_i_1] && cpy_i_1 != src_len {
+            true => alphabet[(albet_i_1 & 0xf) << 2 | albet_i_2 >> 6] as u8,
             _ => pad_val(no_padding),
         });
-        dst.push(match b'\0' != cpy[cpyi_2] && cpyi_2 != src_len + 1 {
-            true => alphabet[albeti_2 & 0x3f] as u8,
+        dst.push(match b'\0' != cpy[cpy_i_2] && cpy_i_2 != src_len + 1 {
+            true => alphabet[albet_i_2 & 0x3f] as u8,
             _ => pad_val(no_padding),
         });
 
@@ -82,7 +82,7 @@ pub fn encode(src: &[u8], url_safe: bool, no_padding: bool, wrap: bool) -> Vec<u
             }
         }
 
-        cpyi += NUMBER_OF_BYTES_PER_GROUP;
+        cpy_i += NUMBER_OF_BYTES_PER_GROUP;
     }
     dst
 }
@@ -106,9 +106,9 @@ pub fn decode(string: &str, url_safe: bool) -> Vec<u8> {
     };
 
     // Find the index of every four from the Base64 encoding table
-    let find_albeti = |elems: &[u8]| -> (i8, i8, i8, i8) {
+    let find_albet_i = |elems: &[u8]| -> (i8, i8, i8, i8) {
         // Define every four as a pair of indexes
-        let mut albeti = (-1i8, -1i8, -1i8, -1i8);
+        let mut albet_i = (-1i8, -1i8, -1i8, -1i8);
         let mut count = 0u8;
 
         for i in 0..(alphabet.len()) {
@@ -119,50 +119,50 @@ pub fn decode(string: &str, url_safe: bool) -> Vec<u8> {
                 if ale == elems[elemi] {
                     let i_i = i as i8;
                     match elemi {
-                        0 => albeti.0 = i_i,
-                        1 => albeti.1 = i_i,
-                        2 => albeti.2 = i_i,
-                        3 => albeti.3 = i_i,
+                        0 => albet_i.0 = i_i,
+                        1 => albet_i.1 = i_i,
+                        2 => albet_i.2 = i_i,
+                        3 => albet_i.3 = i_i,
                         _ => panic!("error"),
                     }
                     match count {
-                        3 => return albeti, /* Four indexes found */
+                        3 => return albet_i, /* Four indexes found */
                         _ => count += 1,
                     }
                 }
             }
         }
 
-        albeti
+        albet_i
     };
 
-    let mut srci = 0usize;
+    let mut src_i = 0usize;
 
     let src = remove_unused_chars(string);
     let mut dst = Vec::<u8>::new();
 
     loop {
-        if srci == src.len() {
+        if src_i == src.len() {
             break;
         }
 
         // Find the index of every four elements from the Base64 encoding table
-        let (albeti_0, albeti_1, albeti_2, albeti_3) =
-            find_albeti(&src[srci..(srci + NUMBER_OF_ENCODED_BYTES_PER_GROUP)]);
+        let (albet_i_0, albet_i_1, albet_i_2, albet_i_3) =
+            find_albet_i(&src[src_i..(src_i + NUMBER_OF_ENCODED_BYTES_PER_GROUP)]);
 
-        dst.push((albeti_0 << 2 | albeti_1 >> 4) as u8);
+        dst.push((albet_i_0 << 2 | albet_i_1 >> 4) as u8);
 
-        match albeti_2 {
+        match albet_i_2 {
             -1 => break,
-            _ => dst.push((albeti_1 << 4 | albeti_2 >> 2) as u8),
+            _ => dst.push((albet_i_1 << 4 | albet_i_2 >> 2) as u8),
         }
 
-        match albeti_3 {
+        match albet_i_3 {
             -1 => break,
-            _ => dst.push((albeti_2 << 6 | albeti_3) as u8),
+            _ => dst.push((albet_i_2 << 6 | albet_i_3) as u8),
         }
 
-        srci += NUMBER_OF_ENCODED_BYTES_PER_GROUP;
+        src_i += NUMBER_OF_ENCODED_BYTES_PER_GROUP;
     }
     dst
 }

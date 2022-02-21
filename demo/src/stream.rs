@@ -33,22 +33,22 @@ where
     R: Read + ?Sized,
     F: FnMut(&[u8], bool),
 {
-    let mut readed = Vec::<u8>::new();
+    let mut readied = Vec::<u8>::new();
     let mut buf = [0u8; BUF_SIZE];
 
     loop {
         let len = match reader.read(&mut buf) {
             Ok(0) => {
-                read_callback(&readed, true);
+                read_callback(&readied, true);
                 return Ok(());
             }
             Ok(len) => len,
             Err(ref e) if e.kind() == ErrorKind::Interrupted => continue,
             Err(e) => return Err(e),
         };
-        readed.clear();
+        readied.clear();
         for b in &buf[..len] {
-            readed.push(*b);
+            readied.push(*b);
         }
         read_callback(&buf[..len], false);
     }

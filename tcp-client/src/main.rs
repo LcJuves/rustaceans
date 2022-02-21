@@ -12,7 +12,7 @@ fn main() -> Result<()> {
     let mut server_back = Vec::<u8>::new();
     BufReader::new(&tcp_stream).read_until(b'\n', &mut server_back)?;
 
-    println!("Server callbacked data is: {}", String::from_utf8_lossy(server_back.as_slice()));
+    println!("Server callback's data is: {}", String::from_utf8_lossy(server_back.as_slice()));
 
     Ok(())
 }

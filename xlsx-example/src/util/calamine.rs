@@ -27,7 +27,7 @@ pub(crate) fn default_sheet_of_wb(wb: &mut impl calamine::Reader) -> Option<Rang
 }
 
 #[allow(dead_code)]
-pub(crate) fn sheet_hedaers_from(sheet: &Range<DataType>) -> Vec<String> {
+pub(crate) fn sheet_headers_from(sheet: &Range<DataType>) -> Vec<String> {
     let mut headers = Vec::<String>::new();
     for header in read_row(sheet, 0) {
         if let Some(r#str) = header.get_string() {

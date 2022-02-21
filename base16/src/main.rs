@@ -12,7 +12,7 @@ fn main() {
 
     let bytes = base16::decode(&ret);
     println!("Convert \"{}\" to bytes is {:?}", ret_string, bytes);
-    println!("Prased string is \"{}\"", String::from_utf8_lossy(bytes.as_slice()));
+    println!("Parsed string is \"{}\"", String::from_utf8_lossy(bytes.as_slice()));
 }
 
 #[test]
