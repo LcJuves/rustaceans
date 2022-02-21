@@ -1047,13 +1047,13 @@ pub struct JNINativeInterface {
         unsafe_extern_system_fn!((env: *mut JNIEnv, str: Jstring, chars: *const Jchar)),
 
     pub new_string_utf: unsafe_extern_system_fn!((env: *mut JNIEnv, utf: *const c_char) -> Jstring),
-    pub get_string_utflength: unsafe_extern_system_fn!((env: *mut JNIEnv, str: Jstring) -> Jsize),
-    pub get_string_utfchars: unsafe_extern_system_fn!((
+    pub get_string_utf_length: unsafe_extern_system_fn!((env: *mut JNIEnv, str: Jstring) -> Jsize),
+    pub get_string_utf_chars: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         str: Jstring,
         is_copy: *mut Jboolean
     ) -> *const c_char),
-    pub release_string_utfchars:
+    pub release_string_utf_chars:
         unsafe_extern_system_fn!((env: *mut JNIEnv, str: Jstring, chars: *const c_char)),
 
     pub get_array_length: unsafe_extern_system_fn!((env: *mut JNIEnv, array: Jarray) -> Jsize),
@@ -1305,7 +1305,7 @@ pub struct JNINativeInterface {
         len: Jsize,
         buf: *mut Jchar
     )),
-    pub get_string_utfregion: unsafe_extern_system_fn!((
+    pub get_string_utf_region: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         str: Jstring,
         start: Jsize,

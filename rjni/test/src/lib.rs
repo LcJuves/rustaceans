@@ -36,7 +36,7 @@ jni_fn!(
     (env: *mut JNIEnv, jcls: Jclass, name: Jstring, bytes: JbyteArray),
     Jclass,
     {
-        let name = env_call!(env, get_string_utfchars, name, JNI_FALSE as *mut Jboolean);
+        let name = env_call!(env, get_string_utf_chars, name, JNI_FALSE as *mut Jboolean);
 
         let jcls_class = env_call!(env, find_class, char_const_ptr!("java/lang/Class"));
         let jmid_get_class_loader = env_call!(
@@ -55,7 +55,7 @@ jni_fn!(
 );
 
 jni_fn!(Java_CallJNI_findClass, (env: *mut JNIEnv, _: Jclass, name: Jstring), Jclass, {
-    let c_str = env_call!(env, get_string_utfchars, name, JNI_FALSE as *mut Jboolean);
+    let c_str = env_call!(env, get_string_utf_chars, name, JNI_FALSE as *mut Jboolean);
     env_call!(env, find_class, c_str)
 });
 
@@ -128,7 +128,7 @@ jni_fn!(
     (env: *mut JNIEnv, _: Jclass, clazz: Jclass, message: Jstring),
     Jint,
     {
-        let message = env_call!(env, get_string_utfchars, message, JNI_FALSE as *mut Jboolean);
+        let message = env_call!(env, get_string_utf_chars, message, JNI_FALSE as *mut Jboolean);
         env_call!(env, throw_new, clazz, message)
     }
 );
@@ -165,7 +165,7 @@ jni_fn!(Java_CallJNI_exceptionClear, (env: *mut JNIEnv, _: Jclass), {
 });
 
 jni_fn!(Java_CallJNI_fatalError, (env: *mut JNIEnv, _: Jclass, msg: Jstring), {
-    let msg = env_call!(env, get_string_utfchars, msg, JNI_FALSE as *mut Jboolean);
+    let msg = env_call!(env, get_string_utf_chars, msg, JNI_FALSE as *mut Jboolean);
     env_call!(env, fatal_error, msg);
 });
 
