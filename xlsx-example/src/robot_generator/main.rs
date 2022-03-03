@@ -95,11 +95,8 @@ pub(crate) async fn main_tp_login() -> Result<(), Box<dyn Error>> {
 }
 
 fn exit_with_info(info: &str) {
-    println!("\u{1b}[91m{}\u{1b}[0m", info);
-    println!(
-        "For more information try \u{1b}[92m{}\u{1b}[0m or \u{1b}[92m{}\u{1b}[0m",
-        "--help", "-h"
-    );
+    println!("\x1b[91m{}\x1b[0m", info);
+    println!("For more information try \x1b[92m{}\x1b[0m or \x1b[92m{}\x1b[0m", "--help", "-h");
     std::process::exit(-1);
 }
 

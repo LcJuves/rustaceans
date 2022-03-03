@@ -20,6 +20,6 @@ macro_rules! seeval {
 #[macro_export(local_inner_macros)]
 macro_rules! pass {
     () => {
-        std::println!("\u{1b}[91m{}\u{1b}[0m", ">>> PASS");
+        std::println!("\x1b[91m{}\x1b[0m", ">>> PASS");
     };
 }

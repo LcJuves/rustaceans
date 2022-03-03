@@ -74,11 +74,8 @@ fn login_and_confirm_by_user() -> Result<bool, Error> {
 
 #[inline]
 fn please_login() {
-    println!("\u{1b}[91m{}\u{1b}[0m", "Please login first with option `--login`!");
-    println!(
-        "For more information try \u{1b}[92m{}\u{1b}[0m or \u{1b}[92m{}\u{1b}[0m",
-        "--help", "-h"
-    );
+    println!("\x1b[91m{}\x1b[0m", "Please login first with option `--login`!");
+    println!("For more information try \x1b[92m{}\x1b[0m or \x1b[92m{}\x1b[0m", "--help", "-h");
     std::process::exit(-1);
 }
 

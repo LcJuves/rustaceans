@@ -8,7 +8,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("cargo:rustc-env=TARGET={}", target);
 
     if target.contains("windows") {
-        embed_resource::compile("src/robot_generator/res/icon.rc");
+        // embed_resource::compile("src/robot_generator/res/icon.rc");
     }
 
     // let profile = env::var("PROFILE")?;

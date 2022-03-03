@@ -23,7 +23,7 @@ pub fn draw(perc: usize) -> Result<()> {
         panic!("Cannot be greater than 100");
     }
     print!(
-        "\r {} \u{1b}[42m{}\u{1b}[0m [ {}% ] ",
+        "\r {} \x1b[42m{}\x1b[0m [ {}% ] ",
         BAR_LAB.chars().nth(perc % 4).unwrap(),
         " ".repeat(perc / 2),
         perc

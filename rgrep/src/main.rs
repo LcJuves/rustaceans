@@ -7,7 +7,7 @@ fn grep(target: &str) -> Result<()> {
         if line.contains(target) {
             if args().len() >= 3 && "--colored" == &args().nth(2).unwrap() {
                 let line = line.replace(target, "");
-                println!("\u{1b}[31m{}\u{1b}[0m{}", target, line);
+                println!("\x1b[31m{}\x1b[0m{}", target, line);
             } else {
                 println!("{}", line);
             }

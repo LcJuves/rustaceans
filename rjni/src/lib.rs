@@ -40,7 +40,7 @@ mod tests {
         print!("{stdout_string}");
         assert!(stdout_string.contains("FATAL ERROR in native method: JNICALL"));
         assert!(stdout_string.contains("at CallJNI.fatalError(Native Method)"));
-        println!("\u{1b}[32;1mPASS\u{1b}[m");
+        println!("\x1b[32;1mPASS\x1b[m");
 
         assert!(Command::new(javac_path)
             .arg("Main.java")
