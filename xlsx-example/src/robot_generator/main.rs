@@ -46,7 +46,7 @@ macro_rules! option_check_after_cli_matches {
         }
 
         if args_os_has_flag("--login") {
-            (TOKIO_RT.as_ref()?).block_on(main_tp_login())?;
+            futures_executor::block_on(main_tp_login())?;
             return Ok(());
         }
 
@@ -133,7 +133,7 @@ pub(crate) fn robot_generator_main() -> Result<(), Box<dyn Error>> {
         let tp_path = cli_matches.value_of("tp-path").unwrap_or("");
 
         if !tp_root_path.is_empty() && !tp_path.is_empty() {
-            gen_cases((TOKIO_RT.as_ref()?).block_on(query_cases(
+            gen_cases(futures_executor::block_on(query_cases(
                 tp_proj_name,
                 tp_root_path,
                 tp_path,

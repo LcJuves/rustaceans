@@ -20,10 +20,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     /* #[cfg(debug_assertions)]
     {
         // let (ep_jwt_token_current, sessionid, username, email, staff_code, token) =
-        //     (TOKIO_RT.as_ref()?).block_on(sign_in_tp_by_sms())?;
+        //     futures_executor::block_on(sign_in_tp_by_sms())?;
 
         // let (ep_jwt_token_current, sessionid, username, email, staff_code, token) =
-        //     (TOKIO_RT.as_ref()?).block_on(sign_in_tp_by_scan_moa_qrcode())?;
+        //     futures_executor::block_on(sign_in_tp_by_scan_moa_qrcode())?;
         // seeval!((&ep_jwt_token_current, &sessionid, &username, &email, &staff_code, &token));
 
         use crate::robot_generator::upgrade::*;

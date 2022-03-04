@@ -9,13 +9,7 @@ use std::io::Write;
 use bytes::buf::Reader;
 use calamine::{open_workbook_auto, DataType, Range, Sheets};
 use hyper::body::Buf;
-use lazy_static::lazy_static;
 use serde::Deserialize;
-use tokio::runtime::Runtime;
-
-lazy_static! {
-    pub(crate) static ref TOKIO_RT: Result<Runtime, std::io::Error> = Runtime::new();
-}
 
 pub(crate) fn default_sheet_of_wb(wb: &mut impl calamine::Reader) -> Option<Range<DataType>> {
     if let Some(range_ret) = wb.worksheet_range_at(0) {
@@ -52,7 +46,7 @@ async fn dl_excel(url: &str) -> Result<impl Buf, Box<dyn Error>> {
 }
 
 fn sync_dl_excel(url: &str) -> Result<Reader<impl Buf>, Box<dyn Error>> {
-    Ok(((TOKIO_RT.as_ref()?).block_on(dl_excel(url))?).reader())
+    Ok((futures_executor::block_on(dl_excel(url))?).reader())
 }
 
 pub(crate) fn open_workbook_by_url(url: &str) -> Result<Sheets, Box<dyn Error>> {

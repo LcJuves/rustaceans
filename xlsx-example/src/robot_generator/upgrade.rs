@@ -4,7 +4,6 @@
 use crate::robot_generator::cli_parser::option_value_of;
 use crate::seeval;
 use crate::util::hyper::*;
-use crate::TOKIO_RT;
 
 use std::error::Error;
 use std::fs::OpenOptions;
@@ -125,7 +124,7 @@ pub(crate) fn self_upgrade() -> Result<(), Box<dyn Error>> {
         Ok(())
     }
 
-    (TOKIO_RT.as_ref()?).block_on(upgrade())?;
+    futures_executor::block_on(upgrade())?;
 
     Ok(())
 }
