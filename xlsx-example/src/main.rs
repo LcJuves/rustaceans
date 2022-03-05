@@ -1,5 +1,6 @@
 mod reflection;
 mod robot_generator;
+#[macro_use]
 mod util;
 #[macro_use]
 mod macros;
@@ -20,10 +21,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     /* #[cfg(debug_assertions)]
     {
         // let (ep_jwt_token_current, sessionid, username, email, staff_code, token) =
-        //     futures_executor::block_on(sign_in_tp_by_sms())?;
+        //     future_block_on!(sign_in_tp_by_sms())?;
 
         // let (ep_jwt_token_current, sessionid, username, email, staff_code, token) =
-        //     futures_executor::block_on(sign_in_tp_by_scan_moa_qrcode())?;
+        //     future_block_on!(sign_in_tp_by_scan_moa_qrcode())?;
         // seeval!((&ep_jwt_token_current, &sessionid, &username, &email, &staff_code, &token));
 
         use crate::robot_generator::upgrade::*;

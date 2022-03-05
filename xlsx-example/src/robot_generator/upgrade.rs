@@ -14,6 +14,7 @@ use std::str::FromStr;
 
 use hyper::StatusCode;
 use lazy_static::lazy_static;
+use promises::future_block_on;
 use ruimpl::rmeol;
 use serde::{Deserialize, Serialize};
 use ssri::{Algorithm, IntegrityOpts};
@@ -124,7 +125,7 @@ pub(crate) fn self_upgrade() -> Result<(), Box<dyn Error>> {
         Ok(())
     }
 
-    futures_executor::block_on(upgrade())?;
+    future_block_on!(upgrade())?;
 
     Ok(())
 }

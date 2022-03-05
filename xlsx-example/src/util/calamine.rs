@@ -9,6 +9,7 @@ use std::io::Write;
 use bytes::buf::Reader;
 use calamine::{open_workbook_auto, DataType, Range, Sheets};
 use hyper::body::Buf;
+use promises::future_block_on;
 use serde::Deserialize;
 
 pub(crate) fn default_sheet_of_wb(wb: &mut impl calamine::Reader) -> Option<Range<DataType>> {
@@ -46,7 +47,7 @@ async fn dl_excel(url: &str) -> Result<impl Buf, Box<dyn Error>> {
 }
 
 fn sync_dl_excel(url: &str) -> Result<Reader<impl Buf>, Box<dyn Error>> {
-    Ok((futures_executor::block_on(dl_excel(url))?).reader())
+    Ok((future_block_on!(dl_excel(url))?).reader())
 }
 
 pub(crate) fn open_workbook_by_url(url: &str) -> Result<Sheets, Box<dyn Error>> {

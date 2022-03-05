@@ -14,6 +14,7 @@ use std::path::Path;
 
 use calamine::{open_workbook_auto, Sheets};
 use lazy_static::lazy_static;
+use promises::future_block_on;
 
 lazy_static! {
     static ref SAVE_ROBOT_DIR: Result<std::path::PathBuf, std::io::Error> =
@@ -46,7 +47,7 @@ macro_rules! option_check_after_cli_matches {
         }
 
         if args_os_has_flag("--login") {
-            futures_executor::block_on(main_tp_login())?;
+            future_block_on!(main_tp_login())?;
             return Ok(());
         }
 
@@ -133,11 +134,7 @@ pub(crate) fn robot_generator_main() -> Result<(), Box<dyn Error>> {
         let tp_path = cli_matches.value_of("tp-path").unwrap_or("");
 
         if !tp_root_path.is_empty() && !tp_path.is_empty() {
-            gen_cases(futures_executor::block_on(query_cases(
-                tp_proj_name,
-                tp_root_path,
-                tp_path,
-            ))?)?;
+            gen_cases(future_block_on!(query_cases(tp_proj_name, tp_root_path, tp_path,))?)?;
             return Ok(());
         }
 
