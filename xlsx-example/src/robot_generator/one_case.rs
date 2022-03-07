@@ -222,7 +222,7 @@ impl OneCase {
         if self.can_be_automated.starts_with("否")
             && self.expect_cond_js_return_true().unwrap_or(true)
         {
-            self.eval_custom_js().unwrap();
+            self.eval_custom_js().unwrap_or(());
             self.feature_name = self.feature_name.replace('/', &MAIN_SEPARATOR.to_string());
             self.case_title = self
                 .case_title

@@ -24,7 +24,7 @@ lazy_static = "1.4.0"
 clearscreen = "1.0.9"
 ssri = "7.0.0"
 toml = "0.5.8"
-Boa = "0.13.0"
+Boa = { version = "0.13.0", features = ["console"] }
 ruimpl = "0.1.0"
 promises = { version = "0.1.0", path = "../promises" }
 
