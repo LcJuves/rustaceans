@@ -10,4 +10,5 @@ authors = ["Liangcheng Juves <liangchengj@outlook.com>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-lazy_static = { git = "https://github.com/rust-lang-nursery/lazy-static.rs.git", rev = "7324c83a9212d6052993001dcd0ac5d617ae87ce", version = "1.4.0" }
+# lazy_static = { git = "https://github.com/rust-lang-nursery/lazy-static.rs.git", rev = "7324c83a9212d6052993001dcd0ac5d617ae87ce", version = "1.4.0" }
+lazy_static = "1.4.0"
