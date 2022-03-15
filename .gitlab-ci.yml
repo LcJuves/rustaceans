@@ -25,4 +25,5 @@ image: "rust:latest"
 test:cargo:
   script:
     - rustc --version && cargo --version  # Print version info for debugging
+    - rustup target add x86_64-pc-windows-gnu
     - cargo test --target x86_64-pc-windows-gnu -- --nocapture
