@@ -3,6 +3,11 @@
 # This specific template is located at:
 # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Rust.gitlab-ci.yml
 
+
+before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+
+
 # Official language image. Look for the different tagged releases at:
 # https://hub.docker.com/r/library/rust/tags/
 image: "liangchengj/denv:fedora-x86-64-0.1.3"
@@ -20,9 +25,6 @@ image: "liangchengj/denv:fedora-x86-64-0.1.3"
 # before_script:
 #   - apt-get update -yqq
 #   - apt-get install -yqq --no-install-recommends build-essential
-
-before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
 
 # Use cargo to test the project
 test:cargo:
