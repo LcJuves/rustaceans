@@ -29,5 +29,6 @@ image: "liangchengj/denv:fedora-x86-64-0.1.3"
 # Use cargo to test the project
 test:cargo:
   script:
+    - source /root/.bashrc
     - rustc --version && cargo --version  # Print version info for debugging
     - cargo test --target x86_64-pc-windows-gnu -- --nocapture
