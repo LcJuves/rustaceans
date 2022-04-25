@@ -3,6 +3,7 @@ workspace.members = [
     "base32",
     "base64",
     "cityhash",
+    "cmd-proxy",
     "demo",
     "ferris-says",
     "fmedia",
