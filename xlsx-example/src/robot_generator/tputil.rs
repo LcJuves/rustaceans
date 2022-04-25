@@ -19,7 +19,7 @@ use ruimpl::rmeol;
 use serde_json::json;
 
 lazy_static! {
-    pub(crate) static ref UA: &'static str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36";
+    pub(crate) static ref UA: &'static str = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36";
     static ref JWT_KEY: &'static str = "32293231323532373241325132713273328533033339335733613403343934413469350335713605364136513735376937813863393139494017409141594161";
     static ref BR_UUID: &'static str = "014a6560486429cada00afc53fe1017c";
     pub(crate) static ref USER_INFO_JSON_PATH: std::io::Result<PathBuf> = {
@@ -113,6 +113,7 @@ pub(crate) async fn req_ac_portal_userauth(
 
     let mut headers = HashMap::new();
     headers.insert("user-agent".to_owned(), UA.to_string());
+    headers.insert("Connection".to_owned(), "keep-alive".to_owned());
 
     let resp = get(&url, &headers).await?;
     seeval!(resp.headers());

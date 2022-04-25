@@ -1,3 +1,5 @@
+use crate::seeval;
+
 use std::collections::HashMap;
 use std::error::Error;
 
@@ -33,7 +35,8 @@ pub(crate) async fn request(
     }
     req_builder = req_builder.method(method).uri(url).version(Version::HTTP_11);
 
-    let client = Client::builder().build::<_, Body>(HttpsConnector::new());
+    let client =
+        Client::builder().build::<_, Body>(HttpsConnector::new_with_tls_options(true, true, true));
     let req = req_builder.body(body)?;
 
     Ok(client.request(req).await?)
@@ -43,6 +46,8 @@ pub(crate) async fn get(
     url: &str,
     headers: &HashMap<String, String>,
 ) -> Result<Response<Body>, Box<dyn Error>> {
+    seeval!(url);
+    seeval!(headers);
     Ok(request(url, &Method::GET, Body::empty(), headers).await?)
 }
 
