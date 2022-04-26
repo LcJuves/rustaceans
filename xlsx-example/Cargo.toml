@@ -12,9 +12,10 @@ path = "src/main.rs"
 [dependencies]
 calamine = "0.18.0"
 hyper = { version = "0.14.17", features = ["http1"] }
-hyper-tls = { git = "https://jihulab.com/LiangchengJ/hyper-tls.git", branch = "master", version = "0.5.0", features = [
-    "alpn",
-    "vendored",
+hyper-rustls = { version = "0.23.0", git = "https://jihulab.com/LiangchengJ/hyper-rustls.git", branch = "main", features = [
+    "tokio-runtime",
+    "dangerous_configuration",
+    "tls12",
 ] }
 bytes = "1.1.0"
 biscuit = "0.5.0"

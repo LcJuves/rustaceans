@@ -5,8 +5,7 @@ use std::error::Error;
 
 use hyper::body::Buf;
 use hyper::{Body, Client, Method, Request, Response, Version};
-use hyper_tls::native_tls::Protocol;
-use hyper_tls::HttpsConnector;
+use hyper_rustls::HttpsConnectorBuilder;
 use serde_json::Value;
 
 #[allow(unused_macros)]
@@ -35,13 +34,23 @@ pub(crate) async fn request(
     }
     req_builder = req_builder.method(method).uri(url).version(Version::HTTP_11);
 
-    let client = Client::builder().build::<_, Body>(HttpsConnector::new_with_tls_options(
-        true,
-        true,
-        true,
-        Some(Protocol::Tlsv12),
-        &["h2", "http/1.1"],
-    ));
+    // https://github.com/seanmonstar/reqwest/issues/1310
+    // use rustls::ciphersuite::TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384;
+    let client_config = hyper_rustls::rustls::ClientConfig::builder()
+        .with_safe_default_cipher_suites()
+        .with_safe_default_kx_groups()
+        .with_safe_default_protocol_versions()
+        .unwrap()
+        .with_no_certificate_verifier()
+        .with_no_client_auth();
+    let client = Client::builder().build::<_, Body>(
+        HttpsConnectorBuilder::new()
+            .with_tls_config(client_config)
+            .https_or_http()
+            .enable_http1()
+            .build(),
+    );
+
     let req = req_builder.body(body)?;
 
     Ok(client.request(req).await?)
@@ -65,6 +74,9 @@ pub(crate) async fn post(
     body: Body,
     headers: &HashMap<String, String>,
 ) -> Result<Response<Body>, Box<dyn Error>> {
+    seeval!(url);
+    seeval!(body);
+    seeval!(headers);
     Ok(request(url, &Method::POST, body, headers).await?)
 }
 
