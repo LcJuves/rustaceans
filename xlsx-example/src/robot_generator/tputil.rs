@@ -59,8 +59,6 @@ pub(crate) async fn req_ss_auth_att_oauth2_authorize(
     let resp = get(url, &headers).await?;
     seeval!(resp.headers());
 
-    seeval!(resp.headers());
-
     let redirect_url = String::from_utf8_lossy(resp.headers()["location"].as_bytes()).to_string();
 
     let sso_provider_session =
