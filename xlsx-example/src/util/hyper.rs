@@ -5,8 +5,8 @@ use std::error::Error;
 
 use hyper::body::Buf;
 use hyper::{Body, Client, Method, Request, Response, Version};
+use hyper_tls::native_tls::Protocol;
 use hyper_tls::HttpsConnector;
-
 use serde_json::Value;
 
 #[allow(unused_macros)]
@@ -35,8 +35,13 @@ pub(crate) async fn request(
     }
     req_builder = req_builder.method(method).uri(url).version(Version::HTTP_11);
 
-    let client =
-        Client::builder().build::<_, Body>(HttpsConnector::new_with_tls_options(true, true, true));
+    let client = Client::builder().build::<_, Body>(HttpsConnector::new_with_tls_options(
+        true,
+        true,
+        true,
+        Some(Protocol::Tlsv12),
+        &["h2", "http/1.1"],
+    ));
     let req = req_builder.body(body)?;
 
     Ok(client.request(req).await?)
