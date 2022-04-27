@@ -17,8 +17,10 @@ mod tests {
     };
 
     use toml::Value;
-
+    #[cfg(windows)]
     const ENABLE_ZIG: bool = true;
+    #[cfg(not(windows))]
+    const ENABLE_ZIG: bool = false;
 
     fn javac_and_run(jcalls_dir: &Path, javac_path: &Path, java_path: &Path, dylib_out_dir: &str) {
         assert!(Command::new(javac_path)
@@ -114,12 +116,13 @@ mod tests {
         #[cfg(windows)]
         let dylib_out_name = format!("{cargo_dylib_name}.{dylib_ext}");
         #[cfg(any(unix, target_os = "hermit"))]
-        let dylib_out_name = format!("lib{dylib_name}.{dylib_ext}");
+        let dylib_out_name = format!("lib{cargo_dylib_name}.{dylib_ext}");
 
         let dylib_out_full_path = Path::new(dylib_out_dir).join(&dylib_out_name);
 
         let jcalls_dir = cargo_build_dir.join("tests").join("jcalls");
-        let env_java_home = env::var("JAVA_HOME").unwrap();
+        let env_java_home =
+            env::var("JAVA_HOME").expect("Need to set `JAVA_HOME` environment variable");
         let java_home_paths = vec![Path::new(&env_java_home)];
         for java_home in java_home_paths {
             if java_home.exists() {
@@ -158,51 +161,53 @@ mod tests {
 
                     std::fs::copy(&zig_out_lib_dir.join(&dylib_out_name), &dylib_out_full_path)
                         .unwrap();
-                } else {
-                    let clang_dir = cargo_build_dir.join("tests").join("clang");
-                    remove_file(&clang_dir.join("CallJNI.h")).unwrap();
+                } /* else {
+                      let clang_dir = cargo_build_dir.join("tests").join("clang");
+                      remove_file(&clang_dir.join("CallJNI.h")).unwrap();
 
-                    // "${javac_path}" -encoding utf8 -h "${base_dir}" CallJNI.java
-                    assert!(Command::new(&javac_path)
-                        .arg("-encoding")
-                        .arg("utf8")
-                        .arg("-h")
-                        .arg(&clang_dir)
-                        .arg("CallJNI.java")
-                        .current_dir(&jcalls_dir)
-                        .status()
-                        .unwrap()
-                        .success());
+                      // "${javac_path}" -encoding utf8 -h "${base_dir}" CallJNI.java
+                      assert!(Command::new(&javac_path)
+                          .arg("-encoding")
+                          .arg("utf8")
+                          .arg("-h")
+                          .arg(&clang_dir)
+                          .arg("CallJNI.java")
+                          .current_dir(&jcalls_dir)
+                          .status()
+                          .unwrap()
+                          .success());
 
-                    if Platform::IS_MACOS {
-                        // gcc -dynamiclib -I "${base_dir}" "${base_dir}/main.c" -o "${base_dir}/${dylib}"
-                        assert!(Command::new("gcc")
-                            .arg("-dynamiclib")
-                            .arg("-I")
-                            .arg(&clang_dir)
-                            .arg(&clang_dir.join("main.c"))
-                            .arg("-o")
-                            .arg(&dylib_out_full_path)
-                            .status()
-                            .unwrap()
-                            .success());
-                    } else {
-                        // gcc -I "${base_dir}" -fPIC -shared -o "${base_dir}/${dylib}" "${base_dir}/main.c"
-                        assert!(Command::new("gcc")
-                            .arg("-I")
-                            .arg(&clang_dir)
-                            .arg("-fPIC")
-                            .arg("-shared")
-                            .arg("-o")
-                            .arg(&dylib_out_full_path)
-                            .arg(&clang_dir.join("main.c"))
-                            .status()
-                            .unwrap()
-                            .success());
-                    }
+                      if Platform::IS_MACOS {
+                          // gcc -dynamiclib -I "${base_dir}" "${base_dir}/main.c" -o "${base_dir}/${dylib}"
+                          assert!(Command::new("gcc")
+                              .arg("-dynamiclib")
+                              .arg("-I")
+                              .arg(&clang_dir)
+                              .arg(&clang_dir.join("main.c"))
+                              .arg("-o")
+                              .arg(&dylib_out_full_path)
+                              .status()
+                              .unwrap()
+                              .success());
+                      } else {
+                          // gcc -I "${base_dir}" -fPIC -shared -o "${base_dir}/${dylib}" "${base_dir}/main.c"
+                          assert!(Command::new("gcc")
+                              .arg("-I")
+                              .arg(&clang_dir)
+                              .arg("-fPIC")
+                              .arg("-shared")
+                              .arg("-o")
+                              .arg(&dylib_out_full_path)
+                              .arg(&clang_dir.join("main.c"))
+                              .status()
+                              .unwrap()
+                              .success());
+                      }
+                  } */
+
+                if ENABLE_ZIG {
+                    javac_and_run(&jcalls_dir, &javac_path, &java_path, &dylib_out_dir);
                 }
-
-                javac_and_run(&jcalls_dir, &javac_path, &java_path, &dylib_out_dir);
 
                 println!();
                 println!("///////////////////////////////////////////////////////////////");

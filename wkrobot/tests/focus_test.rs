@@ -1,3 +1,5 @@
+#![cfg(windows)]
+
 include!("../src/lib.rs");
 
 use std::error::Error;

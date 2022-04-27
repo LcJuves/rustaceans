@@ -1,3 +1,5 @@
+#![cfg(windows)]
+
 mod focus;
 mod kbd;
 

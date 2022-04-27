@@ -1,3 +1,5 @@
+#![cfg(windows)]
+
 use windows::core::Result;
 use windows::Win32::Foundation::PWSTR;
 use windows::Win32::UI::WindowsAndMessaging::{FindWindowW, SwitchToThisWindow};

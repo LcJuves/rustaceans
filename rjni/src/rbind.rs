@@ -36,11 +36,11 @@
 
 /// # Examples
 ///
-/// ```rust
+/// ```no_run
 /// unsafe_extern_system_fn!((env: *mut JNIEnv) -> Jint)
 /// ```
 /// expand to
-/// ```rust
+/// ```no_run
 /// Option<unsafe extern "system" fn(env: *mut JNIEnv) -> Jint>
 /// ```
 #[macro_export(local_inner_macros)]
@@ -52,11 +52,11 @@ macro_rules! unsafe_extern_system_fn {
 
 /// # Examples
 ///
-/// ```rust
+/// ```no_run
 /// unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: Jclass, method_id: JmethodID) -> Jobject)
 /// ```
 /// expand to
-/// ```rust
+/// ```no_run
 /// Option<unsafe extern "C" fn(env: *mut JNIEnv, clazz: Jclass, method_id: JmethodID, ...) -> Jobject>
 /// ```
 #[macro_export(local_inner_macros)]
@@ -68,7 +68,7 @@ macro_rules! unsafe_extern_c_var_fn {
 
 /// # Such as
 ///
-/// ```rust
+/// ```no_run
 /// jni_fn!(
 ///     JNI_OnLoad,
 ///     (vm: *mut JavaVM, reserved: *mut c_void),
@@ -80,7 +80,7 @@ macro_rules! unsafe_extern_c_var_fn {
 /// );
 /// ```
 /// expand to
-/// ```rust
+/// ```no_run
 /// #[no_mangle]
 /// pub extern "system" fn JNI_OnLoad(vm: *mut JavaVM, reserved: *mut c_void) -> Jint {
 ///     /* code */
@@ -99,7 +99,7 @@ macro_rules! jni_fn {
 ///
 /// ##  JNI_OnLoad
 /// ***
-/// ```rust
+/// ```no_run
 /// #[no_mangle]
 /// pub extern "system" fn JNI_OnLoad(vm: *mut JavaVM, reserved: *mut c_void) -> Jint {
 ///     /* code */
@@ -107,7 +107,7 @@ macro_rules! jni_fn {
 /// }
 /// ```
 /// ### Or use the `impl_jni_on_load` macro, like this
-/// ``` rust
+/// ```no_run
 /// impl_jni_on_load!(vm, reserved, {
 ///     /* code */
 ///     /* The return value must be >= JNI_VERSION_1_1 */
@@ -129,14 +129,14 @@ macro_rules! impl_jni_on_load {
 ///
 /// ## JNI_OnUnload
 /// ***
-/// ```rust
+/// ```no_run
 /// #[no_mangle]
 /// pub extern "system" fn JNI_OnUnload(vm: *mut JavaVM, reserved: *mut c_void) {
 ///     /* code */
 /// }
 /// ```
 /// ### Or use the `impl_jni_on_unload` macro, like this
-/// ```rust
+/// ```no_run
 /// impl_jni_on_unload!(vm, reserved, { /* code */ });
 /// ```
 #[macro_export(local_inner_macros)]
@@ -154,46 +154,40 @@ macro_rules! impl_jni_on_unload {
 #[macro_export(local_inner_macros)]
 macro_rules! env_call {
     ($env:expr, $method_name:ident$(, $($arg:expr), *)?) => {
-        (|| {
-            unsafe { (*(*$env)).$method_name.unwrap()($env$(, $($arg, )*)?) }
-        })()
+        unsafe { (*(*$env)).$method_name.unwrap()($env$(, $($arg, )*)?) }
     };
 }
 
 #[macro_export(local_inner_macros)]
 macro_rules! vm_call {
     ($vm:expr, $method_name:ident$(, $($arg:expr), *)?) => {
-        (|| {
-            unsafe { (*(*$vm)).$method_name.unwrap()($vm$(, $($arg, )*)?) }
-        })()
+        unsafe { (*(*$vm)).$method_name.unwrap()($vm$(, $($arg, )*)?) }
     };
 }
 
 #[macro_export(local_inner_macros)]
 macro_rules! char_const_ptr {
-    ($str:expr) => {
-        (|| CString::new($str).unwrap().into_raw())()
-    };
+    ($str:expr) => {{
+        CString::new($str).unwrap().into_raw()
+    }};
 }
 
 #[macro_export(local_inner_macros)]
 macro_rules! jstring {
-    ($env:expr, $str:expr) => {
-        (|| env_call!($env, new_string_utf, char_const_ptr!($str)))()
-    };
+    ($env:expr, $str:expr) => {{
+        env_call!($env, new_string_utf, char_const_ptr!($str))
+    }};
 }
 
 #[macro_export(local_inner_macros)]
 macro_rules! env_from_vm {
-    ($vm:expr) => {
-        (|| {
-            let mut env = core::ptr::null_mut::<c_void>();
-            core::assert!(
-                vm_call!($vm, get_env, &mut env as *mut *mut c_void, JNI_VERSION_1_1) == JNI_OK
-            );
-            env as *mut JNIEnv
-        })()
-    };
+    ($vm:expr) => {{
+        let mut env = core::ptr::null_mut::<c_void>();
+        core::assert!(
+            vm_call!($vm, get_env, &mut env as *mut *mut c_void, JNI_VERSION_1_1) == JNI_OK
+        );
+        env as *mut JNIEnv
+    }};
 }
 
 use std::os::raw::{c_char, c_void};

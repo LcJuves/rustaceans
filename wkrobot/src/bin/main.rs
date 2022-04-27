@@ -1,15 +1,28 @@
+#[cfg(not(windows))]
+fn main() {
+    panic!("Only supports Windows systems");
+}
+
+#[cfg(windows)]
 include!("../lib.rs");
 
+#[cfg(windows)]
 use core::time::Duration;
-
+#[cfg(windows)]
 use std::collections::HashMap;
+#[cfg(windows)]
 use std::convert::Infallible;
+#[cfg(windows)]
 use std::net::SocketAddr;
+#[cfg(windows)]
 use std::str::FromStr;
 
+#[cfg(windows)]
 use hyper::service::{make_service_fn, service_fn};
+#[cfg(windows)]
 use hyper::{Body, Request, Response, Server, StatusCode};
 
+#[cfg(windows)]
 async fn hello_world(req: Request<Body>) -> Result<Response<Body>, Infallible> {
     let mut resp = Response::new(Body::empty());
     if req.uri().path() != "/" {
@@ -85,6 +98,7 @@ async fn hello_world(req: Request<Body>) -> Result<Response<Body>, Infallible> {
     Ok(resp)
 }
 
+#[cfg(windows)]
 fn decode_uri(uri: &str) -> String {
     let mut pending = 0u8;
     let mut digit = 0;
@@ -112,6 +126,7 @@ fn decode_uri(uri: &str) -> String {
     String::from_utf8_lossy(&ret_bytes).to_string()
 }
 
+#[cfg(windows)]
 #[tokio::main]
 async fn main() {
     #[cfg(debug_assertions)]
@@ -135,6 +150,7 @@ async fn main() {
     }
 }
 
+#[cfg(windows)]
 #[test]
 fn test_decode_uri() {
     assert_eq!(

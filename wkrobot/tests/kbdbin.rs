@@ -1,3 +1,5 @@
+#![cfg(windows)]
+
 use std::io::{stdin, stdout, BufRead, Result, Write};
 
 fn main() -> Result<()> {

@@ -1,3 +1,5 @@
+#![cfg(windows)]
+
 use std::process::{Command, Stdio};
 use std::thread;
 

@@ -134,11 +134,14 @@ pub(crate) fn get_curr_exe_path() -> Result<PathBuf, std::io::Error> {
     #[cfg(debug_assertions)]
     println!("TARGET >>> {}", env!("TARGET"));
     let curr_exe_path = if cfg!(test) {
-        let cargo_manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let mut cargo_manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         seeval!(cargo_manifest_dir);
         let full_exe_name = env!("CARGO_BIN_NAME");
         #[cfg(windows)]
         let full_exe_name = full_exe_name.to_owned() + ".exe";
+        if cargo_manifest_dir.parent().unwrap().join("Cargo.toml").exists() {
+            cargo_manifest_dir = cargo_manifest_dir.parent().unwrap().to_path_buf();
+        }
         cargo_manifest_dir.join("target").join("debug").join(full_exe_name)
     } else {
         use std::env::current_exe;

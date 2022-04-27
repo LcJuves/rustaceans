@@ -1,3 +1,5 @@
+#![cfg(windows)]
+
 include!("../src/lib.rs");
 
 #[macro_use]

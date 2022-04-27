@@ -1,3 +1,5 @@
+#![cfg(windows)]
+
 use core::mem::size_of;
 
 use windows::core::{Error, Result};
