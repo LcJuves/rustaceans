@@ -31,3 +31,4 @@ rjni/test/tests/zig/src/jni.zig
 rjni/test/tests/zig/src/main_c.zig
 !DefinedClass.class
 !.vscode/settings.json
+.cargo/config.toml
