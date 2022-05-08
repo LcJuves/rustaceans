@@ -6,6 +6,6 @@ image: liangchengj/rustaceans:latest
 
 tasks:
   - init: |
-      cargo build
+      rm -rf .cargo
     command: |
-      cargo check
+      cargo build
