@@ -25,7 +25,7 @@ lazy_static! {
         if let Ok(ret) = serde_json::from_str::<Vec<SplitInfo<'static>>>(*SPLIT_INFO_JSON) {
             ret
         } else {
-            vec![SplitInfo::<'static>::default()]
+            Vec::<SplitInfo<'static>>::new()
         }
     };
 }
@@ -39,7 +39,7 @@ pub(crate) struct SplitInfo<'a> {
 
 impl<'a> SplitInfo<'a> {
     pub(crate) fn default() -> Self {
-        SplitInfo { file_name: "", block_paths: vec![""] }
+        SplitInfo { file_name: "", block_paths: Vec::<&'static str>::new() }
     }
 }
 
