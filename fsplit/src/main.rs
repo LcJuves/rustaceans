@@ -26,12 +26,16 @@ fn write_block(file_path: &Path, part_bytes: &Vec<u8>, split_infos: &mut SplitIn
     block_file.write_all(&*part_bytes)?;
     block_file.flush()?;
     let mut block_file_path_string = (&block_file_path.to_string_lossy()).to_string();
-    block_file_path_string = block_file_path_string.replace(
-        &format!("{}{}", current_dir().unwrap().to_str().unwrap(), std::path::MAIN_SEPARATOR),
-        "",
-    );
+    dbg!(&block_file_path_string);
+    let current_dir_path_string = current_dir().unwrap().to_string_lossy().to_string();
     #[cfg(windows)]
-    let block_file_path_string = block_file_path_string.replace("\\", "");
+    let current_dir_path_string = current_dir_path_string.replace("\\", "/");
+    dbg!(&current_dir_path_string);
+    block_file_path_string =
+        block_file_path_string.replace(&format!("{}{}", current_dir_path_string, "/"), "");
+    #[cfg(windows)]
+    let block_file_path_string = block_file_path_string.replace("\\", "/");
+    dbg!(&block_file_path_string);
     split_infos.block_paths.push(Box::leak(block_file_path_string.into_boxed_str()));
     Ok(())
 }
