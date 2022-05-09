@@ -32,3 +32,4 @@ rjni/test/tests/zig/src/main_c.zig
 !DefinedClass.class
 !.vscode/settings.json
 .cargo/config.toml
+fsplit/tests/res/*
