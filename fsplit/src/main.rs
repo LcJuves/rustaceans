@@ -31,10 +31,11 @@ fn write_block(file_path: &Path, part_bytes: &Vec<u8>, split_infos: &mut SplitIn
     #[cfg(windows)]
     let split_info_dir_path_string = split_info_dir_path_string.replace("\\", "/");
     dbg!(&split_info_dir_path_string);
+    #[cfg(windows)]
+    #[allow(unused_mut)]
+    let mut block_file_path_string = block_file_path_string.replace("\\", "/");
     block_file_path_string =
         block_file_path_string.replace(&format!("{}{}", split_info_dir_path_string, "/"), "");
-    #[cfg(windows)]
-    let block_file_path_string = block_file_path_string.replace("\\", "/");
     dbg!(&block_file_path_string);
     split_infos.block_paths.push(Box::leak(block_file_path_string.into_boxed_str()));
     Ok(())
