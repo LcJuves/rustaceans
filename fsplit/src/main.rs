@@ -5,7 +5,6 @@ mod splinfo;
 use crate::cli::ARGS;
 use crate::splinfo::{SplitInfo, SPLIT_INFOS, SPLIT_INFO_JSON_PATH};
 
-use std::env::current_dir;
 use std::path::Path;
 use std::{
     fs::{File, OpenOptions},
@@ -27,12 +26,13 @@ fn write_block(file_path: &Path, part_bytes: &Vec<u8>, split_infos: &mut SplitIn
     block_file.flush()?;
     let mut block_file_path_string = (&block_file_path.to_string_lossy()).to_string();
     dbg!(&block_file_path_string);
-    let current_dir_path_string = current_dir().unwrap().to_string_lossy().to_string();
+    let split_info_dir_path_string =
+        (*SPLIT_INFO_JSON_PATH).parent().unwrap().to_string_lossy().to_string();
     #[cfg(windows)]
-    let current_dir_path_string = current_dir_path_string.replace("\\", "/");
-    dbg!(&current_dir_path_string);
+    let split_info_dir_path_string = split_info_dir_path_string.replace("\\", "/");
+    dbg!(&split_info_dir_path_string);
     block_file_path_string =
-        block_file_path_string.replace(&format!("{}{}", current_dir_path_string, "/"), "");
+        block_file_path_string.replace(&format!("{}{}", split_info_dir_path_string, "/"), "");
     #[cfg(windows)]
     let block_file_path_string = block_file_path_string.replace("\\", "/");
     dbg!(&block_file_path_string);
