@@ -2,16 +2,13 @@ mod cli;
 mod sha512sum;
 mod splinfo;
 
-use lazy_static::__Deref;
-
 use crate::cli::ARGS;
 use crate::splinfo::{SplitInfo, SPLIT_INFOS, SPLIT_INFO_JSON};
 
+use std::path::Path;
 use std::{
     fs::{File, OpenOptions},
     io::{Read, Result, Seek, SeekFrom, Write},
-    marker::PhantomData,
-    path::{Path, PathBuf},
 };
 
 #[inline]
@@ -74,19 +71,14 @@ fn main() -> Result<()> {
     //     .write(true)
     //     .open(&split_info_json_path)?;
 
-    let mut def_split_infos = vec![SplitInfo::<'static>::default()];
-    let mut split_infos = if let Ok(ref de) = &*SPLIT_INFOS {
-        panic!("0");
-    } else {
-        panic!("1");
-    };
+    let mut split_infos = SPLIT_INFOS.clone();
     let mut split_info = SplitInfo::default();
-    // split_info.file_name = file_path.file_name().unwrap().to_string_lossy().to_string().clone();
+    // split_info.file_name = file_path.file_name().unwrap().to_string_lossy().to_string().as_str();
     for _ in 0..parts {
         block_stream(&file_path, &mut seek, &block_size, &mut split_info)?;
     }
     end_block_stream(&file_path, &mut seek, &mut split_info)?;
-    // (*split_infos).push(split_info);
+    split_infos.push(split_info);
     dbg!(parts);
     dbg!(seek);
     Ok(())
