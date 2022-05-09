@@ -1,34 +1,17 @@
+mod cli;
+mod sha512sum;
+
+use crate::cli::ARGS;
+
 use std::{
     fs::{File, OpenOptions},
     io::{Read, Result, Seek, SeekFrom, Write},
     path::Path,
 };
 
-use clap::Parser;
-use ssri::{Algorithm, IntegrityOpts};
-
-fn compute_sha512sum(bytes: &[u8]) -> String {
-    let integrity = IntegrityOpts::new().algorithm(Algorithm::Sha512).chain(bytes).result();
-    let (_, hex) = integrity.to_hex();
-    hex
-}
-
-/// A command line tool for splitting files
-#[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
-struct Args {
-    /// The path of the file to be split
-    #[clap(short, long)]
-    file_path: String,
-
-    /// The size of each block after splitting
-    #[clap(long, default_value_t = 3145728)]
-    block_size: u64,
-}
-
 #[inline]
 fn write_block(file_path: &Path, part_bytes: &Vec<u8>) -> Result<()> {
-    let block_sha512sum = compute_sha512sum(&*part_bytes);
+    let block_sha512sum = sha512sum::compute(&*part_bytes);
     dbg!(&block_sha512sum);
     let mut block_file = OpenOptions::new()
         .create(true)
@@ -62,9 +45,9 @@ fn end_block_stream(file_path: &Path, seek: &mut u64) -> Result<()> {
 }
 
 fn main() -> Result<()> {
-    let args = Args::parse();
+    let args = &ARGS;
     let file_path = Path::new(&args.file_path);
-    let file_sha512sum = compute_sha512sum(&std::fs::read(&file_path)?);
+    let file_sha512sum = sha512sum::compute(&std::fs::read(&file_path)?);
     dbg!(file_sha512sum);
     let metadata = file_path.metadata()?;
     dbg!(&metadata.len());
