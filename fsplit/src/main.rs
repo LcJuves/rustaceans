@@ -70,7 +70,7 @@ fn main() -> Result<()> {
     let args = &ARGS;
     let file_path = Path::new(&args.file_path);
     let file_sha512sum = sha512sum::compute(&std::fs::read(&file_path)?);
-    dbg!(file_sha512sum);
+    dbg!(&file_sha512sum);
     let metadata = file_path.metadata()?;
     dbg!(&metadata.len());
     let block_size = args.block_size;
@@ -81,6 +81,7 @@ fn main() -> Result<()> {
     let mut split_info = SplitInfo::default();
     split_info.file_name =
         Box::leak(file_path.file_name().unwrap().to_string_lossy().to_string().into_boxed_str());
+    split_info.file_sha512sum = Box::leak(file_sha512sum.into_boxed_str());
     for _ in 0..parts {
         block_stream(&file_path, &mut seek, &block_size, &mut split_info)?;
     }
@@ -88,6 +89,7 @@ fn main() -> Result<()> {
     dbg!(parts);
     dbg!(seek);
     split_infos.push(split_info);
+    split_infos.dedup_by(|a, b| a.file_sha512sum == b.file_sha512sum);
     let mut split_info_json_file = OpenOptions::new()
         .create(true)
         .truncate(true)

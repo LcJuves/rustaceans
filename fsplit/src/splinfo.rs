@@ -34,12 +34,13 @@ lazy_static! {
 #[serde(rename_all = "camelCase")]
 pub(crate) struct SplitInfo<'a> {
     pub(crate) file_name: &'a str,
+    pub(crate) file_sha512sum: &'a str,
     pub(crate) block_paths: Vec<&'a str>,
 }
 
 impl<'a> SplitInfo<'a> {
     pub(crate) fn default() -> Self {
-        SplitInfo { file_name: "", block_paths: Vec::<&'static str>::new() }
+        SplitInfo { file_name: "", file_sha512sum: "", block_paths: Vec::<&'static str>::new() }
     }
 }
 
