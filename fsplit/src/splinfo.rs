@@ -1,6 +1,6 @@
 use crate::cli::ARGS;
 
-use std::fs::{File, OpenOptions};
+use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
@@ -10,13 +10,7 @@ use serde::{Deserialize, Serialize};
 lazy_static! {
     pub(crate) static ref SPLIT_INFO_JSON_PATH: PathBuf = get_split_info_json_path();
     pub(crate) static ref SPLIT_INFO_JSON: &'static str = {
-        let mut split_info_json_file = OpenOptions::new()
-            .create(true)
-            .truncate(true)
-            .read(true)
-            .write(true)
-            .open(&*SPLIT_INFO_JSON_PATH)
-            .unwrap();
+        let mut split_info_json_file = File::open(&*SPLIT_INFO_JSON_PATH).unwrap();
         let mut split_info_json = String::new();
         split_info_json_file.read_to_string(&mut split_info_json).unwrap_or(0usize);
         Box::leak(split_info_json.into_boxed_str())
@@ -30,7 +24,7 @@ lazy_static! {
     };
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct SplitInfo<'a> {
     pub(crate) file_name: &'a str,
