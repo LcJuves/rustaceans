@@ -6,6 +6,7 @@ image: liangchengj/rustaceans:latest
 
 tasks:
   - init: |
+      export PATH="$HOME/.cargo/bin:$PATH"
       rm -rf .cargo
     command: |
       cargo build
