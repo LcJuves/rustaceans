@@ -13,7 +13,7 @@ use std::{
 pub(crate) fn write_block(
     file_path: &Path,
     part_bytes: &Vec<u8>,
-    split_infos: &mut SplitInfo,
+    split_info: &mut SplitInfo,
 ) -> Result<()> {
     let block_sha512sum = sha512sum::compute(&*part_bytes);
     #[cfg(debug_assertions)]
@@ -43,7 +43,7 @@ pub(crate) fn write_block(
         block_file_path_string.replace(&format!("{}{}", split_info_dir_path_string, "/"), "");
     #[cfg(debug_assertions)]
     dbg!(&block_file_path_string);
-    split_infos.block_paths.push(Box::leak(block_file_path_string.into_boxed_str()));
+    split_info.block_paths.push(Box::leak(block_file_path_string.into_boxed_str()));
     Ok(())
 }
 
