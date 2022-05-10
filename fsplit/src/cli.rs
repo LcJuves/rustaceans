@@ -19,4 +19,8 @@ pub(crate) struct Args {
     /// The size of each block after splitting
     #[clap(long, default_value_t = 3145728)]
     pub(crate) block_size: u64,
+
+    /// JSON configuration file path for block description information
+    #[clap(long)]
+    pub(crate) back_from: String,
 }
