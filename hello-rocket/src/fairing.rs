@@ -32,11 +32,8 @@ impl Fairing for CommonFairing {
                 Self::ACCESS_CONTROL_ALLOW_ORIGIN,
             );
             let cty = ContentType::JSON;
-            let cty = ContentType::with_params(
-                cty.top().to_string(),
-                cty.sub().to_string(),
-                vec![("charset", "utf-8")],
-            );
+            let cty = ContentType::new(cty.top().to_string(), cty.sub().to_string())
+                .with_params([("charset", "utf-8")]);
             resp.set_header(cty);
         }
     }
