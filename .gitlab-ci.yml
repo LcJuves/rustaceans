@@ -7,8 +7,18 @@
 # https://hub.docker.com/r/library/rust/tags/
 image: "liangchengj/rustaceans:jit"
 
+stages:
+  - check
+  - test
+
 check:cargo:
+  stage: check
   script:
     - rustc --version && cargo --version # Print version info
     - cargo check
     - cargo build
+
+test:cargo:
+  stage: test
+  script:
+    - cargo test --workspace --exclude wkrobot --exclude xlsx-example -- --nocapture
