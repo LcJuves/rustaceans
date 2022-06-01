@@ -17,10 +17,7 @@ mod tests {
     };
 
     use toml::Value;
-    #[cfg(windows)]
     const ENABLE_ZIG: bool = true;
-    #[cfg(not(windows))]
-    const ENABLE_ZIG: bool = false;
 
     fn javac_and_run(jcalls_dir: &Path, javac_path: &Path, java_path: &Path, dylib_out_dir: &str) {
         assert!(Command::new(javac_path)
