@@ -2,14 +2,11 @@
 # Please adjust to your needs (see https://www.gitpod.io/docs/config-gitpod-file)
 # and commit this file to your remote git repository to share the goodness with others.
 
-image: liangchengj/rustaceans:latest
+image: liangchengj/develop-environment:latest
 
 tasks:
   - init: |
       export PATH="$HOME/.cargo/bin:$PATH"
       rm -rf .cargo
-      curl -L -O -s https://ziglang.org/download/0.9.1/zig-linux-x86_64-0.9.1.tar.xz
-      tar -xJf zig-linux-x86_64-0.9.1.tar.xz
-      export PATH="$PWD/zig-linux-x86_64-0.9.1:$PATH"
     command: |
       cargo build
