@@ -21,4 +21,4 @@ check:cargo:
 test:cargo:
   stage: test
   script:
-    - cargo test --workspace --exclude wkrobot --exclude xlsx-example -- --nocapture
+    - cargo test --workspace --exclude wkrobot --exclude xlsx-example --exclude rjni -- --nocapture
