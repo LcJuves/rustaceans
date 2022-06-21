@@ -14,6 +14,7 @@ use std::ptr::{null, null_mut};
 use std::sync::Once;
 
 use lazy_static::lazy_static;
+
 use windows::core::{Error, Result};
 use windows::Win32::Foundation::HANDLE;
 use windows::Win32::Foundation::MAX_PATH;
@@ -49,6 +50,8 @@ const ONCE_INIT: Once = Once::new();
 pub(crate) fn get_stdout_handle() -> HANDLE {
     let stdout_handle = *STDOUT_HANDLE;
     ONCE_INIT.call_once(|| {
+        #[cfg(debug_assertions)]
+        dbg!(*IS_MINTTY);
         let _ = *DEFAULT_WATTRIBUTES;
     });
     stdout_handle
@@ -58,9 +61,7 @@ fn get_curr_wattributes() -> u16 {
     let mut buf_info = CONSOLE_SCREEN_BUFFER_INFO::default();
     let stdout_handle = *STDOUT_HANDLE;
     unsafe {
-        GetConsoleScreenBufferInfo(stdout_handle, &mut buf_info as *mut CONSOLE_SCREEN_BUFFER_INFO)
-            .ok()
-            .unwrap_or(());
+        GetConsoleScreenBufferInfo(stdout_handle, &mut buf_info as *mut CONSOLE_SCREEN_BUFFER_INFO);
     }
     buf_info.wAttributes
 }
@@ -71,7 +72,7 @@ fn check_is_mintty() -> bool {
     let size = size_of::<FILE_NAME_INFO>();
     type WCHAR = u16;
     let mut name_info_bytes = vec![0u8; size + (MAX_PATH as usize) * size_of::<WCHAR>()];
-    let res = unsafe {
+    unsafe {
         GetFileInformationByHandleEx(
             stdout_handle,
             FileNameInfo,
@@ -80,15 +81,14 @@ fn check_is_mintty() -> bool {
         )
     };
 
-    if !res.as_bool() {
-        return false;
-    }
     let name_info: &FILE_NAME_INFO =
         unsafe { &*(name_info_bytes.as_ptr() as *const FILE_NAME_INFO) };
     let s = unsafe {
         slice::from_raw_parts(name_info.FileName.as_ptr(), name_info.FileNameLength as usize / 2)
     };
     let name = String::from_utf16_lossy(s);
+    #[cfg(debug_assertions)]
+    dbg!(&name);
     // This checks whether 'pty' exists in the file name, which indicates that
     // a pseudo-terminal is attached. To mitigate against false positives
     // (e.g., an actual file name that contains 'pty'), we also require that
@@ -123,7 +123,9 @@ fn set_con_text_attr(wattributes: u16) {
         }
         // END FIXME
 
-        SetConsoleTextAttribute(stdout_handle, _wattributes).ok().unwrap_or(());
+        if !SetConsoleTextAttribute(stdout_handle, _wattributes).as_bool() {
+            panic!("{:?}", Error::from_win32());
+        }
     }
 }
 
@@ -135,6 +137,24 @@ fn wattr_fg_color(wattributes: u16) -> u16 {
 #[inline]
 fn wattr_bg_color(wattributes: u16) -> u16 {
     (wattributes / 16) % 16
+}
+
+fn write_conw_util(stdout_handle: HANDLE, r#str: &str) -> Result<()> {
+    let mut str_utf16 = r#str.encode_utf16().collect::<Vec<u16>>();
+    unsafe {
+        if !WriteConsoleW(
+            stdout_handle,
+            str_utf16.as_mut_ptr() as *const c_void,
+            str_utf16.len() as u32,
+            null_mut() as *mut u32,
+            null_mut() as *mut c_void,
+        )
+        .as_bool()
+        {
+            return Err(Error::from_win32());
+        }
+    }
+    Ok(())
 }
 
 fn write_conw(ansi_str: &str) -> Result<()> {
@@ -153,24 +173,16 @@ fn write_conw(ansi_str: &str) -> Result<()> {
             return Err(Error::from_win32());
         }
 
-        let mut sequence = ansi_str.encode_utf16().collect::<Vec<u16>>();
-
-        if !WriteConsoleW(
-            stdout_handle,
-            sequence.as_mut_ptr() as *const c_void,
-            sequence.len() as u32,
-            null_mut() as *mut u32,
-            null_mut() as *mut c_void,
-        )
-        .as_bool()
-        {
+        if let error @ Err(_) = write_conw_util(stdout_handle, ansi_str) {
             // If we fail, try to restore the mode on the way out.
             SetConsoleMode(stdout_handle, original_mode);
-            return Err(Error::from_win32());
+            return error;
         }
 
         // Restore the mode on the way out to be nice to other command-line applications.
-        SetConsoleMode(stdout_handle, original_mode);
+        if !SetConsoleMode(stdout_handle, original_mode).as_bool() {
+            return Err(Error::from_win32());
+        }
     }
     Ok(())
 }
@@ -268,7 +280,7 @@ pub(crate) fn cls() {
                 )
                 .as_bool()
                 {
-                    return;
+                    panic!("{:?}", Error::from_win32());
                 }
 
                 // Scroll the rectangle of the entire buffer.
@@ -286,19 +298,25 @@ pub(crate) fn cls() {
                 fill.Attributes = csbi.wAttributes;
 
                 // Do the scroll
-                ScrollConsoleScreenBufferW(
+                if !ScrollConsoleScreenBufferW(
                     stdout_handle,
                     &scroll_rect,
                     null() as *const SMALL_RECT,
                     scroll_target,
                     &fill,
-                );
+                )
+                .as_bool()
+                {
+                    panic!("{:?}", Error::from_win32());
+                }
 
                 // Move the cursor to the top left corner too.
                 csbi.dwCursorPosition.X = 0;
                 csbi.dwCursorPosition.Y = 0;
 
-                SetConsoleCursorPosition(stdout_handle, csbi.dwCursorPosition);
+                if !SetConsoleCursorPosition(stdout_handle, csbi.dwCursorPosition).as_bool() {
+                    panic!("{:?}", Error::from_win32());
+                }
             }
         }
     }
@@ -307,10 +325,10 @@ pub(crate) fn cls() {
 pub(crate) fn print(r#str: &str) {
     if *IS_MINTTY {
         print!("{}", r#str);
-    } else {
-        if let Err(_) = write_conw(r#str) {
-            todo!();
-        }
+    } else if let Err(_) = write_conw(r#str) {
+        let stdout_handle = get_stdout_handle();
+        // FIXME: Windows 7 not supported.
+        write_conw_util(stdout_handle, r#str).unwrap();
     }
 }
 
