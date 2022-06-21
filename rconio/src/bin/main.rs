@@ -38,7 +38,7 @@ fn main() {
 
         print(&format!("{}我的世界{}", SGR_LIGHT_RED, SGR_NONE));
 
-        // std::thread::sleep(std::time::Duration::from_millis(3000));
-        // clear_screen();
+        std::thread::sleep(std::time::Duration::from_millis(3000));
+        clear_screen();
     }
 }

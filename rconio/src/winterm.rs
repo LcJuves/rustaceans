@@ -10,6 +10,7 @@ use core::ffi::c_void;
 use core::mem::size_of;
 use core::slice;
 
+use std::process::Command;
 use std::ptr::{null, null_mut};
 use std::sync::Once;
 
@@ -21,7 +22,6 @@ use windows::Win32::Foundation::MAX_PATH;
 use windows::Win32::Storage::FileSystem::FileNameInfo;
 use windows::Win32::Storage::FileSystem::GetFileInformationByHandleEx;
 use windows::Win32::Storage::FileSystem::FILE_NAME_INFO;
-use windows::Win32::System::Console::GetConsoleMode;
 use windows::Win32::System::Console::GetConsoleScreenBufferInfo;
 use windows::Win32::System::Console::GetStdHandle;
 use windows::Win32::System::Console::ScrollConsoleScreenBufferW;
@@ -38,6 +38,7 @@ use windows::Win32::System::Console::ENABLE_VIRTUAL_TERMINAL_PROCESSING;
 use windows::Win32::System::Console::FOREGROUND_INTENSITY;
 use windows::Win32::System::Console::SMALL_RECT;
 use windows::Win32::System::Console::STD_OUTPUT_HANDLE;
+use windows::Win32::System::Console::{GetConsoleMode, WriteConsoleA};
 
 lazy_static! {
     static ref DEFAULT_WATTRIBUTES: u16 = get_curr_wattributes();
@@ -68,6 +69,7 @@ fn get_curr_wattributes() -> u16 {
 
 // https://github.com/softprops/atty/blob/master/src/lib.rs
 fn check_is_mintty() -> bool {
+    let term_program_var = std::env::var("TERM_PROGRAM").unwrap_or("".to_string());
     let stdout_handle = *STDOUT_HANDLE;
     let size = size_of::<FILE_NAME_INFO>();
     type WCHAR = u16;
@@ -95,7 +97,7 @@ fn check_is_mintty() -> bool {
     // either the strings 'msys-' or 'cygwin-' are in the file name as well.)
     let is_msys = name.contains("msys-") || name.contains("cygwin-");
     let is_pty = name.contains("-pty");
-    is_msys && is_pty
+    (is_msys && is_pty) || !term_program_var.is_empty()
 }
 
 fn set_con_text_attr(wattributes: u16) {
@@ -137,6 +139,24 @@ fn wattr_fg_color(wattributes: u16) -> u16 {
 #[inline]
 fn wattr_bg_color(wattributes: u16) -> u16 {
     (wattributes / 16) % 16
+}
+
+fn write_cona_util(stdout_handle: HANDLE, r#str: &str) -> Result<()> {
+    let str_bytes = r#str.as_bytes();
+    unsafe {
+        if !WriteConsoleA(
+            stdout_handle,
+            str_bytes.as_ptr() as *const c_void,
+            str_bytes.len() as u32,
+            null_mut() as *mut u32,
+            null_mut() as *mut c_void,
+        )
+        .as_bool()
+        {
+            return Err(Error::from_win32());
+        }
+    }
+    Ok(())
 }
 
 fn write_conw_util(stdout_handle: HANDLE, r#str: &str) -> Result<()> {
@@ -189,7 +209,7 @@ fn write_conw(ansi_str: &str) -> Result<()> {
 
 pub(crate) fn reset() {
     if *IS_MINTTY {
-        print!("{}", cvtseq::SGR_NONE);
+        mintty_printf(cvtseq::SGR_NONE);
     } else {
         let wattributes = *DEFAULT_WATTRIBUTES;
         set_con_text_attr(wattributes);
@@ -198,7 +218,7 @@ pub(crate) fn reset() {
 
 pub(crate) fn set_red() {
     if *IS_MINTTY {
-        print!("{}", cvtseq::SGR_RED);
+        mintty_printf(cvtseq::SGR_RED);
     } else {
         if let Err(_) = write_conw(cvtseq::SGR_RED) {
             set_con_text_attr(0x04 /* RED */);
@@ -208,7 +228,7 @@ pub(crate) fn set_red() {
 
 pub(crate) fn set_green() {
     if *IS_MINTTY {
-        print!("{}", cvtseq::SGR_GREEN);
+        mintty_printf(cvtseq::SGR_GREEN);
     } else {
         if let Err(_) = write_conw(cvtseq::SGR_GREEN) {
             set_con_text_attr(0x2 /* GREEN */);
@@ -218,7 +238,7 @@ pub(crate) fn set_green() {
 
 pub(crate) fn set_blue() {
     if *IS_MINTTY {
-        print!("{}", cvtseq::SGR_BLUE);
+        mintty_printf(cvtseq::SGR_BLUE);
     } else {
         if let Err(_) = write_conw(cvtseq::SGR_BLUE) {
             set_con_text_attr(0x1 /* BLUE */);
@@ -228,7 +248,7 @@ pub(crate) fn set_blue() {
 
 pub(crate) fn set_white() {
     if *IS_MINTTY {
-        print!("{}", cvtseq::SGR_WHITE);
+        mintty_printf(cvtseq::SGR_WHITE);
     } else {
         if let Err(_) = write_conw(cvtseq::SGR_WHITE) {
             set_con_text_attr(0x7 /* WHITE */);
@@ -238,7 +258,7 @@ pub(crate) fn set_white() {
 
 pub(crate) fn set_high_light() {
     if *IS_MINTTY {
-        print!("{}", cvtseq::SGR_HIGH_LIGHT);
+        mintty_printf(cvtseq::SGR_HIGH_LIGHT);
     } else {
         if let Err(_) = write_conw(cvtseq::SGR_HIGH_LIGHT) {
             let mut wattributes = get_curr_wattributes();
@@ -252,7 +272,7 @@ pub(crate) fn set_high_light() {
 
 pub(crate) fn set_under_line() {
     if *IS_MINTTY {
-        print!("{}", cvtseq::SGR_UNDER_LINE);
+        mintty_printf(cvtseq::SGR_UNDER_LINE);
     } else {
         if let Err(_) = write_conw(cvtseq::SGR_UNDER_LINE) {
             let wattributes = get_curr_wattributes();
@@ -263,7 +283,7 @@ pub(crate) fn set_under_line() {
 
 pub(crate) fn cls() {
     if *IS_MINTTY {
-        print!("{}", cvtseq::ESC_CLEAR_SCREEN);
+        mintty_printf(cvtseq::ESC_CLEAR_SCREEN);
     } else {
         if let Err(_) = write_conw(cvtseq::ESC_CLEAR_SCREEN) {
             let stdout_handle = get_stdout_handle();
@@ -322,12 +342,23 @@ pub(crate) fn cls() {
     }
 }
 
+#[macro_export(local_inner_macros)]
+macro_rules! char_const_ptr {
+    ($str:expr) => {{
+        CString::new($str).unwrap().into_raw()
+    }};
+}
+
+fn mintty_printf(r#str: &str) {
+    assert!(Command::new("printf").arg("%s").arg(r#str).status().unwrap().success());
+}
+
 pub(crate) fn print(r#str: &str) {
     if *IS_MINTTY {
-        print!("{}", r#str);
+        mintty_printf(str);
     } else if let Err(_) = write_conw(r#str) {
+        // TODO: ANSI Parse
         let stdout_handle = get_stdout_handle();
-        // FIXME: Windows 7 not supported.
         write_conw_util(stdout_handle, r#str).unwrap();
     }
 }
