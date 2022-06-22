@@ -22,6 +22,7 @@ use windows::Win32::Foundation::MAX_PATH;
 use windows::Win32::Storage::FileSystem::FileNameInfo;
 use windows::Win32::Storage::FileSystem::GetFileInformationByHandleEx;
 use windows::Win32::Storage::FileSystem::FILE_NAME_INFO;
+use windows::Win32::System::Console::GetConsoleMode;
 use windows::Win32::System::Console::GetConsoleScreenBufferInfo;
 use windows::Win32::System::Console::GetStdHandle;
 use windows::Win32::System::Console::ScrollConsoleScreenBufferW;
@@ -38,18 +39,18 @@ use windows::Win32::System::Console::ENABLE_VIRTUAL_TERMINAL_PROCESSING;
 use windows::Win32::System::Console::FOREGROUND_INTENSITY;
 use windows::Win32::System::Console::SMALL_RECT;
 use windows::Win32::System::Console::STD_OUTPUT_HANDLE;
-use windows::Win32::System::Console::{GetConsoleMode, WriteConsoleA};
 
 lazy_static! {
     static ref DEFAULT_WATTRIBUTES: u16 = get_curr_wattributes();
     static ref IS_MINTTY: bool = check_is_mintty();
-    pub(crate) static ref STDOUT_HANDLE: HANDLE = unsafe { GetStdHandle(STD_OUTPUT_HANDLE) };
+    pub(crate) static ref STDOUT_HANDLE: Result<HANDLE> =
+        unsafe { GetStdHandle(STD_OUTPUT_HANDLE) };
 }
 
 const ONCE_INIT: Once = Once::new();
 
-pub(crate) fn get_stdout_handle() -> HANDLE {
-    let stdout_handle = *STDOUT_HANDLE;
+pub(crate) fn get_stdout_handle() -> &'static HANDLE {
+    let stdout_handle = STDOUT_HANDLE.as_ref().unwrap();
     ONCE_INIT.call_once(|| {
         #[cfg(debug_assertions)]
         dbg!(*IS_MINTTY);
@@ -60,7 +61,7 @@ pub(crate) fn get_stdout_handle() -> HANDLE {
 
 fn get_curr_wattributes() -> u16 {
     let mut buf_info = CONSOLE_SCREEN_BUFFER_INFO::default();
-    let stdout_handle = *STDOUT_HANDLE;
+    let stdout_handle = STDOUT_HANDLE.as_ref().unwrap();
     unsafe {
         GetConsoleScreenBufferInfo(stdout_handle, &mut buf_info as *mut CONSOLE_SCREEN_BUFFER_INFO);
     }
@@ -70,7 +71,7 @@ fn get_curr_wattributes() -> u16 {
 // https://github.com/softprops/atty/blob/master/src/lib.rs
 fn check_is_mintty() -> bool {
     let term_program_var = std::env::var("TERM_PROGRAM").unwrap_or("".to_string());
-    let stdout_handle = *STDOUT_HANDLE;
+    let stdout_handle = STDOUT_HANDLE.as_ref().unwrap();
     let size = size_of::<FILE_NAME_INFO>();
     type WCHAR = u16;
     let mut name_info_bytes = vec![0u8; size + (MAX_PATH as usize) * size_of::<WCHAR>()];
@@ -141,31 +142,11 @@ fn wattr_bg_color(wattributes: u16) -> u16 {
     (wattributes / 16) % 16
 }
 
-fn write_cona_util(stdout_handle: HANDLE, r#str: &str) -> Result<()> {
-    let str_bytes = r#str.as_bytes();
-    unsafe {
-        if !WriteConsoleA(
-            stdout_handle,
-            str_bytes.as_ptr() as *const c_void,
-            str_bytes.len() as u32,
-            null_mut() as *mut u32,
-            null_mut() as *mut c_void,
-        )
-        .as_bool()
-        {
-            return Err(Error::from_win32());
-        }
-    }
-    Ok(())
-}
-
 fn write_conw_util(stdout_handle: HANDLE, r#str: &str) -> Result<()> {
-    let mut str_utf16 = r#str.encode_utf16().collect::<Vec<u16>>();
     unsafe {
         if !WriteConsoleW(
             stdout_handle,
-            str_utf16.as_mut_ptr() as *const c_void,
-            str_utf16.len() as u32,
+            r#str.as_bytes(),
             null_mut() as *mut u32,
             null_mut() as *mut c_void,
         )
@@ -181,7 +162,7 @@ fn write_conw(ansi_str: &str) -> Result<()> {
     unsafe {
         let stdout_handle = get_stdout_handle();
 
-        let mut mode: CONSOLE_MODE = 0;
+        let mut mode: CONSOLE_MODE = CONSOLE_MODE(0);
         if !GetConsoleMode(stdout_handle, &mut mode as *mut CONSOLE_MODE).as_bool() {
             return Err(Error::from_win32());
         }
@@ -193,7 +174,7 @@ fn write_conw(ansi_str: &str) -> Result<()> {
             return Err(Error::from_win32());
         }
 
-        if let error @ Err(_) = write_conw_util(stdout_handle, ansi_str) {
+        if let error @ Err(_) = write_conw_util(*stdout_handle, ansi_str) {
             // If we fail, try to restore the mode on the way out.
             SetConsoleMode(stdout_handle, original_mode);
             return error;
@@ -359,7 +340,7 @@ pub(crate) fn print(r#str: &str) {
     } else if let Err(_) = write_conw(r#str) {
         // TODO: ANSI Parse
         let stdout_handle = get_stdout_handle();
-        write_conw_util(stdout_handle, r#str).unwrap();
+        write_conw_util(*stdout_handle, r#str).unwrap();
     }
 }
 
