@@ -3,6 +3,12 @@ include!("../lib.rs");
 fn main() {
     #[cfg(windows)]
     {
+        #[cfg(debug_assertions)]
+        {
+            let version_numbers = get_version_numbers();
+            dbg!(version_numbers);
+        }
+
         set_red();
         println!("RED");
 
@@ -38,7 +44,7 @@ fn main() {
 
         print(&format!("{}我的世界{}", SGR_LIGHT_RED, SGR_NONE));
 
-        std::thread::sleep(std::time::Duration::from_millis(3000));
-        clear_screen();
+        // std::thread::sleep(std::time::Duration::from_millis(3000));
+        // clear_screen();
     }
 }

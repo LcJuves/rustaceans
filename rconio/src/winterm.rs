@@ -5,6 +5,7 @@
 #![allow(dead_code)]
 
 use crate::cvtseq;
+use crate::nt_version_nums::*;
 
 use core::ffi::c_void;
 use core::mem::size_of;
@@ -45,9 +46,10 @@ lazy_static! {
     static ref IS_MINTTY: bool = check_is_mintty();
     pub(crate) static ref STDOUT_HANDLE: Result<HANDLE> =
         unsafe { GetStdHandle(STD_OUTPUT_HANDLE) };
+    static ref WIN8_HIGHER: bool = get_version_numbers().major > 6;
 }
 
-const ONCE_INIT: Once = Once::new();
+static ONCE_INIT: Once = Once::new();
 
 pub(crate) fn get_stdout_handle() -> &'static HANDLE {
     let stdout_handle = STDOUT_HANDLE.as_ref().unwrap();
@@ -331,7 +333,11 @@ macro_rules! char_const_ptr {
 }
 
 fn mintty_printf(r#str: &str) {
-    assert!(Command::new("printf").arg("%s").arg(r#str).status().unwrap().success());
+    if *WIN8_HIGHER {
+        print!("{}", r#str);
+    } else {
+        assert!(Command::new("printf").arg("%s").arg(r#str).status().unwrap().success());
+    }
 }
 
 pub(crate) fn print(r#str: &str) {
