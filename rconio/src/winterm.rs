@@ -178,7 +178,9 @@ fn write_conw(ansi_str: &str) -> Result<()> {
 
         if let error @ Err(_) = write_conw_util(*stdout_handle, ansi_str) {
             // If we fail, try to restore the mode on the way out.
-            SetConsoleMode(stdout_handle, original_mode);
+            if !SetConsoleMode(stdout_handle, original_mode).as_bool() {
+                return Err(Error::from_win32());
+            }
             return error;
         }
 
