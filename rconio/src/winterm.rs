@@ -46,7 +46,7 @@ lazy_static! {
     static ref IS_MINTTY: bool = check_is_mintty();
     pub(crate) static ref STDOUT_HANDLE: Result<HANDLE> =
         unsafe { GetStdHandle(STD_OUTPUT_HANDLE) };
-    static ref WIN8_HIGHER: bool = get_version_numbers().major > 6;
+    static ref WIN7_HIGHER: bool = get_version_numbers().major > 6;
 }
 
 static ONCE_INIT: Once = Once::new();
@@ -333,7 +333,7 @@ macro_rules! char_const_ptr {
 }
 
 fn mintty_printf(r#str: &str) {
-    if *WIN8_HIGHER {
+    if *WIN7_HIGHER {
         print!("{}", r#str);
     } else {
         assert!(Command::new("printf").arg("%s").arg(r#str).status().unwrap().success());
