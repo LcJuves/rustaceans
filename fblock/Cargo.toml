@@ -1,5 +1,5 @@
 [package]
-name = "fsplit"
+name = "fblock"
 version = "0.1.0"
 edition = "2021"
 authors = ["Liangcheng Juves <liangchengj@outlook.com>"]
