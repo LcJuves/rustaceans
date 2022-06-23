@@ -21,6 +21,8 @@ use std::str::FromStr;
 use hyper::service::{make_service_fn, service_fn};
 #[cfg(windows)]
 use hyper::{Body, Request, Response, Server, StatusCode};
+#[cfg(windows)]
+use windows::Win32::UI::Input::KeyboardAndMouse::VIRTUAL_KEY;
 
 #[cfg(windows)]
 async fn hello_world(req: Request<Body>) -> Result<Response<Body>, Infallible> {
@@ -85,7 +87,7 @@ async fn hello_world(req: Request<Body>) -> Result<Response<Body>, Infallible> {
             }
             println!("keyCode >>> {key_code}; frequency >>> {frequency}");
             for _ in 0..frequency {
-                final_ret = key_press(key_code);
+                final_ret = key_press(VIRTUAL_KEY(key_code));
             }
         }
 

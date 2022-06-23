@@ -20,8 +20,8 @@ use hyper::{Body, Client, Method, Request, Response, StatusCode, Version};
 use lazy_static::lazy_static;
 use tokio::runtime::Runtime;
 use windows::Win32::UI::Input::KeyboardAndMouse::{
-    VK_0, VK_1, VK_2, VK_3, VK_4, VK_5, VK_6, VK_7, VK_8, VK_9, VK_A, VK_C, VK_E, VK_G, VK_H, VK_I,
-    VK_J, VK_L, VK_N, VK_RETURN, VK_S, VK_SPACE, VK_U, VK_V,
+    VIRTUAL_KEY, VK_0, VK_1, VK_2, VK_3, VK_4, VK_5, VK_6, VK_7, VK_8, VK_9, VK_A, VK_C, VK_E,
+    VK_G, VK_H, VK_I, VK_J, VK_L, VK_N, VK_RETURN, VK_S, VK_SPACE, VK_U, VK_V,
 };
 
 lazy_static! {
@@ -57,8 +57,8 @@ async fn get_without_headers(url: &str) -> Result<Response<Body>, Box<dyn Error>
     Ok(get(url, &HashMap::new()).await?)
 }
 
-async fn test_kbd_req(frequency: u16, key_code: u16) -> Result<(), Box<dyn Error>> {
-    let url = format!("http://127.0.0.1:3000/?frequency={}&keyCode={}", frequency, key_code);
+async fn test_kbd_req(frequency: u16, vk: VIRTUAL_KEY) -> Result<(), Box<dyn Error>> {
+    let url = format!("http://127.0.0.1:3000/?frequency={}&keyCode={}", frequency, vk.0);
     let resp = get_without_headers(&url).await?;
     assert_eq!(resp.status(), StatusCode::OK);
     assert_eq!(format!("{:?}", (*resp.body())), format!("{:?}", Body::empty()));

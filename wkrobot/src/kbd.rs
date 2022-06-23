@@ -12,7 +12,7 @@ pub fn key_input(ki: KEYBDINPUT) -> Result<()> {
     pinputs.r#type = INPUT_KEYBOARD;
     pinputs.Anonymous = INPUT_0 { ki };
     unsafe {
-        let ret = SendInput(1, &pinputs, size_of::<INPUT>() as i32);
+        let ret = SendInput(&vec![pinputs], size_of::<INPUT>() as i32);
         if ret != 1 {
             return Err(Error::from_win32());
         }
