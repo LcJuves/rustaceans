@@ -1,8 +1,6 @@
-use crate::cli::ARGS;
 use crate::sha512sum;
-use crate::splinfo::{split_info_json_path_from, SplitInfo, SPLIT_INFO_JSON_PATH};
+use crate::splinfo::{SplitInfo, SPLIT_INFO_JSON_PATH};
 
-use std::path::PathBuf;
 use std::{
     fs::{File, OpenOptions},
     io::{Read, Result, Seek, SeekFrom, Write},
@@ -27,7 +25,7 @@ pub(crate) fn write_block(
         .open(&block_file_path)?;
     block_file.write_all(&*part_bytes)?;
     block_file.flush()?;
-    let mut block_file_path_string = (&block_file_path.to_string_lossy()).to_string();
+    let block_file_path_string = (&block_file_path.to_string_lossy()).to_string();
     #[cfg(debug_assertions)]
     dbg!(&block_file_path_string);
     let split_info_dir_path_string =
@@ -76,8 +74,8 @@ pub(crate) fn end_block_stream(
     Ok(())
 }
 
-pub(crate) fn blocks_to_file() -> Result<()> {
-    let args = &ARGS;
-    let sijp = split_info_json_path_from(PathBuf::from(&args.back_from));
-    Ok(())
-}
+// pub(crate) fn blocks_to_file() -> Result<()> {
+//     let Commands::Split { file_path, block_size, back_from } = &*ARGS_CMD;
+//     let sijp = split_info_json_path_from(PathBuf::from(&back_from));
+//     Ok(())
+// }

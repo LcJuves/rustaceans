@@ -4,7 +4,7 @@ mod sha512sum;
 mod splinfo;
 
 use crate::blockopt::*;
-use crate::cli::ARGS;
+use crate::cli::{Commands, ARGS_CMD};
 use crate::splinfo::{SplitInfo, SPLIT_INFOS, SPLIT_INFO_JSON_PATH};
 
 use std::{
@@ -14,15 +14,15 @@ use std::{
 };
 
 fn main() -> Result<()> {
-    let args = &ARGS;
-    let file_path = Path::new(&args.file_path);
+    let Commands::Split { file_path, block_size, .. } = &*ARGS_CMD;
+    let file_path = Path::new(&file_path);
     let file_sha512sum = sha512sum::compute(&std::fs::read(&file_path)?);
     #[cfg(debug_assertions)]
     dbg!(&file_sha512sum);
     let metadata = file_path.metadata()?;
     #[cfg(debug_assertions)]
     dbg!(&metadata.len());
-    let block_size = args.block_size;
+    let block_size = block_size;
     let parts = metadata.len() / block_size;
     let mut seek = 0;
 

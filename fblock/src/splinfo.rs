@@ -1,4 +1,4 @@
-use crate::cli::ARGS;
+use crate::cli::{Commands, ARGS_CMD};
 
 use std::fs::File;
 use std::io::{Read, Result};
@@ -35,8 +35,8 @@ impl<'a> SplitInfo<'a> {
 }
 
 fn get_split_info_json_path() -> PathBuf {
-    let args = &ARGS;
-    split_info_json_path_from(PathBuf::from(&args.file_path).parent().unwrap().to_path_buf())
+    let Commands::Split { file_path, .. } = &*ARGS_CMD;
+    split_info_json_path_from(PathBuf::from(file_path).parent().unwrap().to_path_buf())
 }
 
 pub(crate) fn split_info_json_path_from(path: PathBuf) -> PathBuf {

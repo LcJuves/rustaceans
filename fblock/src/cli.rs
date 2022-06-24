@@ -1,4 +1,4 @@
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use lazy_static::lazy_static;
 
 lazy_static! {
@@ -6,21 +6,35 @@ lazy_static! {
         let args = Args::parse();
         args
     };
+    pub(crate) static ref ARGS_CMD: Commands = {
+        let args = &ARGS;
+        (*args).command.clone()
+    };
 }
 
-/// A command line tool for splitting files
+/// A tool for splitting and restoring files
 #[derive(Parser, Debug)]
+#[clap(propagate_version = true)]
 #[clap(author, version, about, long_about = None)]
 pub(crate) struct Args {
-    /// The path of the file to be split
-    #[clap(short, long)]
-    pub(crate) file_path: String,
+    #[clap(subcommand)]
+    pub(crate) command: Commands,
+}
 
-    /// The size of each block after splitting
-    #[clap(long, default_value_t = 3145728)]
-    pub(crate) block_size: u64,
+#[derive(Subcommand, Debug)]
+#[derive(Clone)]
+pub(crate) enum Commands {
+    /// Divide the file into equal chunks
+    Split {
+        /// The path of the file to be split
+        #[clap(short, long)]
+        file_path: String,
 
-    /// JSON configuration file path for block description information
-    #[clap(long)]
-    pub(crate) back_from: String,
+        /// The size of each block after splitting
+        #[clap(long, default_value_t = 3145728)]
+        block_size: u64,
+        // /// JSON configuration file path for block description information
+        // #[clap(long)]
+        // back_from: String,
+    },
 }
