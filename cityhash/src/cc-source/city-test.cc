@@ -1845,12 +1845,12 @@ void Dump(int offset, int len) {
 
 #endif
 
-int main(int argc, char **argv) {
-    setup();
-    int i = 0;
-    for (; i < kTestSize - 1; i++) {
-        Test(testdata[i], i * i, i);
-    }
-    Test(testdata[i], 0, kDataSize);
-    return errors > 0;
-}
+// int main(int argc, char **argv) {
+//     setup();
+//     int i = 0;
+//     for (; i < kTestSize - 1; i++) {
+//         Test(testdata[i], i * i, i);
+//     }
+//     Test(testdata[i], 0, kDataSize);
+//     return errors > 0;
+// }
