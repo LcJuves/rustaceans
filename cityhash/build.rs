@@ -1,9 +1,9 @@
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-changed=src/**");
+    println!("cargo:rerun-if-changed=src/cc-source/**");
 
     let mut build = cc::Build::new();
-    build.include("src/google").cpp(true).file("src/google/city.cc");
+    build.include("src/cc-source").cpp(true);
 
     // CRC32C Intrinsic can be used on x86_64 architecture that support the SSE 4.2 instruction set
     if cfg!(target_arch = "x86_64") && cfg!(target_feature = "sse4.2") {
@@ -17,5 +17,7 @@ fn main() {
         }
     }
 
-    build.compile("cityhash");
+    let mut test_build = build.clone();
+    build.static_flag(true).file("src/cc-source/city.cc").compile("cityhash");
+    test_build.static_flag(true).file("src/cc-source/city-test.cc").compile("city-test");
 }
