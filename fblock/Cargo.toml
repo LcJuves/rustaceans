@@ -8,7 +8,6 @@ authors = ["Liangcheng Juves <liangchengj@outlook.com>"]
 
 [dependencies]
 lazy_static = "1.4.0"
-ssri = "7.0.0"
 clap = { version = "3.1.17", features = ["derive"] }
 hyper = { version = "0.14.17", features = ["http1"] }
 hyper-rustls = { version = "0.23.0", git = "https://jihulab.com/LiangchengJ/hyper-rustls.git", branch = "main", features = [
@@ -18,3 +17,5 @@ hyper-rustls = { version = "0.23.0", git = "https://jihulab.com/LiangchengJ/hype
 ] }
 serde = { version = "1.0.137", features = ["derive"] }
 serde_json = "1.0.81"
+cityhash-sys = { git = "https://jihulab.com/wireguard/cityhash-sys.git", version = "1.0.1", branch = "master" }
+rb64 = { version = "0.1.0", path = "../base64" }

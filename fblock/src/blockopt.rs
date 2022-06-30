@@ -1,4 +1,4 @@
-use crate::sha512sum;
+use crate::hash;
 use crate::splinfo::{SplitInfo, SPLIT_INFO_JSON_PATH};
 
 use std::{
@@ -13,7 +13,7 @@ pub(crate) fn write_block(
     part_bytes: &Vec<u8>,
     split_info: &mut SplitInfo,
 ) -> Result<()> {
-    let block_sha512sum = sha512sum::compute(&*part_bytes);
+    let block_sha512sum = hash::compute(&*part_bytes);
     #[cfg(debug_assertions)]
     dbg!(&block_sha512sum);
     let block_file_path = file_path.parent().unwrap().join(block_sha512sum);

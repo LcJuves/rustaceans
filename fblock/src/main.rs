@@ -1,6 +1,6 @@
 mod blockopt;
 mod cli;
-mod sha512sum;
+mod hash;
 mod splinfo;
 
 use crate::blockopt::*;
@@ -16,7 +16,7 @@ use std::{
 fn main() -> Result<()> {
     let Commands::Split { file_path, block_size, .. } = &*ARGS_CMD;
     let file_path = Path::new(&file_path);
-    let file_sha512sum = sha512sum::compute(&std::fs::read(&file_path)?);
+    let file_sha512sum = hash::compute(&std::fs::read(&file_path)?);
     #[cfg(debug_assertions)]
     dbg!(&file_sha512sum);
     let metadata = file_path.metadata()?;
