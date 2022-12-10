@@ -25,7 +25,7 @@ pub(crate) fn write_block(
         .open(&block_file_path)?;
     block_file.write_all(&*part_bytes)?;
     block_file.flush()?;
-    let block_file_path_string = (&block_file_path.to_string_lossy()).to_string();
+    let mut block_file_path_string = (&block_file_path.to_string_lossy()).to_string();
     #[cfg(debug_assertions)]
     dbg!(&block_file_path_string);
     let split_info_dir_path_string =
