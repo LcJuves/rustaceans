@@ -11,7 +11,7 @@ lazy_static! {
 fn init_cli_matches() -> ArgMatches<'static> {
     App::new("RF TestCase Generator")
         .version("1.0.4")
-        .author("Liangcheng Juves <liangchengj@outlook.com>")
+        .author("Liangcheng Juves <email@lcjuves.com>")
         .usage("genrobot [FLAGS] [OPTIONS]")
         .arg(
             Arg::with_name("xlsx-url")

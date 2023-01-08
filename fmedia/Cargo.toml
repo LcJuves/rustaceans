@@ -5,7 +5,7 @@ edition = "2021"
 exclude = [".gitignore"]
 license = "MIT"
 description = "Get file media type or suffix"
-authors = ["Liangcheng Juves <liangchengj@outlook.com>"]
+authors = ["Liangcheng Juves <email@lcjuves.com>"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

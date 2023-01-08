@@ -9,7 +9,7 @@ fn main() -> Result<(), Error> {
     #[allow(unused_assignments)]
     let mut commit_author = String::new();
     // TODO: ...
-    commit_author = "Liangcheng Juves <liangchengj@outlook.com>".to_string();
+    commit_author = "Liangcheng Juves <email@lcjuves.com>".to_string();
 
     let base_dir = current_dir().unwrap();
     if base_dir.join("Cargo.toml").exists() {
@@ -47,7 +47,7 @@ fn main() -> Result<(), Error> {
 
     commit_msg = rmeol(&commit_msg);
 
-    // git -C "${base_dir}" commit -m "Updated at ${tm}" --author "Liangcheng Juves <liangchengj@outlook.com>"
+    // git -C "${base_dir}" commit -m "Updated at ${tm}" --author "Liangcheng Juves <email@lcjuves.com>"
     if commit_msg.is_empty() {
         commit_msg = format!("Updated at {local_dt_string}");
     }

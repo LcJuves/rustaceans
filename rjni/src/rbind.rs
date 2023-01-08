@@ -7,7 +7,7 @@
 //! These are called by JNI, not provided by JNI
 
 /**
- * Copyright (c) 2021 Liangcheng Juves <liangchengj@outlook.com>
+ * Copyright (c) 2021 Liangcheng Juves <email@lcjuves.com>
  *
  * Permission is hereby granted, free of charge, to any
  * person obtaining a copy of this software and associated
