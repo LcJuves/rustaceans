@@ -15,7 +15,7 @@ impl CommonFairing {
     const ACCESS_CONTROL_ALLOW_ORIGIN: &'static str = "*";
 
     #[cfg(not(debug_assertions))]
-    const ACCESS_CONTROL_ALLOW_ORIGIN: &'static str = "https://docs.liangchengj.com";
+    const ACCESS_CONTROL_ALLOW_ORIGIN: &'static str = "https://docs.lcjuves.com";
 }
 
 #[rocket::async_trait]
