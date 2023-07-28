@@ -40,7 +40,7 @@ pub const jint_array = jarray;
 pub const jlong_array = jarray;
 pub const jfloat_array = jarray;
 pub const jdouble_array = jarray;
-pub const jobjectArray = jarray;
+pub const jobject_array = jarray;
 
 pub const jweak = jobject;
 
@@ -332,9 +332,9 @@ pub const JNINativeInterface = extern struct {
     get_string_utf_chars: ?fn (env: [*c]JNIEnv, jstring, [*c]jboolean) callconv(.C) [*c]const u8,
     release_string_utf_chars: ?fn (env: [*c]JNIEnv, jstring, [*c]const u8) callconv(.C) void,
     get_array_length: ?fn (env: [*c]JNIEnv, jarray) callconv(.C) jsize,
-    new_object_array: ?fn (env: [*c]JNIEnv, jsize, jclass, jobject) callconv(.C) jobjectArray,
-    get_object_array_element: ?fn (env: [*c]JNIEnv, jobjectArray, jsize) callconv(.C) jobject,
-    set_object_array_element: ?fn (env: [*c]JNIEnv, jobjectArray, jsize, jobject) callconv(.C) void,
+    new_object_array: ?fn (env: [*c]JNIEnv, jsize, jclass, jobject) callconv(.C) jobject_array,
+    get_object_array_element: ?fn (env: [*c]JNIEnv, jobject_array, jsize) callconv(.C) jobject,
+    set_object_array_element: ?fn (env: [*c]JNIEnv, jobject_array, jsize, jobject) callconv(.C) void,
     new_boolean_array: ?fn (env: [*c]JNIEnv, jsize) callconv(.C) jboolean_array,
     new_byte_array: ?fn (env: [*c]JNIEnv, jsize) callconv(.C) jbyte_array,
     new_char_array: ?fn (env: [*c]JNIEnv, jsize) callconv(.C) jchar_array,
