@@ -1,4 +1,4 @@
-//! [https://docs.rs/mysql/21.0.1]
+//! [https://docs.rs/mysql/24.0.0]
 
 use lazy_static::lazy_static;
 

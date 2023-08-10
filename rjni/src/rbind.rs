@@ -547,8 +547,7 @@ pub struct JNINativeInterface {
         args: *const Jvalue
     ) -> Jdouble),
 
-    pub call_void_method:
-        unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: Jobject, method_id: JmethodID)),
+    pub call_void_method: unsafe_extern_c_var_fn!((env: *mut JNIEnv, obj: Jobject, method_id: JmethodID)),
     pub call_void_method_v: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: Jobject,
@@ -792,18 +791,12 @@ pub struct JNINativeInterface {
         field_id: JfieldID,
         val: Jboolean
     )),
-    pub set_byte_field:
-        unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, field_id: JfieldID, val: Jbyte)),
-    pub set_char_field:
-        unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, field_id: JfieldID, val: Jchar)),
-    pub set_short_field:
-        unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, field_id: JfieldID, val: Jshort)),
-    pub set_int_field:
-        unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, field_id: JfieldID, val: Jint)),
-    pub set_long_field:
-        unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, field_id: JfieldID, val: Jlong)),
-    pub set_float_field:
-        unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, field_id: JfieldID, val: Jfloat)),
+    pub set_byte_field: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, field_id: JfieldID, val: Jbyte)),
+    pub set_char_field: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, field_id: JfieldID, val: Jchar)),
+    pub set_short_field: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, field_id: JfieldID, val: Jshort)),
+    pub set_int_field: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, field_id: JfieldID, val: Jint)),
+    pub set_long_field: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, field_id: JfieldID, val: Jlong)),
+    pub set_float_field: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject, field_id: JfieldID, val: Jfloat)),
     pub set_double_field: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         obj: Jobject,
@@ -944,8 +937,7 @@ pub struct JNINativeInterface {
         args: *const Jvalue
     ) -> Jdouble),
 
-    pub call_static_void_method:
-        unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: Jclass, method_id: JmethodID)),
+    pub call_static_void_method: unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: Jclass, method_id: JmethodID)),
     pub call_static_void_method_v: unsafe_extern_system_fn!((
         env: *mut JNIEnv,
         clazz: Jclass,
@@ -1037,8 +1029,7 @@ pub struct JNINativeInterface {
         str: Jstring,
         is_copy: *mut Jboolean
     ) -> *const Jchar),
-    pub release_string_chars:
-        unsafe_extern_system_fn!((env: *mut JNIEnv, str: Jstring, chars: *const Jchar)),
+    pub release_string_chars: unsafe_extern_system_fn!((env: *mut JNIEnv, str: Jstring, chars: *const Jchar)),
 
     pub new_string_utf: unsafe_extern_system_fn!((env: *mut JNIEnv, utf: *const c_char) -> Jstring),
     pub get_string_utf_length: unsafe_extern_system_fn!((env: *mut JNIEnv, str: Jstring) -> Jsize),
@@ -1047,8 +1038,7 @@ pub struct JNINativeInterface {
         str: Jstring,
         is_copy: *mut Jboolean
     ) -> *const c_char),
-    pub release_string_utf_chars:
-        unsafe_extern_system_fn!((env: *mut JNIEnv, str: Jstring, chars: *const c_char)),
+    pub release_string_utf_chars: unsafe_extern_system_fn!((env: *mut JNIEnv, str: Jstring, chars: *const c_char)),
 
     pub get_array_length: unsafe_extern_system_fn!((env: *mut JNIEnv, array: Jarray) -> Jsize),
 
@@ -1324,8 +1314,7 @@ pub struct JNINativeInterface {
         string: Jstring,
         is_copy: *mut Jboolean
     ) -> *const Jchar),
-    pub release_string_critical:
-        unsafe_extern_system_fn!((env: *mut JNIEnv, string: Jstring, cstring: *const Jchar)),
+    pub release_string_critical: unsafe_extern_system_fn!((env: *mut JNIEnv, string: Jstring, cstring: *const Jchar)),
 
     pub new_weak_global_ref: unsafe_extern_system_fn!((env: *mut JNIEnv, obj: Jobject) -> Jweak),
     pub delete_weak_global_ref: unsafe_extern_system_fn!((env: *mut JNIEnv, gref: Jweak)),
