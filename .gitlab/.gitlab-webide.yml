@@ -1,6 +1,6 @@
 terminal:
   # This can be any image that has the necessary runtime environment for your project.
-  image: liangchengj/denv:fedora-x86-64-0.1.2
+  image: lcjuves/denv:fedora-x86-64-0.1.2
   # before_script:
   #   - apk update
   variables:
