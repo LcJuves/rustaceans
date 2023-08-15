@@ -27,6 +27,8 @@ workspace.members = [
     "ruimpl",
     "tcp-client",
     "tcp-server",
+    "udp-client",
+    "udp-server",
     "wasm-game-of-life",
     "wkrobot",
     "xlsx-example",
