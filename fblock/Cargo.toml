@@ -10,12 +10,12 @@ authors = ["Liangcheng Juves <email@lcjuves.com>"]
 lazy_static = "1.4.0"
 clap = { version = "3.1.17", features = ["derive"] }
 hyper = { version = "0.14.17", features = ["http1"] }
-hyper-rustls = { version = "0.23.0", git = "https://jihulab.com/LcJuves/hyper-rustls.git", branch = "main", features = [
+hyper-rustls = { version = "0.23.0", git = "https://gitlab.com/LcJuves/hyper-rustls.git", branch = "main", features = [
     "tokio-runtime",
     "dangerous_configuration",
     "tls12",
 ] }
 serde = { version = "1.0.137", features = ["derive"] }
 serde_json = "1.0.81"
-cityhash-sys = { git = "https://jihulab.com/wireguard/cityhash-sys.git", version = "1.0.1", branch = "master" }
+cityhash-sys = { git = "https://gitlab.com/wireguard/cityhash-sys.git", version = "1.0.1", branch = "master" }
 rb64 = { version = "0.1.0", path = "../base64" }
