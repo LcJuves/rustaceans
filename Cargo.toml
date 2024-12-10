@@ -15,7 +15,7 @@ workspace.members = [
     "hex-string",
     "io",
     "posix",
-    "promises",
+    "awaits",
     "rcallc",
     "rconio",
     "regexp",

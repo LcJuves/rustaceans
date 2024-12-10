@@ -12,9 +12,9 @@ use std::ffi::OsString;
 use std::fs::OpenOptions;
 use std::path::Path;
 
+use awaits::future_block_on;
 use calamine::{open_workbook_auto, Sheets};
 use lazy_static::lazy_static;
-use promises::future_block_on;
 
 lazy_static! {
     static ref SAVE_ROBOT_DIR: Result<std::path::PathBuf, std::io::Error> =

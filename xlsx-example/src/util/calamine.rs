@@ -6,10 +6,10 @@ use std::error::Error;
 use std::fs::{remove_file, File};
 use std::io::Write;
 
+use awaits::future_block_on;
 use bytes::buf::Reader;
 use calamine::{open_workbook_auto, DataType, Range, Sheets};
 use hyper::body::Buf;
-use promises::future_block_on;
 use serde::Deserialize;
 
 pub(crate) fn default_sheet_of_wb(wb: &mut impl calamine::Reader) -> Option<Range<DataType>> {

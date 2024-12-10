@@ -30,7 +30,7 @@ ssri = "7.0.0"
 toml = "0.5.8"
 Boa = { version = "0.13.0", features = ["console"] }
 ruimpl = "0.1.0"
-promises = { version = "0.1.0", path = "../promises" }
+awaits = { version = "0.1.0", path = "../awaits" }
 
 [dependencies.regex]
 version = "1.5.4"

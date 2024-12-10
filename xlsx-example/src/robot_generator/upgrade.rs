@@ -12,9 +12,9 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::str::FromStr;
 
+use awaits::future_block_on;
 use hyper::StatusCode;
 use lazy_static::lazy_static;
-use promises::future_block_on;
 use ruimpl::rmeol;
 use serde::{Deserialize, Serialize};
 use ssri::{Algorithm, IntegrityOpts};
