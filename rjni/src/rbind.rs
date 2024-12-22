@@ -36,11 +36,11 @@
 
 /// # Examples
 ///
-/// ```no_run
+/// ```compile_fail
 /// unsafe_extern_system_fn!((env: *mut JNIEnv) -> Jint)
 /// ```
 /// expand to
-/// ```no_run
+/// ```compile_fail
 /// Option<unsafe extern "system" fn(env: *mut JNIEnv) -> Jint>
 /// ```
 #[macro_export(local_inner_macros)]
@@ -52,11 +52,11 @@ macro_rules! unsafe_extern_system_fn {
 
 /// # Examples
 ///
-/// ```no_run
+/// ```compile_fail
 /// unsafe_extern_c_var_fn!((env: *mut JNIEnv, clazz: Jclass, method_id: JmethodID) -> Jobject)
 /// ```
 /// expand to
-/// ```no_run
+/// ```compile_fail
 /// Option<unsafe extern "C" fn(env: *mut JNIEnv, clazz: Jclass, method_id: JmethodID, ...) -> Jobject>
 /// ```
 #[macro_export(local_inner_macros)]
@@ -68,7 +68,7 @@ macro_rules! unsafe_extern_c_var_fn {
 
 /// # Such as
 ///
-/// ```no_run
+/// ```compile_fail
 /// jni_fn!(
 ///     JNI_OnLoad,
 ///     (vm: *mut JavaVM, reserved: *mut c_void),
@@ -80,7 +80,7 @@ macro_rules! unsafe_extern_c_var_fn {
 /// );
 /// ```
 /// expand to
-/// ```no_run
+/// ```compile_fail
 /// #[no_mangle]
 /// pub extern "system" fn JNI_OnLoad(vm: *mut JavaVM, reserved: *mut c_void) -> Jint {
 ///     /* code */
@@ -99,7 +99,7 @@ macro_rules! jni_fn {
 ///
 /// ##  JNI_OnLoad
 /// ***
-/// ```no_run
+/// ```compile_fail
 /// #[no_mangle]
 /// pub extern "system" fn JNI_OnLoad(vm: *mut JavaVM, reserved: *mut c_void) -> Jint {
 ///     /* code */
@@ -107,7 +107,7 @@ macro_rules! jni_fn {
 /// }
 /// ```
 /// ### Or use the `impl_jni_on_load` macro, like this
-/// ```no_run
+/// ```compile_fail
 /// impl_jni_on_load!(vm, reserved, {
 ///     /* code */
 ///     /* The return value must be >= JNI_VERSION_1_1 */
@@ -129,14 +129,14 @@ macro_rules! impl_jni_on_load {
 ///
 /// ## JNI_OnUnload
 /// ***
-/// ```no_run
+/// ```compile_fail
 /// #[no_mangle]
 /// pub extern "system" fn JNI_OnUnload(vm: *mut JavaVM, reserved: *mut c_void) {
 ///     /* code */
 /// }
 /// ```
 /// ### Or use the `impl_jni_on_unload` macro, like this
-/// ```no_run
+/// ```compile_fail
 /// impl_jni_on_unload!(vm, reserved, { /* code */ });
 /// ```
 #[macro_export(local_inner_macros)]
