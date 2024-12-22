@@ -11,10 +11,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 #define loop for (;;)
 #define print(fmt, ...) printf(fmt, __VA_ARGS__);
 #define println(fmt, ...) print(fmt "\n", __VA_ARGS__);
@@ -45,9 +41,5 @@ typedef uintptr_t usize; /* arch */
 /// Floating-Point
 typedef float f32;  /* 32-bit */
 typedef double f64; /* 64-bit */
-
-#ifdef __cplusplus
-} /* extern "C" */
-#endif /* __cplusplus */
 
 #endif /* _RDEF_H */

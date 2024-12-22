@@ -31,10 +31,6 @@
 
 #include <stdarg.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * JNI Types
  */
@@ -808,9 +804,5 @@ _JNI_IMPORT_OR_EXPORT_ jint JNICALL JNI_GetCreatedJavaVMs(JavaVM **, jsize,
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved);
 
 JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved);
-
-#ifdef __cplusplus
-} /* extern "C" */
-#endif /* __cplusplus */
 
 #endif /* _JNI_H */
