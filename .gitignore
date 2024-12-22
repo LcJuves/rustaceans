@@ -34,3 +34,4 @@ rjni/test/tests/zig/src/main_c.zig
 .cargo/config.toml
 fsplit/tests/res/*
 zig-linux-x86_64-0.9.1*
+.zig-cache
